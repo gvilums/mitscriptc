@@ -5,7 +5,7 @@
 #include "MITScript.h"
 
 // Helper function for reporting errors
-void reportError(const antlr4::Token& token)
+void reportError(antlr4::Token& token)
 {
   std::cout <<"Unexpected Symbol (" 
             <<token.getLine() <<"," 
@@ -18,7 +18,7 @@ bool TermPrime(antlr4::CommonTokenStream& tokens);
 bool Term(antlr4::CommonTokenStream& tokens)
 {
   // Get token at current index in buffer
-  const antlr4::Token* token =  tokens.get(tokens.index());
+  antlr4::Token* token =  tokens.get(tokens.index());
 
   if (token->getType() == MITScript::INT)
   { 
@@ -36,11 +36,9 @@ bool Term(antlr4::CommonTokenStream& tokens)
 
 bool TermPrime(antlr4::CommonTokenStream&  tokens)
 { 
-  const antlr4::Token* token = tokens.get(tokens.index());
+  antlr4::Token* token = tokens.get(tokens.index());
 
-  const auto type = token->getType();
-
-  switch(type)
+  switch(token->getType())
   {
     case MITScript::EOF:
     {
@@ -51,7 +49,7 @@ bool TermPrime(antlr4::CommonTokenStream&  tokens)
     {
       tokens.consume();
 
-      const antlr4::Token* nextToken = tokens.get(tokens.index());
+      antlr4::Token* nextToken = tokens.get(tokens.index());
    
       if (nextToken->getType() == MITScript::INT)
       {
