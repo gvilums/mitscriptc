@@ -13,7 +13,7 @@ sudo apt install default-jre
 sudo apt install g++
 ```
 
-To aid debugging:
+Here is an additional tool aid debugging:
 
 ```
 sudo apt install valgrind
