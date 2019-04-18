@@ -44,7 +44,8 @@ c++ bench.cpp -o bench -I ../bench/include -L ../bench/lib \
      -lcriterion -lpthread -lm -ldl -O3 -std=c++11 # other CFLAGS...
 
 # or, in two steps:
-c++ bench.cpp -o bench.o -O3 -std=c++11 -I ../bench/include
+c++ bench.cpp -o bench.o -O3 -std=c++11 -I ../bench/include -L ../bench/lib \
+     -lcriterion -lpthread -lm -ldl -O3 -std=c++11 
 c++ bench.o -o bench -L ../bench/lib \
      -lcriterion -lpthread -lm -ldl # other CFLAGS...
 
