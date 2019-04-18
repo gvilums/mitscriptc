@@ -5,18 +5,17 @@ This directory contains tools for benchmarking your code.
 Based on the [criterion-c](https://gitlab.com/kazimuth/criterion-c) library:
 > A dead-simple, statistically reliable benchmarking library for C and C++. It automatically warms-up your code, filters outliers, and performs statistical tests to see if the performance of your code has changed between runs.
 
-To use, add a new file to whatever sub-project you're working on, bench.cpp. You can copy this from `bench-example.cpp`. Add bench.cpp to your build process; you'll need to add the `bench/include/` folder to your include path, and 
-
 # usage
 
 Use in c++:
 
+`bench.cpp`:
 ```cpp
 #include "criterion.h"
 
 int main() {
     std::string x("hello, ");
-    criterion::benchmark("example-benchmark", [&]() {
+    criterion::benchmark("example-benchmark", [&]() { // c++11 closure syntax; make sure you capture-by-reference with [&]
         std::string y("world!");
 
         // use "volatile" to prevent dead code elimination from removing benchmark code
@@ -29,13 +28,17 @@ int main() {
 }
 ```
 
-You'll need to add commands like the following to your Makefiles:
+You'll need to add commands like the following to your Makefiles: (organize however you wish)
 ```sh
 
-# make sure you build in release mode! (-O3)
-# make sure you use at least -std=c++11 as well
+# building `bench` executable from `bench.cpp`:
 
-# build:
+# include the `bench/include` directory                   (-I ../bench/include)
+# add the `bench/lib` directory to the linker search path (-L ../bench/lib)
+# link the criterion, pthread, math, and dl libraries     (-lcriterion -lpthread -lm -ldl)
+# make sure you build in release mode!                    (-O3)
+# make sure you use at least -std=c++11 as well           (-std=c++11)
+
 c++ bench.cpp -o bench -I ../bench/include -L ../bench/lib \
      -lcriterion -lpthread -lm -ldl -O3 -std=c++11 # other CFLAGS...
 
@@ -44,6 +47,7 @@ c++ bench.cpp -o bench.o -O3 -std=c++11 -I ../bench/include
 c++ bench.o -o bench -L ../bench/lib \
      -lcriterion -lpthread -lm -ldl # other CFLAGS...
 
+# feel free to include and link in whatever parts of your code you want to benchmark.
 
 # run a single benchmark:
 ./bench example-benchmark
@@ -86,6 +90,6 @@ inline void summary();
 };
 ```
 
-For more documentation, see the [criterion-rs manual](https://bheisler.github.io/criterion.rs/book/criterion_rs.html).
+For more documentation, see the [criterion-rs manual](https://bheisler.github.io/criterion.rs/book/criterion_rs.html). (Note that the original library is in Rust; you're using a c++ wrapping of that API.)
 
 Specifically, the [analysis process](https://bheisler.github.io/criterion.rs/book/analysis.html) section of the manual explains the statistical analysis performed by criterion-c.
