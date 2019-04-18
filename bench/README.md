@@ -3,7 +3,8 @@
 This directory contains tools for benchmarking your code.
 
 Based on the [criterion-c](https://gitlab.com/kazimuth/criterion-c) library:
-> A dead-simple, statistically reliable benchmarking library for C and C++. It automatically warms-up your code, filters outliers, and performs statistical tests to see if the performance of your code has changed between runs.
+> A dead-simple, statistically reliable benchmarking library for C and C++.
+> It automatically warms-up your code, filters outliers, and performs statistical tests to see if the performance of your code has changed between runs.
 
 # usage
 
@@ -15,7 +16,7 @@ Use in c++:
 
 int main() {
     std::string x("hello, ");
-    criterion::benchmark("example-benchmark", [&]() { // c++11 closure syntax; make sure you capture-by-reference with [&]
+    criterion::benchmark("example-benchmark", [&]() { // c++11 closure syntax
         std::string y("world!");
 
         // use "volatile" to prevent dead code elimination from removing benchmark code
