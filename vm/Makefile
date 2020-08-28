@@ -1,5 +1,5 @@
 all: bc-parser.cpp bc-lexer.cpp bc-parser.cpp
-	g++ -g -std=c++1y bc-parser-driver.cpp bc-parser.cpp bc-lexer.cpp -o bc-parser
+	g++ -g -std=c++14 bc-parser-driver.cpp bc-parser.cpp bc-lexer.cpp -o bc-parser
 
 bc-parser.cpp: bc-parser.yy
 	bison -Dapi.prefix={bc} --output=bc-parser.cpp --defines=bc-parser.h bc-parser.yy
