@@ -22,7 +22,7 @@ sudo apt install valgrind
 #### Virtual Machine
 
 Here is an Ubuntu 20.04.1 (LTS) virtual machine with these dependencies already installed:
-[link](https://drive.google.com/open?id=1JSB0ueE2sXz2fG8O42Kw0JCKHKwgc2Vv).
+[link](https://drive.google.com/file/d/1-p-K_WzECk77qpcgWUnCs2qQ_ZiOtQ5n/view?usp=sharing).
 
 Password: IwillgetanA
 
