@@ -1,4 +1,5 @@
 #include "types.h"
+#include "utils.h"
 #include <memory>
 #include <iostream>
 
@@ -145,8 +146,7 @@ class PrettyPrinter
         }
         else if (const auto *value = dynamic_cast<const String *>(&constant))
         {
-            //TODO: escape
-            os << '"' << value->value << '"';
+            os << '"' << unescape(value->value) << '"';
         }
     }
 

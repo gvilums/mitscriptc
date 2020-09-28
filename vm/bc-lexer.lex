@@ -3,6 +3,7 @@
 
 #include <string>
 #include "bc-parser.h"
+#include "utils.h"
 using std::string;
 // You can put additional header files here.
 
@@ -42,8 +43,8 @@ comment      ("//"[^\n]*)
 {comment}      { /* skip */ }
 
 
-{int_const}    { 
-		//Rule to identify an integer constant. 
+{int_const}    {
+		//Rule to identify an integer constant.
 		//The return value indicates the type of token;
 		//in this case T_int as defined in parser.yy.
 		//The actual value of the constant is returned
@@ -54,11 +55,11 @@ comment      ("//"[^\n]*)
 		}
 
 %{
-// The rest of your lexical rules go here. 
-// rules have the form 
+// The rest of your lexical rules go here.
+// rules have the form
 // pattern action
 // we have defined a few rules for you above, but you need
-// to provide additional lexical rules for string constants, 
+// to provide additional lexical rules for string constants,
 // operators, keywords and identifiers.
 //begin_student_code
 %}
@@ -67,7 +68,7 @@ comment      ("//"[^\n]*)
 {string_const}  {
 
 			string*  tmp = new string(yytext);
-			*tmp = tmp->substr(1, tmp->size() -2);
+			*tmp = escape(tmp->substr(1, tmp->size() -2));
 			yylval->strconst = tmp;
 			return T_string;
 		}
@@ -123,7 +124,7 @@ comment      ("//"[^\n]*)
 
 {Operator} {  return yytext[0]; }
 
-{name} 		{ 
+{name} 		{
 			yylval->strconst = new std::string(yytext);
 			return T_ident;
 		}
