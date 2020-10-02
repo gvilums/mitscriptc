@@ -1,6 +1,6 @@
 #pragma once
 
-#include <experimental/optional>
+#include <optional>
 #include <vector>
 
 enum class Operation
@@ -228,7 +228,7 @@ enum class Operation
 
 struct Instruction
 {
-    Instruction(const Operation operation, std::experimental::optional<int32_t> operand0)
+    Instruction(const Operation operation, std::optional<int32_t> operand0)
     : operation(operation),
     operand0(operand0)
     {
@@ -236,7 +236,7 @@ struct Instruction
     }
 
     Operation operation;
-    std::experimental::optional<int32_t> operand0;
+    std::optional<int32_t> operand0;
 };
 
 typedef std::vector<Instruction> InstructionList;
