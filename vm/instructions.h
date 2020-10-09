@@ -76,7 +76,7 @@ enum class Operation
     // Mnemonic:    field_load i
     // Operand 0:   index of the field's name within the enclosing function's names list
     // Operand 1:   record from which to load
-    // Stack:       S :: operand 1 => S :: record_value_of(operand, f.names[i])
+    // Stack:       S :: operand 1 => S :: record_value_of(operand 1, f.names[i])
     FieldLoad,
 
     // Description: store value into field of record
@@ -92,7 +92,7 @@ enum class Operation
     // Operand 0:   N/A
     // Operand 1:   the index to read from (can be arbitrary value. indexing adheres to semantics of Assignment #2)
     // Operand 2:   the record to read from
-    // Stack:       S :: operand 2 :: operand 1 => S
+    // Stack:       S :: operand 2 :: operand 1 => S :: record_value_of(operand 2, operand 1)
     IndexLoad,
 
     // Description: store value into index of record
@@ -132,8 +132,8 @@ enum class Operation
     // Operand 0:   N/A
     // Operand 1:   right value
     // Operand 2:   left value
-    // Result:      value of the operation as specified by the semantics of Assignment #2
-    // Stack:       S:: operand 2 :: operand 1 => S :: op(operand 2, operand 1)
+    // Result:      value of + operation as specified by the semantics of Assignment #2
+    // Stack:       S:: operand 2 :: operand 1 => S :: (operand 2) + (operand 1)
     Add,
 
     // Description: performs an arithmetic operation on two integer operands
@@ -150,7 +150,7 @@ enum class Operation
     // Mnemonic:    neg
     // Operand 0:   N/A
     // Operand 1:   value
-    // Stack:       S :: operand 1 => S:: - operand 1
+    // Stack:       S :: operand 1 => S:: -(operand 1)
     Neg,
 
     // Description: computes a comparison operation on two integer operands
@@ -183,7 +183,7 @@ enum class Operation
     // Mnemonic:    not
     // Operand 0:   N/A
     // Operand 1:   value
-    // Stack:       S :: operand 1 => S:: op(operand 1)
+    // Stack:       S :: operand 1 => S:: not(operand 1)
     Not,
 
     // Description: transfers execution of the function to a new instruction offset within the current function
