@@ -11,7 +11,7 @@ enum class Operation
     // Stack:       S =>  S :: f.constants()[i]
     LoadConst,
 
-    // Description: push a  function onto the operand stack
+    // Description: push a function onto the operand stack
     // Mnemonic:    load_func i
     // Operand 0:   index of function  in enclosing function's list of functions
     // Stack:       S => S :: f.functions()[i]
@@ -46,19 +46,19 @@ enum class Operation
     // Description: push a reference to a local variable or free variable reference onto the operand stack
     // Mnemonic:    push_ref i
     // Operand 0:   index of local variable reference
-    // Stack:       S ==>  address_of(var) :: S
+    // Stack:       S ==>  S :: address_of(var)
     //                  where var = i < f.local_reference_vars.size() ? f.local_reference_vars[i]
     //                                                           :  f.free_vars[i - f.local_reference_vars.size()]
     PushReference,
 
-    // Description: loads the value of a reference onto the operand stack
+    // Description: load the value of a reference onto the operand stack
     // Mnemonic:    load_ref
     // Operand 0:   N/A
     // Operand 1:   reference to load from
     // Stack:       S :: operand 1 => S :: value_of(operand 1)
     LoadReference,
 
-    // Description: loads the value of a reference onto the operand stack
+    // Description: store value to a reference
     // Mnemonic:    store_ref
     // Operand 0:   N/A
     // Operand 1:   value to store
