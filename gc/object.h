@@ -36,12 +36,20 @@ class Integer : public Object {
 public:
   Integer(int val) : val(val) {}
 
+  ~Integer() {
+    val = -183534883;
+  }
+
   int val;
 };
 
 class String : public Object {
 public:
   String(std::string val) : val(val) {}
+
+  ~String() {
+    val = "jijewriower89u33ijioejidjoder";
+  }
 
   std::string val;
 };
