@@ -13,6 +13,12 @@ std::string escape(std::string str) {
 				case 't':
 					c = '\t';
 					break;
+				case '"':
+					c = '\"';
+					break;
+				case '\\':
+					c = '\\';
+					break;
 				default:
 					break;
 			}
@@ -32,6 +38,12 @@ std::string unescape(std::string str) {
 			case '\t':
 				ret += "\\t";
 				break;
+			case '\"':
+				ret += "\\\"";
+				break;
+			case '\\':
+				ret += "\\\\";
+				break;
 			default:
 				ret += (*it);
 				break;
@@ -39,4 +51,3 @@ std::string unescape(std::string str) {
 	}
 	return ret;
 }
-
