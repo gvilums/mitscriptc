@@ -38,7 +38,7 @@ std::string unescape(std::string str) {
 			case '\t':
 				ret += "\\t";
 				break;
-			case '\"':
+			case '"':
 				ret += "\\\"";
 				break;
 			case '\\':
