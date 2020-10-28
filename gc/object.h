@@ -27,6 +27,8 @@ protected:
     if (rhs) heap.markSuccessors(rhs);
   };
 
+  friend class CollectedHeap;
+
 private: 
   static size_t allocated;
   static size_t deallocated;
