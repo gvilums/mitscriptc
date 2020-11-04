@@ -1299,7 +1299,6 @@
 , 2 // MOVMSKPS r32, xmm
 , 2 // MOVMSKPS r64, xmm
 , 2 // MOVNTDQ m128, xmm
-, 2 // MOVNTDQ m256, ymm
 , 2 // MOVNTDQA xmm, m128
 , 2 // MOVNTI m32, r32
 , 2 // MOVNTI m64, r64
@@ -2625,7 +2624,7 @@
 , 2 // VCVTDQ2PD xmm, m64
 , 2 // VCVTDQ2PD xmm, xmm
 , 2 // VCVTDQ2PD ymm, m128
-, 2 // VCVTDQ2PD ymm, ymm
+, 2 // VCVTDQ2PD ymm, xmm
 , 2 // VCVTDQ2PS xmm, m128
 , 2 // VCVTDQ2PS xmm, xmm
 , 2 // VCVTDQ2PS ymm, m256
@@ -3035,6 +3034,7 @@
 , 2 // VMOVMSKPS r64, xmm
 , 2 // VMOVMSKPS r64, ymm
 , 2 // VMOVNTDQ m128, xmm
+, 2 // VMOVNTDQ m256, ymm
 , 2 // VMOVNTDQA xmm, m128
 , 2 // VMOVNTDQA ymm, m256
 , 2 // VMOVNTPD m128, xmm

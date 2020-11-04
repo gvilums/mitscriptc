@@ -1299,7 +1299,6 @@
 , RegSet::empty() // MOVMSKPS r32, xmm
 , RegSet::empty() // MOVMSKPS r64, xmm
 , RegSet::empty() // MOVNTDQ m128, xmm
-, RegSet::empty() // MOVNTDQ m256, ymm
 , RegSet::empty() // MOVNTDQA xmm, m128
 , RegSet::empty() // MOVNTI m32, r32
 , RegSet::empty() // MOVNTI m64, r64
@@ -2625,7 +2624,7 @@
 , RegSet::empty() // VCVTDQ2PD xmm, m64
 , RegSet::empty() // VCVTDQ2PD xmm, xmm
 , RegSet::empty() // VCVTDQ2PD ymm, m128
-, RegSet::empty() // VCVTDQ2PD ymm, ymm
+, RegSet::empty() // VCVTDQ2PD ymm, xmm
 , RegSet::empty() // VCVTDQ2PS xmm, m128
 , RegSet::empty() // VCVTDQ2PS xmm, xmm
 , RegSet::empty() // VCVTDQ2PS ymm, m256
@@ -3035,6 +3034,7 @@
 , RegSet::empty() // VMOVMSKPS r64, xmm
 , RegSet::empty() // VMOVMSKPS r64, ymm
 , RegSet::empty() // VMOVNTDQ m128, xmm
+, RegSet::empty() // VMOVNTDQ m256, ymm
 , RegSet::empty() // VMOVNTDQA xmm, m128
 , RegSet::empty() // VMOVNTDQA ymm, m256
 , RegSet::empty() // VMOVNTPD m128, xmm

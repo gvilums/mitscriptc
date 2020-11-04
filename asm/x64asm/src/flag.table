@@ -1299,7 +1299,6 @@
 , FlagSet::empty()+Flag::SSE // MOVMSKPS r32, xmm
 , FlagSet::empty()+Flag::SSE // MOVMSKPS r64, xmm
 , FlagSet::empty()+Flag::SSE2 // MOVNTDQ m128, xmm
-, FlagSet::empty()+Flag::AVX // MOVNTDQ m256, ymm
 , FlagSet::empty()+Flag::SSE4_1 // MOVNTDQA xmm, m128
 , FlagSet::empty() // MOVNTI m32, r32
 , FlagSet::empty() // MOVNTI m64, r64
@@ -2625,7 +2624,7 @@
 , FlagSet::empty()+Flag::AVX // VCVTDQ2PD xmm, m64
 , FlagSet::empty()+Flag::AVX // VCVTDQ2PD xmm, xmm
 , FlagSet::empty()+Flag::AVX // VCVTDQ2PD ymm, m128
-, FlagSet::empty()+Flag::AVX // VCVTDQ2PD ymm, ymm
+, FlagSet::empty()+Flag::AVX // VCVTDQ2PD ymm, xmm
 , FlagSet::empty()+Flag::AVX // VCVTDQ2PS xmm, m128
 , FlagSet::empty()+Flag::AVX // VCVTDQ2PS xmm, xmm
 , FlagSet::empty()+Flag::AVX // VCVTDQ2PS ymm, m256
@@ -3035,6 +3034,7 @@
 , FlagSet::empty()+Flag::AVX // VMOVMSKPS r64, xmm
 , FlagSet::empty()+Flag::AVX // VMOVMSKPS r64, ymm
 , FlagSet::empty()+Flag::AVX // VMOVNTDQ m128, xmm
+, FlagSet::empty()+Flag::AVX // VMOVNTDQ m256, ymm
 , FlagSet::empty()+Flag::AVX // VMOVNTDQA xmm, m128
 , FlagSet::empty()+Flag::AVX2 // VMOVNTDQA ymm, m256
 , FlagSet::empty()+Flag::AVX // VMOVNTPD m128, xmm

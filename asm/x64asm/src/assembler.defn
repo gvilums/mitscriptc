@@ -29920,29 +29920,6 @@ void Assembler::movntdq(const M128& arg0, const Xmm& arg1) {
 	#endif
 }
 
-void Assembler::movntdq(const M256& arg0, const Ymm& arg1) {
-	#ifdef DEBUG_ASSEMBLER
-		size_t debug_i = fxn_->size();
-	#endif
-
-  // VEX-Encoded Instruction: 
-
-  // Prefix Group 1 is #UD for VEX
-  pref_group2(arg0);
-  // Prefix Group 3 is #UD for VEX
-  pref_group4(arg0);
-  vex(0x01,0x1,0x1,0x0,Constants::xmm0(),arg0,arg1);
-  opcode(0xe7);
-  mod_rm_sib(arg0,arg1);
-  // No Displacement/Immediate
-  // No label displacement
-  // No VEX Immediate
-  
-	#ifdef DEBUG_ASSEMBLER
-		debug(Instruction{MOVNTDQ_M256_YMM,{arg0,arg1}}, debug_i);
-	#endif
-}
-
 void Assembler::movntdqa(const Xmm& arg0, const M128& arg1) {
 	#ifdef DEBUG_ASSEMBLER
 		size_t debug_i = fxn_->size();
@@ -60418,7 +60395,7 @@ void Assembler::vcvtdq2pd(const Ymm& arg0, const M128& arg1) {
 	#endif
 }
 
-void Assembler::vcvtdq2pd(const Ymm& arg0, const Ymm& arg1) {
+void Assembler::vcvtdq2pd(const Ymm& arg0, const Xmm& arg1) {
 	#ifdef DEBUG_ASSEMBLER
 		size_t debug_i = fxn_->size();
 	#endif
@@ -60437,7 +60414,7 @@ void Assembler::vcvtdq2pd(const Ymm& arg0, const Ymm& arg1) {
   // No VEX Immediate
   
 	#ifdef DEBUG_ASSEMBLER
-		debug(Instruction{VCVTDQ2PD_YMM_YMM,{arg0,arg1}}, debug_i);
+		debug(Instruction{VCVTDQ2PD_YMM_XMM,{arg0,arg1}}, debug_i);
 	#endif
 }
 
@@ -69845,6 +69822,29 @@ void Assembler::vmovntdq(const M128& arg0, const Xmm& arg1) {
   
 	#ifdef DEBUG_ASSEMBLER
 		debug(Instruction{VMOVNTDQ_M128_XMM,{arg0,arg1}}, debug_i);
+	#endif
+}
+
+void Assembler::vmovntdq(const M256& arg0, const Ymm& arg1) {
+	#ifdef DEBUG_ASSEMBLER
+		size_t debug_i = fxn_->size();
+	#endif
+
+  // VEX-Encoded Instruction: 
+
+  // Prefix Group 1 is #UD for VEX
+  pref_group2(arg0);
+  // Prefix Group 3 is #UD for VEX
+  pref_group4(arg0);
+  vex(0x01,0x1,0x1,0x0,Constants::xmm0(),arg0,arg1);
+  opcode(0xe7);
+  mod_rm_sib(arg0,arg1);
+  // No Displacement/Immediate
+  // No label displacement
+  // No VEX Immediate
+  
+	#ifdef DEBUG_ASSEMBLER
+		debug(Instruction{VMOVNTDQ_M256_YMM,{arg0,arg1}}, debug_i);
 	#endif
 }
 

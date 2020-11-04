@@ -3901,9 +3901,6 @@ case MOVMSKPS_R64_XMM:
 case MOVNTDQ_M128_XMM:
 	movntdq(instr.get_operand<M128>(0), instr.get_operand<Xmm>(1));
 	break;
-case MOVNTDQ_M256_YMM:
-	movntdq(instr.get_operand<M256>(0), instr.get_operand<Ymm>(1));
-	break;
 case MOVNTDQA_XMM_M128:
 	movntdqa(instr.get_operand<Xmm>(0), instr.get_operand<M128>(1));
 	break;
@@ -7879,8 +7876,8 @@ case VCVTDQ2PD_XMM_XMM:
 case VCVTDQ2PD_YMM_M128:
 	vcvtdq2pd(instr.get_operand<Ymm>(0), instr.get_operand<M128>(1));
 	break;
-case VCVTDQ2PD_YMM_YMM:
-	vcvtdq2pd(instr.get_operand<Ymm>(0), instr.get_operand<Ymm>(1));
+case VCVTDQ2PD_YMM_XMM:
+	vcvtdq2pd(instr.get_operand<Ymm>(0), instr.get_operand<Xmm>(1));
 	break;
 case VCVTDQ2PS_XMM_M128:
 	vcvtdq2ps(instr.get_operand<Xmm>(0), instr.get_operand<M128>(1));
@@ -9108,6 +9105,9 @@ case VMOVMSKPS_R64_YMM:
 	break;
 case VMOVNTDQ_M128_XMM:
 	vmovntdq(instr.get_operand<M128>(0), instr.get_operand<Xmm>(1));
+	break;
+case VMOVNTDQ_M256_YMM:
+	vmovntdq(instr.get_operand<M256>(0), instr.get_operand<Ymm>(1));
 	break;
 case VMOVNTDQA_XMM_M128:
 	vmovntdqa(instr.get_operand<Xmm>(0), instr.get_operand<M128>(1));

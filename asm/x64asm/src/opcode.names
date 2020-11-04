@@ -558,10 +558,10 @@
 , "cvtps2pd_xmm_xmm" // CVTPS2PD xmm, xmm
 , "cvtps2pi_mm_m64" // CVTPS2PI mm, m64
 , "cvtps2pi_mm_xmm" // CVTPS2PI mm, xmm
-, "cvtsd2sil_r32_m64" // CVTSD2SI r32, m64
-, "cvtsd2sil_r32_xmm" // CVTSD2SI r32, xmm
-, "cvtsd2siq_r64_m64" // CVTSD2SI r64, m64
-, "cvtsd2siq_r64_xmm" // CVTSD2SI r64, xmm
+, "cvtsd2si_r32_m64" // CVTSD2SI r32, m64
+, "cvtsd2si_r32_xmm" // CVTSD2SI r32, xmm
+, "cvtsd2si_r64_m64" // CVTSD2SI r64, m64
+, "cvtsd2si_r64_xmm" // CVTSD2SI r64, xmm
 , "cvtsd2ss_xmm_m64" // CVTSD2SS xmm, m64
 , "cvtsd2ss_xmm_xmm" // CVTSD2SS xmm, xmm
 , "cvtsi2sdl_xmm_m32" // CVTSI2SD xmm, m32
@@ -574,10 +574,10 @@
 , "cvtsi2ssq_xmm_r64" // CVTSI2SS xmm, r64
 , "cvtss2sd_xmm_m32" // CVTSS2SD xmm, m32
 , "cvtss2sd_xmm_xmm" // CVTSS2SD xmm, xmm
-, "cvtss2sil_r32_m32" // CVTSS2SI r32, m32
-, "cvtss2sil_r32_xmm" // CVTSS2SI r32, xmm
-, "cvtss2siq_r64_m32" // CVTSS2SI r64, m32
-, "cvtss2siq_r64_xmm" // CVTSS2SI r64, xmm
+, "cvtss2si_r32_m32" // CVTSS2SI r32, m32
+, "cvtss2si_r32_xmm" // CVTSS2SI r32, xmm
+, "cvtss2si_r64_m32" // CVTSS2SI r64, m32
+, "cvtss2si_r64_xmm" // CVTSS2SI r64, xmm
 , "cvttpd2dq_xmm_m128" // CVTTPD2DQ xmm, m128
 , "cvttpd2dq_xmm_xmm" // CVTTPD2DQ xmm, xmm
 , "cvttpd2pi_mm_m128" // CVTTPD2PI mm, m128
@@ -586,14 +586,14 @@
 , "cvttps2dq_xmm_xmm" // CVTTPS2DQ xmm, xmm
 , "cvttps2pi_mm_m64" // CVTTPS2PI mm, m64
 , "cvttps2pi_mm_xmm" // CVTTPS2PI mm, xmm
-, "cvttsd2sil_r32_m64" // CVTTSD2SI r32, m64
-, "cvttsd2sil_r32_xmm" // CVTTSD2SI r32, xmm
-, "cvttsd2siq_r64_m64" // CVTTSD2SI r64, m64
-, "cvttsd2siq_r64_xmm" // CVTTSD2SI r64, xmm
-, "cvttss2sil_r32_m32" // CVTTSS2SI r32, m32
-, "cvttss2sil_r32_xmm" // CVTTSS2SI r32, xmm
-, "cvttss2siq_r64_m32" // CVTTSS2SI r64, m32
-, "cvttss2siq_r64_xmm" // CVTTSS2SI r64, xmm
+, "cvttsd2si_r32_m64" // CVTTSD2SI r32, m64
+, "cvttsd2si_r32_xmm" // CVTTSD2SI r32, xmm
+, "cvttsd2si_r64_m64" // CVTTSD2SI r64, m64
+, "cvttsd2si_r64_xmm" // CVTTSD2SI r64, xmm
+, "cvttss2si_r32_m32" // CVTTSS2SI r32, m32
+, "cvttss2si_r32_xmm" // CVTTSS2SI r32, xmm
+, "cvttss2si_r64_m32" // CVTTSS2SI r64, m32
+, "cvttss2si_r64_xmm" // CVTTSS2SI r64, xmm
 , "cwtd" // CWD 
 , "cwtl" // CWDE 
 , "decw_m16" // DEC m16
@@ -1299,7 +1299,6 @@
 , "movmskps_r32_xmm" // MOVMSKPS r32, xmm
 , "movmskps_r64_xmm" // MOVMSKPS r64, xmm
 , "movntdq_m128_xmm" // MOVNTDQ m128, xmm
-, "movntdq_m256_ymm" // MOVNTDQ m256, ymm
 , "movntdqa_xmm_m128" // MOVNTDQA xmm, m128
 , "movnti_m32_r32" // MOVNTI m32, r32
 , "movnti_m64_r64" // MOVNTI m64, r64
@@ -1768,7 +1767,7 @@
 , "popcntl_r32_r32" // POPCNT r32, r32
 , "popcntq_r64_m64" // POPCNT r64, m64
 , "popcntq_r64_r64" // POPCNT r64, r64
-, "popf" // POPF 
+, "popfw" // POPF 
 , "popfq" // POPFQ 
 , "por_mm_m64" // POR mm, m64
 , "por_mm_mm" // POR mm, mm
@@ -1926,7 +1925,7 @@
 , "pushw_r16_1" // PUSH r16
 , "pushq_r64" // PUSH r64
 , "pushq_r64_1" // PUSH r64
-, "pushf" // PUSHF 
+, "pushfw" // PUSHF 
 , "pushfq" // PUSHFQ 
 , "pushq_imm16" // PUSHQ imm16
 , "pushq_imm32" // PUSHQ imm32
@@ -2599,7 +2598,7 @@
 , "vblendvps_ymm_ymm_m256_ymm" // VBLENDVPS ymm, ymm, m256, ymm
 , "vblendvps_ymm_ymm_ymm_ymm" // VBLENDVPS ymm, ymm, ymm, ymm
 , "vbroadcastf128_ymm_m128" // VBROADCASTF128 ymm, m128
-, "vpbroadcasti128_ymm_m128" // VBROADCASTI128 ymm, m128
+, "vbroadcasti128_ymm_m128" // VBROADCASTI128 ymm, m128
 , "vbroadcastsd_ymm_m64" // VBROADCASTSD ymm, m64
 , "vbroadcastsd_ymm_xmm" // VBROADCASTSD ymm, xmm
 , "vbroadcastss_xmm_m32" // VBROADCASTSS xmm, m32
@@ -2625,14 +2624,14 @@
 , "vcvtdq2pd_xmm_m64" // VCVTDQ2PD xmm, m64
 , "vcvtdq2pd_xmm_xmm" // VCVTDQ2PD xmm, xmm
 , "vcvtdq2pd_ymm_m128" // VCVTDQ2PD ymm, m128
-, "vcvtdq2pd_ymm_ymm" // VCVTDQ2PD ymm, ymm
+, "vcvtdq2pd_ymm_xmm" // VCVTDQ2PD ymm, xmm
 , "vcvtdq2ps_xmm_m128" // VCVTDQ2PS xmm, m128
 , "vcvtdq2ps_xmm_xmm" // VCVTDQ2PS xmm, xmm
 , "vcvtdq2ps_ymm_m256" // VCVTDQ2PS ymm, m256
 , "vcvtdq2ps_ymm_ymm" // VCVTDQ2PS ymm, ymm
-, "vcvtpd2dqx_xmm_m128" // VCVTPD2DQ xmm, m128
+, "vcvtpd2dq_xmm_m128" // VCVTPD2DQ xmm, m128
 , "vcvtpd2dq_xmm_m256" // VCVTPD2DQ xmm, m256
-, "vcvtpd2dqx_xmm_xmm" // VCVTPD2DQ xmm, xmm
+, "vcvtpd2dq_xmm_xmm" // VCVTPD2DQ xmm, xmm
 , "vcvtpd2dq_xmm_ymm" // VCVTPD2DQ xmm, ymm
 , "vcvtpd2ps_xmm_m128" // VCVTPD2PS xmm, m128
 , "vcvtpd2ps_xmm_m256" // VCVTPD2PS xmm, m256
@@ -2654,10 +2653,10 @@
 , "vcvtps2ph_m64_xmm_imm8" // VCVTPS2PH m64, xmm, imm8
 , "vcvtps2ph_xmm_xmm_imm8" // VCVTPS2PH xmm, xmm, imm8
 , "vcvtps2ph_xmm_ymm_imm8" // VCVTPS2PH xmm, ymm, imm8
-, "vcvtsd2sil_r32_m64" // VCVTSD2SI r32, m64
-, "vcvtsd2sil_r32_xmm" // VCVTSD2SI r32, xmm
-, "vcvtsd2siq_r64_m64" // VCVTSD2SI r64, m64
-, "vcvtsd2siq_r64_xmm" // VCVTSD2SI r64, xmm
+, "vcvtsd2si_r32_m64" // VCVTSD2SI r32, m64
+, "vcvtsd2si_r32_xmm" // VCVTSD2SI r32, xmm
+, "vcvtsd2si_r64_m64" // VCVTSD2SI r64, m64
+, "vcvtsd2si_r64_xmm" // VCVTSD2SI r64, xmm
 , "vcvtsd2ss_xmm_xmm_m64" // VCVTSD2SS xmm, xmm, m64
 , "vcvtsd2ss_xmm_xmm_xmm" // VCVTSD2SS xmm, xmm, xmm
 , "vcvtsi2sdl_xmm_xmm_m32" // VCVTSI2SD xmm, xmm, m32
@@ -2670,10 +2669,10 @@
 , "vcvtsi2ssq_xmm_xmm_r64" // VCVTSI2SS xmm, xmm, r64
 , "vcvtss2sd_xmm_xmm_m32" // VCVTSS2SD xmm, xmm, m32
 , "vcvtss2sd_xmm_xmm_xmm" // VCVTSS2SD xmm, xmm, xmm
-, "vcvtss2sil_r32_m32" // VCVTSS2SI r32, m32
-, "vcvtss2sil_r32_xmm" // VCVTSS2SI r32, xmm
-, "vcvtss2siq_r64_m32" // VCVTSS2SI r64, m32
-, "vcvtss2siq_r64_xmm" // VCVTSS2SI r64, xmm
+, "vcvtss2si_r32_m32" // VCVTSS2SI r32, m32
+, "vcvtss2si_r32_xmm" // VCVTSS2SI r32, xmm
+, "vcvtss2si_r64_m32" // VCVTSS2SI r64, m32
+, "vcvtss2si_r64_xmm" // VCVTSS2SI r64, xmm
 , "vcvttpd2dq_xmm_m128" // VCVTTPD2DQ xmm, m128
 , "vcvttpd2dq_xmm_m256" // VCVTTPD2DQ xmm, m256
 , "vcvttpd2dq_xmm_xmm" // VCVTTPD2DQ xmm, xmm
@@ -2682,14 +2681,14 @@
 , "vcvttps2dq_xmm_xmm" // VCVTTPS2DQ xmm, xmm
 , "vcvttps2dq_ymm_m256" // VCVTTPS2DQ ymm, m256
 , "vcvttps2dq_ymm_ymm" // VCVTTPS2DQ ymm, ymm
-, "vcvttsd2sil_r32_m64" // VCVTTSD2SI r32, m64
-, "vcvttsd2sil_r32_xmm" // VCVTTSD2SI r32, xmm
-, "vcvttsd2siq_r64_m64" // VCVTTSD2SI r64, m64
-, "vcvttsd2siq_r64_xmm" // VCVTTSD2SI r64, xmm
-, "vcvttss2sil_r32_m32" // VCVTTSS2SI r32, m32
-, "vcvttss2sil_r32_xmm" // VCVTTSS2SI r32, xmm
-, "vcvttss2siq_r64_m32" // VCVTTSS2SI r64, m32
-, "vcvttss2siq_r64_xmm" // VCVTTSS2SI r64, xmm
+, "vcvttsd2si_r32_m64" // VCVTTSD2SI r32, m64
+, "vcvttsd2si_r32_xmm" // VCVTTSD2SI r32, xmm
+, "vcvttsd2si_r64_m64" // VCVTTSD2SI r64, m64
+, "vcvttsd2si_r64_xmm" // VCVTTSD2SI r64, xmm
+, "vcvttss2si_r32_m32" // VCVTTSS2SI r32, m32
+, "vcvttss2si_r32_xmm" // VCVTTSS2SI r32, xmm
+, "vcvttss2si_r64_m32" // VCVTTSS2SI r64, m32
+, "vcvttss2si_r64_xmm" // VCVTTSS2SI r64, xmm
 , "vdivpd_xmm_xmm_m128" // VDIVPD xmm, xmm, m128
 , "vdivpd_xmm_xmm_xmm" // VDIVPD xmm, xmm, xmm
 , "vdivpd_ymm_ymm_m256" // VDIVPD ymm, ymm, m256
@@ -3034,7 +3033,8 @@
 , "vmovmskps_r32_ymm" // VMOVMSKPS r32, ymm
 , "vmovmskps_r64_xmm" // VMOVMSKPS r64, xmm
 , "vmovmskps_r64_ymm" // VMOVMSKPS r64, ymm
-, "vmovntdqa_m128_xmm" // VMOVNTDQ m128, xmm
+, "vmovntdq_m128_xmm" // VMOVNTDQ m128, xmm
+, "vmovntdq_m256_ymm" // VMOVNTDQ m256, ymm
 , "vmovntdqa_xmm_m128" // VMOVNTDQA xmm, m128
 , "vmovntdqa_ymm_m256" // VMOVNTDQA ymm, m256
 , "vmovntpd_m128_xmm" // VMOVNTPD m128, xmm
@@ -3245,8 +3245,8 @@
 , "vpcmpgtd_ymm_ymm_ymm" // VPCMPGTD ymm, ymm, ymm
 , "vpcmpgtq_xmm_xmm_m128" // VPCMPGTQ xmm, xmm, m128
 , "vpcmpgtq_xmm_xmm_xmm" // VPCMPGTQ xmm, xmm, xmm
-, "vpvmpgtq_ymm_ymm_m256" // VPCMPGTQ ymm, ymm, m256
-, "vpvmpgtq_ymm_ymm_ymm" // VPCMPGTQ ymm, ymm, ymm
+, "vpcmpgtq_ymm_ymm_m256" // VPCMPGTQ ymm, ymm, m256
+, "vpcmpgtq_ymm_ymm_ymm" // VPCMPGTQ ymm, ymm, ymm
 , "vpcmpgtw_xmm_xmm_m128" // VPCMPGTW xmm, xmm, m128
 , "vpcmpgtw_xmm_xmm_xmm" // VPCMPGTW xmm, xmm, xmm
 , "vpcmpgtw_ymm_ymm_m256" // VPCMPGTW ymm, ymm, m256

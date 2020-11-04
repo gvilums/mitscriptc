@@ -1299,7 +1299,6 @@
 , {{Properties::none()+Property::MUST_WRITE_ZX,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVMSKPS r32, xmm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVMSKPS r64, xmm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVNTDQ m128, xmm
-, {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVNTDQ m256, ymm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVNTDQA xmm, m128
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVNTI m32, r32
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // MOVNTI m64, r64
@@ -2625,7 +2624,7 @@
 , {{Properties::none()+Property::MUST_WRITE_ZX,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PD xmm, m64
 , {{Properties::none()+Property::MUST_WRITE_ZX,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PD xmm, xmm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PD ymm, m128
-, {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PD ymm, ymm
+, {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PD ymm, xmm
 , {{Properties::none()+Property::MUST_WRITE_ZX,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PS xmm, m128
 , {{Properties::none()+Property::MUST_WRITE_ZX,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PS xmm, xmm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VCVTDQ2PS ymm, m256
@@ -3035,6 +3034,7 @@
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVMSKPS r64, xmm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVMSKPS r64, ymm
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVNTDQ m128, xmm
+, {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVNTDQ m256, ymm
 , {{Properties::none()+Property::MUST_WRITE_ZX,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVNTDQA xmm, m128
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVNTDQA ymm, m256
 , {{Properties::none()+Property::MUST_WRITE,Properties::none()+Property::MUST_READ,Properties::none(),Properties::none()}} // VMOVNTPD m128, xmm

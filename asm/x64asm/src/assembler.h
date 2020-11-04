@@ -77,7 +77,7 @@ public:
 
   /** Returns the number of bytes in the hex encoding of this instruction */
   size_t hex_size(const Instruction& instr) {
-    static Function f;
+    static thread_local Function f;
 
     const auto backup = fxn_;
     start(f);
@@ -142,6 +142,11 @@ public:
   /** Bind a label definition to the current assembler position. */
   void bind(Label label) {
     fxn_->label_defs_[label.val_] = fxn_->size();
+  }
+
+  /** Get a copy of the underlying function object */
+  const Function* get_fxn() {
+    return fxn_;
   }
 
   // void adc(const Al& arg0, const Imm8& arg1); ...

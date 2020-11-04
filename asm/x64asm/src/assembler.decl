@@ -3901,9 +3901,6 @@ void movmskps(const R64& arg0, const Xmm& arg1);
 /** Move double quadword from xmm to m128 using non-temporal hint. */
 void movntdq(const M128& arg0, const Xmm& arg1);
 
-/** Move packed integer values in ymm1 to m256 using non-temporal hint. */
-void movntdq(const M256& arg0, const Ymm& arg1);
-
 /** Move double quadword from m128 to xmm using non-temporal hint if WC memory type. */
 void movntdqa(const Xmm& arg0, const M128& arg1);
 
@@ -7880,7 +7877,7 @@ void vcvtdq2pd(const Xmm& arg0, const Xmm& arg1);
 void vcvtdq2pd(const Ymm& arg0, const M128& arg1);
 
 /** Convert four packed signed doubleword integers from ymm2/mem to four packed double-precision floating-point values in ymm1. */
-void vcvtdq2pd(const Ymm& arg0, const Ymm& arg1);
+void vcvtdq2pd(const Ymm& arg0, const Xmm& arg1);
 
 /** Convert four packed signed doubleword integers from xmm2/mem to four packed single-precision floating-point values in xmm1. */
 void vcvtdq2ps(const Xmm& arg0, const M128& arg1);
@@ -9108,6 +9105,9 @@ void vmovmskps(const R64& arg0, const Ymm& arg1);
 
 /** Move packed integer values in xmm1 to m128 using non-temporal hint. */
 void vmovntdq(const M128& arg0, const Xmm& arg1);
+
+/** Move packed integer values in ymm1 to m256 using non-temporal hint. */
+void vmovntdq(const M256& arg0, const Ymm& arg1);
 
 /** Move double quadword from m128 to xmm using non-temporal hint if WC memory type. */
 void vmovntdqa(const Xmm& arg0, const M128& arg1);
