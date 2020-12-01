@@ -48,13 +48,9 @@ int main() {
 
   // Example 2:
   // Compile a function that calls a previously assembled function.
-	uint64_t addr = (uint64_t)hello;
-	std::cout << addr << std::endl;
-	printf("address of function main() is :%p\n", hello); 
   Code c2 {
-    //{MOV_R64_IMM64, {rax, Imm64{f1}}},
-    //{CALL_R64, {rax}},
-		{CALL_FARPTR1664, {Imm64{addr}}},
+    {MOV_R64_IMM64, {rax, Imm64{f1}}},
+    {CALL_R64, {rax}},
     {RET}
   };
   const auto f2 = assm.assemble(c2).second;
