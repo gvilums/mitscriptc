@@ -31,7 +31,7 @@ Password: IwillgetanA
 To pull updates from this repository, go to your own repository, and run:
 
 ```sh
-git remote add upstream https://github.com/6S081/6818-fa20
+git remote add upstream git@github.com:mit-6818/6818-fa21.git
 ```
 
 Then, to update, you can run:
