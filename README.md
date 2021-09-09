@@ -38,5 +38,5 @@ Then, to update, you can run:
 
 ```
 git fetch upstream
-git merge upstream/master
+git merge upstream/main
 ```
