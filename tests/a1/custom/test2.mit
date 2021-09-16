@@ -1,0 +1,10 @@
+scanf(a);
+scanf(b);
+assert((a > 0) & (b > 0));
+if(b > a){swap(a,b);}
+while(!(b == 0)){
+	t = mod(a, b);
+	b = a;
+	a = t; 
+}
+print(b);

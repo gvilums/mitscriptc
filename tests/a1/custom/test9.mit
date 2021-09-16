@@ -1,0 +1,7 @@
+
+str = "H" + "e" + "llo World\n" - "\n";
+mistery = fun(){
+	mistery2 = fun(){return str;};
+	return mistery2;
+};
+print(mistery);

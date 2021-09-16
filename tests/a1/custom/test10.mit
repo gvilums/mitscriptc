@@ -1,0 +1,11 @@
+global y;
+y = 42;
+
+if(y == 42){
+	global x;
+	x = 78;
+}else{
+	if(true){
+		return y; 
+	}
+}

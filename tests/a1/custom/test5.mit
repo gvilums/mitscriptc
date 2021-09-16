@@ -1,0 +1,4 @@
+assert((!a & !b) == (!(a | b)));
+//some comment in the middle
+assert((!(!a)) == a);
+assert(P == NP);

@@ -1,0 +1,11 @@
+f = fun(x){
+	rs=!5;
+	while(x < 8){
+		rs = rs - 6;
+	}
+	return 42;
+};
+
+if(f(4, 5, 6)){
+	i = i + i;
+}	

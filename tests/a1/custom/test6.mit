@@ -1,0 +1,6 @@
+f = fun(){return "World\n";};
+g = fun(y){return "Hello " + y;};
+assert(g(f()) == "Hello World\n");
+print("No error!");
+
+ 

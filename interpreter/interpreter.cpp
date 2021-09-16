@@ -5,7 +5,7 @@
 #include "MITScript.h"
 #include "AST.h"
 
-Program* ParseProgram(antlr4::CommonTokenStream &tokens)
+AST::Program* ParseProgram(antlr4::CommonTokenStream &tokens)
 {
   // Call your parse here instead
   return nullptr;
@@ -38,7 +38,7 @@ int main(int argc, const char *argv[])
   // Load all tokens within the file to a buffer
   tokens.fill();
 
-  Program *program = ParseProgram(tokens);
+  AST::Program *program = ParseProgram(tokens);
 
   if (program == nullptr)
   {
