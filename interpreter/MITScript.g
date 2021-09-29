@@ -33,7 +33,7 @@ FUNCTION : 'fun' ;
 BOOLCONST : ('true' | 'false') ; // (????) parsing problems for trueNULLdsa ??
 NONECONST : 'None' ;
 NAME : [a-zA-Z_] [a-zA-Z0-9_]* ;
-STRCONST : '"' ~('"')* '"'; // (????)
+STRCONST : '"' (~('"'|'\\') | '\\n' | '\\t' | '\\"' | '\\\\')* '"'; // (????)
 
 // The rest of your lexical rules go here
 

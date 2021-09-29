@@ -4,12 +4,9 @@
 #include "antlr4-runtime.h"
 #include "MITScript.h"
 #include "AST.h"
-
-AST::Program* ParseProgram(antlr4::CommonTokenStream &tokens)
-{
-  // Call your parse here instead
-  return nullptr;
-}
+#include "Interpreter.h"
+#include "parsercode.cpp"
+#include <exception>
 
 int main(int argc, const char *argv[])
 {
@@ -35,31 +32,23 @@ int main(int argc, const char *argv[])
   MITScript lexer(&input);
   antlr4::CommonTokenStream tokens(&lexer);
 
-  // Load all tokens within the file to a buffer
   tokens.fill();
 
-  AST::Program *program = ParseProgram(tokens);
-
-  if (program == nullptr)
-  {
-    // Print error messages if you'd like
-    return 1;
+  AST::Program* program = Program(tokens);
+  if(!program){
+  	std::cout << "Parsing failed\n";
+  	return 1;
   }
-
-  // Cartoon of calling your interpreter
-  #if 0
+  	
+  Interpreter interpreter;
   
-	try {
-		Interpreter interp;
-		program->accept(interp);
-	}	
-	catch (InterpreterException& exception)
-	{
-    // Catch exception and show error message
-		std::cout << exception.message() << "\n";
-		return 1;
-	}
-  #endif
-
+  try {
+  	program->accept(interpreter);
+  } catch(exception& e){
+  	cout << e.what() << endl;
+  	return 1;
+  }
+ 
+  
   return 0;
 }

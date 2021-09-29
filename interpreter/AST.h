@@ -67,6 +67,15 @@ namespace AST {
 			virtual string tostring(){
 				return "expression";
 			}
+			virtual bool isFieldDereference(){
+				return false;
+			}
+			virtual bool isIndexExpression(){
+				return false;
+			}
+			virtual bool isStringConstant(){
+				return false;
+			}
 	};
 	
 	class BinaryExpression : Expression {
@@ -175,6 +184,9 @@ namespace AST {
 			virtual void accept(Visitor& v){
 				v.visit(*this);
 			}
+			bool isFieldDereference() override {
+				return true;
+			}
 	};
 	
 	class IndexExpression : Expression {
@@ -193,13 +205,17 @@ namespace AST {
 			virtual void accept(Visitor& v){
 				v.visit(*this);
 			}	
+			bool isIndexExpression() override {
+				return true;
+			}
 	};
 	
 	class Record : Expression {
 		public:
-			map<string, Expression*> dict;
+			vector<pair<string, Expression*>> dict;
+			
 			void addMap(string str, Expression* expr) {
-				dict[str] = expr;
+				dict.push_back({str, expr});
 			}
 			string tostring(){
 				string res = "{";
@@ -225,6 +241,9 @@ namespace AST {
 			virtual void accept(Visitor& v){
 				v.visit(*this);
 			}
+			int getVal(){
+				return stoi(val);
+			}
 	};
 	
 	class StringConstant : Expression {
@@ -239,6 +258,12 @@ namespace AST {
 			virtual void accept(Visitor& v){
 				v.visit(*this);
 			}
+			string getVal(){
+				return val;
+			}
+			bool isStringConstant() override {
+				return true;
+			}
 	};
 	
 	class BoolConstant : Expression {
@@ -252,6 +277,9 @@ namespace AST {
 			}
 			virtual void accept(Visitor& v){
 				v.visit(*this);
+			}
+			bool getVal(){
+				return val == "true";
 			}
 	};
 	
@@ -283,15 +311,15 @@ namespace AST {
 	class Return : Statement {
 		public:
 		AST::Expression* Expr;
-			string tostring(){
-				return "return " + Expr->tostring();
-			}
-			void addExpr(AST::Expression* expr) {
-				Expr = expr;
-			}
-			virtual void accept(Visitor& v){
-				v.visit(*this);
-			}
+		string tostring(){
+			return "return " + Expr->tostring();
+		}
+		void addExpr(AST::Expression* expr) {
+			Expr = expr;
+		}
+		virtual void accept(Visitor& v){
+			v.visit(*this);
+		}
 	};
 	
 	class Assignment : Statement {
