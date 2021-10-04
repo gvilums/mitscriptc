@@ -42,18 +42,18 @@ class Interpreter : public Visitor {
 		return rval_->toString();
 	}
 	
-	void print(AST::Expression* expr){
+	void print(AST::Expression* expr){ // predefined function
 		expr->accept(*((Visitor*) this));
 		cout << rval_->toString() << endl;
 	}
 	
-	void input(){
+	void input(){// predefined function
 		string str;
 		getline(cin, str);
 		rval_ = new String(str);
 	}	
 	
-	void intcast(AST::Expression* expr){
+	void intcast(AST::Expression* expr){// predefined function
 		expr->accept(*((Visitor*) this));
 		if (!rval_->isString()){
 			IllegalCastException e;
@@ -82,18 +82,18 @@ class Interpreter : public Visitor {
 		
 		vector<string> arg_names = fun->getArguments();
 		vector<Value*> val;
-		if (expr.arguments.size() != arg_names.size()){
+		if (expr.arguments.size() != arg_names.size()){ // check if arguments are the same
 			RuntimeException e;
 			throw e;
 		}
 		
-		if (fun == print_) 
+		if (fun == print_)  // check whether pointer matches with some predefined function
 			print(expr.arguments[0]);
 		else if (fun == input_)
 			input();
 		else if (fun == intcast_)
 			intcast(expr.arguments[0]);
-		else {
+		else { // otherwise proceed with default function call
 			Frame* frame = new Frame(fun->getFrame(), global_);
 			for(int i = 0; i < expr.arguments.size(); i++){
 				expr.arguments[i]->accept(*((Visitor*) this));
@@ -132,8 +132,8 @@ class Interpreter : public Visitor {
 		return_ = true;
 	}
 	
-	void visit(AST::Assignment& expr){
-		if (expr.Lhs->isStringConstant()){
+	void visit(AST::Assignment& expr){ // case distinction on LHS
+		if (expr.Lhs->isStringConstant()){ // case variable name
 			expr.Expr->accept(*((Visitor*) this));
 			Value* val = rval_;
 			string x = ((AST::StringConstant*) expr.Lhs)->getVal();
@@ -141,12 +141,12 @@ class Interpreter : public Visitor {
 			Frame* frame = stack_.top()->lookupWrite(x);
 			frame->insert(x, val);
 		}
-		else if (expr.Lhs->isFieldDereference()){
+		else if (expr.Lhs->isFieldDereference()){ // case field dereference
 			AST::FieldDereference* fd = (AST::FieldDereference*) expr.Lhs;
 			fd->baseexpr->accept(*((Visitor*) this));
 			Value* record = rval_;
 			
-			if (!record->isRecord()){
+			if (!record->isRecord()){ // check for right type
 				IllegalCastException e;
 				throw e;
 			}
@@ -156,12 +156,12 @@ class Interpreter : public Visitor {
 			
 			((Record*) record)->insert(fd->field, val);
 		}
-		else if (expr.Lhs->isIndexExpression()){
+		else if (expr.Lhs->isIndexExpression()){ // case index expression
 			AST::IndexExpression* ie = (AST::IndexExpression*) expr.Lhs;
 			ie->baseexpr->accept(*((Visitor*) this));
 			Value* record = rval_;
 				
-			if (!record->isRecord()){
+			if (!record->isRecord()){ // check for right type
 				IllegalCastException e;
 				throw e;
 			}
@@ -180,7 +180,7 @@ class Interpreter : public Visitor {
 		}
 	}
 	
-	void visit(AST::Program& expr){
+	void visit(AST::Program& expr){ // visit in order substatements, also check for returns
 		for(auto c : expr.children) {
 			c->accept(*((Visitor*) this));
 			if (return_)
@@ -188,7 +188,7 @@ class Interpreter : public Visitor {
 		}
 	}
 	
-	void visit(AST::Block& expr){
+	void visit(AST::Block& expr){ // visit in order substatements, also check for returns
 		for(auto c : expr.children) {
 			c->accept(*((Visitor*) this));
 			if (return_)
@@ -198,24 +198,22 @@ class Interpreter : public Visitor {
 	
 	void visit(AST::IfStatement& expr){
 		expr.Expr->accept(*((Visitor*) this));
-		Value* cond = rval_;
+		Value* cond = rval_; // evaulate boolean condition
 
-		if (!cond->isBoolean()){
+		if (!cond->isBoolean()){ // check for right type
 			IllegalCastException e;
 			throw e;
 		}
 		
 		if (((Boolean*) cond)->getValue())
 			expr.children[0]->accept(*((Visitor*) this));
-		else if(expr.children.size() > 1)
+		else if(expr.children.size() > 1) // check whether there is some else condition
 			expr.children[1]->accept(*((Visitor*) this));
 	}
 	
 	void visit(AST::WhileLoop& expr){
 		while(true){
-			if (return_)
-				break;
-			expr.Expr->accept(*((Visitor*) this));
+			expr.Expr->accept(*((Visitor*) this)); // evaluate condition
 			Value* cond = rval_;
 			
 
@@ -224,15 +222,17 @@ class Interpreter : public Visitor {
 				throw e;
 			}
 					
-			if (((Boolean*) cond)->getValue())
+			if (((Boolean*) cond)->getValue()) // if condition is true execute statement
 				expr.children[0]->accept(*((Visitor*) this));
 			else
 				break;
-			}
+			if (return_) // check for return statements
+				break;
+		}
 	}
 	
 	void visit(AST::BinaryExpression& expr){
-		if (expr.op == "-" || expr.op == "/" || expr.op == "*"){
+		if (expr.op == "-" || expr.op == "/" || expr.op == "*"){ // onyly defined for integers
 			expr.children[0]->accept(*((Visitor*) this));
 			if (!rval_->isInteger()){
 				IllegalCastException e;
@@ -249,13 +249,13 @@ class Interpreter : public Visitor {
 			Integer *t2;
 			t2 = (Integer*) rval_;
 			
-			if (expr.op == "/" && t2->getValue() == 0){
+			if (expr.op == "/" && t2->getValue() == 0){ // check for division by zero
 				IllegalArithmeticException e;
 				throw e;
 			}
 			
 			int newval;
-			if (expr.op == "-") newval = t1->getValue() - t2->getValue();
+			if (expr.op == "-") newval = t1->getValue() - t2->getValue(); // evaluate
 			if (expr.op == "*") newval = t1->getValue() * t2->getValue();
 			if (expr.op == "/") newval = t1->getValue() / t2->getValue();
 			rval_ = new Integer(newval);
@@ -266,17 +266,17 @@ class Interpreter : public Visitor {
 			expr.children[1]->accept(*((Visitor*) this));
 			Value *t2 = rval_;
 			
-			if (t1->isString() || t2->isString()){
+			if (t1->isString() || t2->isString()){ // either one of the two operands is a string
 				rval_ = new String(t1->toString() + t2->toString());
 			}
-			else if(t1->isInteger() && t2->isInteger())
+			else if(t1->isInteger() && t2->isInteger()) // or both are integers
 				rval_ = new Integer(((Integer*) t1)->getValue() + ((Integer*) t2)->getValue());
 			else{
 				IllegalCastException e;
 				throw e;
 			}
 		}
-		else if (expr.op == "<" || expr.op == "<=" || expr.op == ">" || expr.op == ">="){
+		else if (expr.op == "<" || expr.op == "<=" || expr.op == ">" || expr.op == ">="){ // defined for integers
 			expr.children[0]->accept(*((Visitor*) this));
 			if (!rval_->isInteger()){
 				IllegalCastException e;
@@ -301,7 +301,7 @@ class Interpreter : public Visitor {
 			
 			rval_ = new Boolean(newval);
 		}
-		else if (expr.op == "=="){
+		else if (expr.op == "=="){ // evaluated using isEqual, but first check whether they are of the same type
 			expr.children[0]->accept(*((Visitor*) this));
 			Value *t1 = rval_;
 			expr.children[1]->accept(*((Visitor*) this));
@@ -312,7 +312,7 @@ class Interpreter : public Visitor {
 			else 
 				rval_ = new Boolean(t1->isEqual(t2));
 		}
-		else if (expr.op == "|" || expr.op == "&"){
+		else if (expr.op == "|" || expr.op == "&"){ // only defined for integers
 			expr.children[0]->accept(*((Visitor*) this));
 			if (!rval_->isBoolean()){
 				IllegalCastException e;
@@ -338,7 +338,7 @@ class Interpreter : public Visitor {
 	}
 	
 	void visit(AST::UnaryExpression& expr){
-		if (expr.op == "!"){
+		if (expr.op == "!"){ // only defined for booleans
 			expr.children[0]->accept(*((Visitor*) this));
 			if (!rval_->isBoolean()){
 				IllegalCastException e;
@@ -346,7 +346,7 @@ class Interpreter : public Visitor {
 			}
 			rval_ = new Boolean(!((Boolean*) rval_)->getValue());
 		}
-		else if (expr.op == "-"){
+		else if (expr.op == "-"){ // only defined for integers
 			expr.children[0]->accept(*((Visitor*) this));
 			if (!rval_->isInteger()){
 				IllegalCastException e;
@@ -368,7 +368,7 @@ class Interpreter : public Visitor {
 			throw e;
 		}
 		
-		if (((Record*) record)->count(index->toString()))
+		if (((Record*) record)->count(index->toString())) // check if record is contained
 			rval_ = ((Record*) record)->get(index->toString());
 		else
 			rval_ = (Value*) none_;
@@ -404,7 +404,7 @@ class Interpreter : public Visitor {
 	
 	void visit(AST::StringConstant& expr){
 		string val = expr.getVal();
-		if (val[0] == '"') 
+		if (val[0] == '"') // in this case we are dealing with string constants
 			rval_ = new String(val.substr(1, val.size() - 2));
 		else {
 			Frame* frame = stack_.top()->lookupRead(val);
@@ -423,7 +423,7 @@ class Interpreter : public Visitor {
 	}
 	
 	void visit(AST::NoneConstant& expr){
-		rval_ = none_; // or new None?
+		rval_ = none_; // assign to predefined none
 	}
 	
 	void visit(AST::FunctionDeclaration& expr){

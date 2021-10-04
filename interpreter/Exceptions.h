@@ -1,5 +1,7 @@
 #include <exception>
 
+// file defining all possible exceptions
+
 class UninitializedVariableException : public exception{
 	virtual const char* what() const throw() {
 		return "UninitializedVariableException";

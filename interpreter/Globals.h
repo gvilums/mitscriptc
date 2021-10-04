@@ -16,7 +16,7 @@ public:
 		for(auto c : expr.children)
 			c->accept(*((Visitor*) this));
 	}
-	void visit(AST::Global& expr){
+	void visit(AST::Global& expr){ // add vaiable to globals
 		globals.push_back(expr.name);
 	}
 	void visit(AST::Return& expr){}

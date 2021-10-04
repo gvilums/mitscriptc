@@ -37,7 +37,7 @@ class Frame{
 };
 
 
-bool Value::isInteger(){
+bool Value::isInteger(){ // function to check to which subclass it belongs
 	return false;
 }	
 bool Value::isBoolean(){
@@ -78,7 +78,7 @@ class Integer : public Value{
 		void setValue(int v){
 			value = v;
 		}
-		void invert(){
+		void invert(){  // not used
 			value = -value;
 		}
 		bool isInteger() override{
@@ -107,7 +107,7 @@ class Boolean : public Value{
 		void setValue(bool v){
 			value = v;
 		}
-		void invert(){
+		void invert(){ // not used
 			value = !value;
 		}
 		bool isBoolean() override{
@@ -165,7 +165,7 @@ class Function : public Value{
 		bool isFunction() override{
 				return true;
 			}
-		bool isEqual(Value* other) override{
+		bool isEqual(Value* other) override{ // could change
 			if (other != this)
 				return false;
 			if (((Function*) other)->getBody() != this->block)

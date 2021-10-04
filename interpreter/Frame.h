@@ -5,6 +5,7 @@
 #include <string>
 #include "Value.h"
 
+// the declaration is in Value.h
 
 Frame::Frame() : parent(nullptr), global(nullptr){}
 
