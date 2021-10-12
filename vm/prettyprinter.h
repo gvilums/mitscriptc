@@ -11,7 +11,7 @@ class PrettyPrinter
     {
     }
 
-    void print(const Function &function, std::ostream &os)
+    void print(const struct Function &function, std::ostream &os)
     {
         print_indent(os) << "function\n";
 
@@ -380,3 +380,4 @@ class PrettyPrinter
   private:
     size_t indent_;
 };
+

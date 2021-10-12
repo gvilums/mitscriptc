@@ -1708,7 +1708,7 @@ yyreduce:
   case 11:
 #line 220 "bc-parser.yy"
 {
-	(yyval.constant) = new None();
+	(yyval.constant) = new Constant(None{});
 }
 #line 1714 "bc-parser.cpp"
     break;
@@ -1716,7 +1716,7 @@ yyreduce:
   case 12:
 #line 224 "bc-parser.yy"
 {
-	(yyval.constant) = new Boolean(true);
+	(yyval.constant) = new Constant(true);
 }
 #line 1722 "bc-parser.cpp"
     break;
@@ -1724,7 +1724,7 @@ yyreduce:
   case 13:
 #line 228 "bc-parser.yy"
 {
-	(yyval.constant) = new Boolean(false);
+	(yyval.constant) = new Constant(false);
 }
 #line 1730 "bc-parser.cpp"
     break;
@@ -1732,7 +1732,7 @@ yyreduce:
   case 14:
 #line 232 "bc-parser.yy"
 {
-	(yyval.constant) = new String(*(yyvsp[0].strconst));
+	(yyval.constant) = new Constant(*(yyvsp[0].strconst));
 
 	delete (yyvsp[0].strconst);
 }
@@ -1742,7 +1742,7 @@ yyreduce:
   case 15:
 #line 238 "bc-parser.yy"
 {
-	(yyval.constant) = new Integer{safe_cast((yyvsp[0].intconst))};
+	(yyval.constant) = new Constant{safe_cast((yyvsp[0].intconst))};
 }
 #line 1748 "bc-parser.cpp"
     break;
