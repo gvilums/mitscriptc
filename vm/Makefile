@@ -1,7 +1,7 @@
 all: bc-parser
 
 bc-parser: bc-parser.cpp bc-lexer.cpp bc-parser.cpp utils.cpp
-	g++ -g -std=c++17 bc-parser-driver.cpp bc-parser.cpp bc-lexer.cpp utils.cpp -o bc-parser
+	g++ -g -std=c++2a bc-parser.cpp bc-lexer.cpp utils.cpp compiler.cpp -o bc-parser
 
 bc-parser.cpp: bc-parser.yy
 	bison -Dapi.prefix={bc} --output=bc-parser.cpp --defines=bc-parser.h bc-parser.yy
