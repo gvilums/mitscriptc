@@ -218,25 +218,25 @@ T_ident
 Constant :
   T_none
 {
-	$$ = new None();
+	$$ = new Constant(None{});
 }
 | T_true
 {
-	$$ = new Boolean(true);
+	$$ = new Constant(true);
 }
 | T_false
 {
-	$$ = new Boolean(false);
+	$$ = new Constant(false);
 }
 |  T_string
 {
-	$$ = new String(*$1);
+	$$ = new Constant(*$1);
 
 	delete $1;
 }
 | T_int
 {
-	$$ = new Integer{safe_cast($1)};
+	$$ = new Constant{safe_cast($1)};
 }
 
 ConstantListStar:

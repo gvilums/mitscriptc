@@ -132,22 +132,12 @@ class PrettyPrinter
 
     void print(const Constant &constant, std::ostream &os)
     {
-        if (const auto *value = dynamic_cast<const None *>(&constant))
-        {
-            os << "None";
-        }
-        else if (const auto *value = dynamic_cast<const Boolean *>(&constant))
-        {
-            os << (value->value ? "true" : "false");
-        }
-        else if (const auto *value = dynamic_cast<const Integer *>(&constant))
-        {
-            os << value->value;
-        }
-        else if (const auto *value = dynamic_cast<const String *>(&constant))
-        {
-            os << '"' << unescape(value->value) << '"';
-        }
+        std::visit(overloaded {
+            [&](None arg) { os << "None"; },
+            [&](bool arg) { os << (arg ? "true" : "false"); },
+            [&](int arg) { os << arg; },
+            [&](const std::string& arg) { os << '"' << unescape(arg) << '"'; }
+        }, constant);
     }
 
     void print(const Instruction &inst, std::ostream &os)

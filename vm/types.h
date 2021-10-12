@@ -6,55 +6,13 @@
 #include <vector>
 #include <memory>
 #include <cstdint>
+#include <variant>
 
-struct Constant
-{
-    virtual ~Constant() { }
-};
+struct None {};
+using Constant = std::variant<None, int, bool, std::string>;
 
-struct None : public Constant
-{
-    virtual ~None() { }
-};
-
-struct Integer : public Constant
-{
-    Integer(int32_t value) 
-    : value(value)
-    {
-
-    }
-
-    int32_t value;
-
-    virtual ~Integer() { }
-};
-
-struct String : public Constant
-{
-    String(std::string value)
-    : value(value)
-    {
-
-    }
-
-    std::string value;
-
-    virtual ~String() { }
-};
-
-struct Boolean : public Constant
-{
-    Boolean(bool value) 
-    : value(value)
-    {
-
-    }
-
-    bool value;
-
-    virtual ~Boolean() { }
-};
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 struct Function 
 {
