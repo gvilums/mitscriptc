@@ -62,7 +62,7 @@ class PrettyPrinter
                     os << ", ";
                 }
 
-                print(*function.constants_[i], os);
+                print(function.constants_[i], os);
             }
         }
 

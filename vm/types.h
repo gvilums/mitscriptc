@@ -20,7 +20,7 @@ struct Function
     std::vector<Function *> functions_;
  
     // List of constants used by the instructions within this function (but not nested functions)
-    std::vector<Constant *> constants_;
+    std::vector<Constant> constants_;
 
     // The number of parameters to the function
     uint32_t parameter_count_;
