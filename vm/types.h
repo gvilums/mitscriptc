@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <variant>
 
-struct None {};
+using None = std::monostate;
 using Constant = std::variant<None, int, bool, std::string>;
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
