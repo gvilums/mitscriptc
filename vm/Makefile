@@ -3,9 +3,6 @@ all: interpreter
 interpreter: MITScriptLexer.cpp MITScriptParser.cpp interpreter.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
 	g++-11 -g -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp interpreter.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o interpreter 
 
-bc-parser: bc-parser.cpp bc-lexer.cpp bc-parser.cpp utils.cpp
-	g++-11 -g -std=c++17 bc-parser.cpp bc-lexer.cpp utils.cpp bc-parser-driver.cpp -o bc-parser
-
 bc-parser.cpp: bc-parser.yy
 	bison -Dapi.prefix={bc} --output=bc-parser.cpp --defines=bc-parser.h bc-parser.yy
 
