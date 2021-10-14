@@ -80,6 +80,7 @@ bool VM::step() {
         throw std::string{"instruction pointer overran instruction list"};
     }
     Instruction instr = fn->instructions[frame->iptr];
+    // std::cout << (int)instr.operation << std::endl;
 
     if (instr.operation == Operation::LoadConst) {
         ProgVal v =
