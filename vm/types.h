@@ -8,7 +8,8 @@
 #include <cstdint>
 #include <variant>
 
-struct None {};
+// struct None {};
+using None = std::monostate;
 using Constant = std::variant<None, int, bool, std::string>;
 
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
@@ -20,7 +21,7 @@ struct Function
     std::vector<Function *> functions_;
  
     // List of constants used by the instructions within this function (but not nested functions)
-    std::vector<Constant *> constants_;
+    std::vector<Constant> constants_;
 
     // The number of parameters to the function
     uint32_t parameter_count_;

@@ -3,6 +3,7 @@ f = fun(y)
 {
   g = fun(z)
   {
-     return x + y + z;
+	a = fun(){return y;};	
+     return x + z;
   };
 };
