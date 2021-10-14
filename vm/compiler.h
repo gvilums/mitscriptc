@@ -328,6 +328,13 @@ public:
 				return;
 			}
 			
+			it = find(rfun_->local_reference_vars_.begin(), rfun_->local_reference_vars_.end(), val);
+			if (it != rfun_->local_reference_vars_.end()) {
+				rfun_->instructions.push_back(Instruction(Operation::PushReference, int(it - rfun_->local_reference_vars_.begin())));
+				rfun_->instructions.push_back(Instruction(Operation::LoadReference, std::nullopt));
+				return;
+			}
+				
 			it = find(rfun_->local_vars_.begin(), rfun_->local_vars_.end(), val);
 			rfun_->instructions.push_back(Instruction(Operation::LoadLocal, int(it - rfun_->local_vars_.begin())));
 		}
