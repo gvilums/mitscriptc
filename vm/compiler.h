@@ -184,12 +184,19 @@ public:
 		
 		for (auto s : expr.arguments) {
 			// if (count(glob_var.begin(), glob_var.end(), s)) continue;
+			std::cout << s << " ";
 			rfun_->local_vars_.push_back(s);
 			if (count(nb_var.begin(), nb_var.end(), s))	
 				rfun_->local_reference_vars_.push_back(s);
 			if (globals_.count(s))
 				globals_.erase(s);
 		}
+		std::cout << std::endl;
+		
+		for (auto s : nb_var)
+			std::cout << s << ", ";
+		std::cout << std::endl;
+		
 		for (auto s : ass_var) {
 			if (count(glob_var.begin(), glob_var.end(), s)) continue;
 			if (count(rfun_->local_vars_.begin(), rfun_->local_vars_.end(), s)) continue;

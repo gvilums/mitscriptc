@@ -46,11 +46,13 @@ public:
 	}
 	
 	void visit(AST::IfStatement& expr){
+		expr.Expr->accept(*((Visitor*) this));
 		for(auto c : expr.children)
 			c->accept(*((Visitor*) this));
 	}
 	
 	void visit(AST::WhileLoop& expr){
+		expr.Expr->accept(*((Visitor*) this));
 		for(auto c : expr.children)
 			c->accept(*((Visitor*) this));
 	}
@@ -79,12 +81,14 @@ public:
 		vector<string> var = assigns.getVariables();
 		
 		for (auto s : fv) {
+			std::cout << s << " : ";
 			if (count(glob.begin(), glob.end(), s)) continue;	
 			if (count(var.begin(), var.end(), s)) continue;
 			if (count(expr.arguments.begin(), expr.arguments.end(), s)) continue;
 			nb_variables.push_back(s);
 			variables.push_back(s);
 		}
+		std::cout << std::endl;
 	}
 	
 	void visit(AST::Call& expr){
