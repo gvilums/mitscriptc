@@ -309,7 +309,7 @@ public:
 		string val = expr.getVal();
 		if (val[0] == '"') {// in this case we are dealing with string constants
 			rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
-			rfun_->constants_.push_back(expr.getVal());
+			rfun_->constants_.push_back(val.substr(1, val.size() - 2));
 		} else {
 			auto it = find(rfun_->names_.begin(), rfun_->names_.end(), val);
 			if (it != rfun_->names_.end()) {
