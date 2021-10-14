@@ -10,25 +10,28 @@ ProgVal value_from_constant(Constant c) {
 }
 
 bool value_eq(ProgVal l, ProgVal r) {
-    return std::visit(overloaded{
-        [](None, None) -> bool { return true; },
-        [](bool l, bool r) -> bool { return l == r; },
-        [](int x, int y) -> bool { return x == y; },
-        [](const std::string& l, const std::string& r) -> bool { return l == r; },
-        [](RecordCell lrec, RecordCell rrec) -> bool {
-            auto& l = *lrec.internal;
-            auto& r = *rrec.internal;
-            auto l_iter = l.cbegin();
-            auto r_iter = r.cbegin();
-            while (l_iter != l.cend() && r_iter != r.cend()) {
-                if (l_iter->first != r_iter->first || !value_eq(l_iter->second, r_iter->second)) {
-                    return false;
-                }
-            }
-            return l_iter == l.cend() && r_iter == r.cend();
-        },
-        [](auto x, auto y) -> bool { return false; }
-    }, l, r);
+    return std::visit(
+        overloaded{[](None, None) -> bool { return true; },
+                   [](bool l, bool r) -> bool { return l == r; },
+                   [](int x, int y) -> bool { return x == y; },
+                   [](const std::string& l, const std::string& r) -> bool {
+                       return l == r;
+                   },
+                   [](RecordCell lrec, RecordCell rrec) -> bool {
+                       auto& l = *lrec.internal;
+                       auto& r = *rrec.internal;
+                       auto l_iter = l.cbegin();
+                       auto r_iter = r.cbegin();
+                       while (l_iter != l.cend() && r_iter != r.cend()) {
+                           if (l_iter->first != r_iter->first ||
+                               !value_eq(l_iter->second, r_iter->second)) {
+                               return false;
+                           }
+                       }
+                       return l_iter == l.cend() && r_iter == r.cend();
+                   },
+                   [](auto x, auto y) -> bool { return false; }},
+        l, r);
 }
 
 std::string value_to_string(ProgVal val) {

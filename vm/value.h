@@ -9,16 +9,11 @@ struct RecordCell;
 struct RefCell;
 struct ClosureRef;
 
-using ProgVal = std::variant<None, int, bool, std::string, RecordCell, ClosureRef>;
+using ProgVal =
+    std::variant<None, int, bool, std::string, RecordCell, ClosureRef>;
 using StackVal = std::variant<ProgVal, RefCell, struct Function*>;
 
-
-enum class FnType {
-    DEFAULT,
-    PRINT,
-    INPUT,
-    INTCAST
-};
+enum class FnType { DEFAULT, PRINT, INPUT, INTCAST };
 
 struct RecordCell {
     // pointer to hashmap holding record state
@@ -36,9 +31,8 @@ struct Closure {
 };
 
 struct ClosureRef {
-	Closure* closure;
+    Closure* closure;
 };
-
 
 ProgVal value_from_constant(Constant c);
 std::string value_to_string(ProgVal v);
