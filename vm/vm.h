@@ -18,6 +18,7 @@ class VM {
         std::vector<RefCell> refs;
         size_t iptr;
 
+        // TODO implement binding references to locals if they have same name
         StackFrame(struct Function* fn,
                    std::vector<ProgVal>&& params,
                    const std::vector<RefCell>& free_vars) {
