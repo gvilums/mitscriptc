@@ -1,3 +1,10 @@
-x = 7;
-y = "hello \world";
-x = 8;
+f = fun(x){
+	global x;
+	x = 4;
+	g = fun(){
+		return x;	
+	};
+	print(g());
+};
+a = f(2);
+print(x);

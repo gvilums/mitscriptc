@@ -27,6 +27,16 @@ AST::Expression* LHS(antlr4::CommonTokenStream& tokens);
 AST::Call* Call(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs);
 AST::Record* Record(antlr4::CommonTokenStream& tokens);
 
+AST::Program* parse(std::ifstream &file) {
+	antlr4::ANTLRInputStream input(file);
+  	MITScript lexer(&input);
+  	antlr4::CommonTokenStream tokens(&lexer);
+
+  	tokens.fill();
+
+  	return Program(tokens);
+}
+
 AST::Program* Program(antlr4::CommonTokenStream& tokens) {
 	AST::Program* Prog = new AST::Program;
 	antlr4::Token* token = tokens.get(tokens.index());
