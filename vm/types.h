@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <variant>
 
-// struct None {};
 using None = std::monostate;
 using Constant = std::variant<None, int, bool, std::string>;
 
