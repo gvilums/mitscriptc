@@ -27,6 +27,8 @@ bool value_eq(ProgVal l, ProgVal r) {
                                !value_eq(l_iter->second, r_iter->second)) {
                                return false;
                            }
+                           l_iter++;
+                           r_iter++;
                        }
                        return l_iter == l.cend() && r_iter == r.cend();
                    },

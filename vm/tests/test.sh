@@ -29,29 +29,29 @@ for filename in public/good*.mit; do
     TOTAL=$((TOTAL+1))
     rm -f tmp.out
 done
-for filename in personal/*.mit; do
-    echo $filename
-    timeout $TIMEOUT $INTERPRETER -s $filename > tmp.out
-    CODE=$?
-    if diff tmp.out public/$(basename $filename).out; then
-        COUNT=$((COUNT+1))
-    else
-        echo "Fail: $(basename $filename) (exit code $CODE)"
-    fi
-    TOTAL=$((TOTAL+1))
-    rm -f tmp.out
-done
-for filename in new/*.mit; do
-    echo $filename
-    timeout $TIMEOUT $INTERPRETER -s $filename > tmp.out
-    CODE=$?
-    if diff tmp.out public/$(basename $filename).out; then
-        COUNT=$((COUNT+1))
-    else
-        echo "Fail: $(basename $filename) (exit code $CODE)"
-    fi
-    TOTAL=$((TOTAL+1))
-    rm -f tmp.out
-done
+# for filename in personal/*.mit; do
+#     echo $filename
+#     timeout $TIMEOUT $INTERPRETER -s $filename > tmp.out
+#     CODE=$?
+#     if [$CODE -eq 1]; then
+#         echo "Fail: $(basename $filename) (exit code $CODE)"
+#     else
+#         COUNT=$((COUNT+1))
+#     fi
+#     TOTAL=$((TOTAL+1))
+#     rm -f tmp.out
+# done
+# for filename in new/*.mit; do
+#     echo $filename
+#     timeout $TIMEOUT $INTERPRETER -s $filename > tmp.out
+#     CODE=$?
+#     if diff tmp.out public/$(basename $filename).out; then
+#         COUNT=$((COUNT+1))
+#     else
+#         echo "Fail: $(basename $filename) (exit code $CODE)"
+#     fi
+#     TOTAL=$((TOTAL+1))
+#     rm -f tmp.out
+# done
 
 echo "Passed $COUNT out of $TOTAL tests"
