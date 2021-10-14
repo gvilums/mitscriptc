@@ -42,6 +42,7 @@ public:
 	
 	void visit(AST::Assignment& expr){
 		expr.Expr->accept(*((Visitor*) this));
+		expr.Lhs->accept(*((Visitor*) this));
 	}
 	
 	void visit(AST::IfStatement& expr){
