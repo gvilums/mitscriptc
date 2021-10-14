@@ -168,6 +168,7 @@ public:
 			if (count(expr.arguments.begin(), expr.arguments.end(), s)) continue;
 			if (count(ass_var.begin(), ass_var.end(), s)) continue;
 			
+			
 			if (globals_.count(s))
 				rfun_->names_.push_back(s); 
 		}
@@ -199,8 +200,11 @@ public:
 				globals_.erase(s);
 		}
 		
-		for (auto s : glob_var)
+		for (auto s : glob_var) {
 			globals_.insert(s);
+			if (!count(rfun_->names_.begin(), rfun_->names_.end(), s))
+				rfun_->names_.push_back(s); 
+		}
 		
 		// finding local decl
 		
