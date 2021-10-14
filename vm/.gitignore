@@ -15,3 +15,5 @@ MITScript.cpp
 MITScript.h
 MITScript.interp
 MITScript.tokens
+
+tests/tmp.out
