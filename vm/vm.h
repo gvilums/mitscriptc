@@ -24,6 +24,8 @@ private:
             this->ctx = fn;
             this->iptr = 0;
             this->locals = params;
+            this->refs = std::vector<RefCell>();
+            this->opstack = std::vector<StackVal>();
             for (size_t i = 0; i < fn->local_vars_.size() - nparams; ++i) {
                 this->locals.push_back(None{});
             }
@@ -38,15 +40,18 @@ private:
         StackFrame(struct Function* fn) {
             this->ctx = fn;
             this->iptr = 0;
+            this->refs = std::vector<RefCell>();
+            this->locals = std::vector<ProgVal>();
+            this->opstack = std::vector<StackVal>();
         }
     };
 
-    struct Function source;
+    struct Function* source;
     std::vector<StackFrame> callstack;
     std::map<std::string, ProgVal> globals;
 
 public:
-    VM(struct Function&& prog);
+    VM(struct Function* prog);
     VM(const VM&) = delete;
     VM& operator=(const VM&) = delete;
 

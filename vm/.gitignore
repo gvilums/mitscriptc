@@ -2,3 +2,16 @@ bc-lexer.*
 bc-parser*
 vm/vm_test
 interpreter
+compilertest
+vmtest
+vgout.txt
+
+bc-lexer.h
+bc-lexer.cpp
+bc-parser.h
+bc-parser.cpp
+
+MITScript.cpp
+MITScript.h
+MITScript.interp
+MITScript.tokens
