@@ -147,6 +147,7 @@ public:
 		
 		// finding local decl
 		
+		
 		FreeVariables freeVar;
 		expr.block->accept(freeVar);
 		vector<string> free_var = freeVar.getFreeVariables();
@@ -160,6 +161,7 @@ public:
 		Globals globals;
 		expr.block->accept(globals);
 		vector<string> glob_var = globals.getGlobals();
+		
 		
 		for (auto s : cur_var) {
 			if (count(glob_var.begin(), glob_var.end(), s)) continue;
@@ -180,7 +182,7 @@ public:
 		}
 		
 		for (auto s : expr.arguments) {
-			if (count(glob_var.begin(), glob_var.end(), s)) continue;
+			// if (count(glob_var.begin(), glob_var.end(), s)) continue;
 			rfun_->local_vars_.push_back(s);
 			if (count(nb_var.begin(), nb_var.end(), s))	
 				rfun_->local_reference_vars_.push_back(s);

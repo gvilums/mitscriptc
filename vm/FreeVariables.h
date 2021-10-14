@@ -87,6 +87,7 @@ public:
 	}
 	
 	void visit(AST::Call& expr){
+		expr.expr->accept(*((Visitor*) this));
 		for (auto c : expr.arguments)
 			c->accept(*((Visitor*) this));
 	}
