@@ -18,7 +18,14 @@ private:
 public:	
 	Compiler(){
 		rfun_ = (struct Function*) malloc(sizeof(struct Function));
+		rfun_->names_.push_back("print");
+		rfun_->names_.push_back("intcast");
+		rfun_->names_.push_back("input");
+		globals_.insert("print");
+		globals_.insert("intcast");
+		globals_.insert("input");
 		global_scope_ = true;
+		
 	}
 
 	struct Function* get_function(){
@@ -26,7 +33,7 @@ public:
 	}
 
 	void visit(AST::Program& expr){
-		for(auto c : expr.children)
+		for(auto c : expr.children) 
 			c->accept(*((Visitor*) this));
 	}
 	
