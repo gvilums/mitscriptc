@@ -1,6 +1,6 @@
 #include "value.h"
 
-#include "../types.h"
+#include "types.h"
 
 #include <string>
 #include <variant>

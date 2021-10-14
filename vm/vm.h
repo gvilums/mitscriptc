@@ -5,6 +5,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <algorithm>
 
 #include "types.h"
 #include "value.h"
@@ -33,6 +34,20 @@ class VM {
             }
             for (size_t i = 0; i < fn->local_reference_vars_.size(); ++i) {
                 ProgVal* ptr = new ProgVal();
+                std::string name = fn->local_reference_vars_.at(i);
+                int j = -1;
+                for (size_t k = 0; k < fn->local_vars_.size(); ++k) {
+                    if (fn->local_vars_.at(k) == name) {
+                        j = k;
+                        break;
+                    }
+                }
+                // a local ref var is also a local var
+                if (j != -1) {
+                    *ptr = this->locals.at(i);
+                } else {
+                    *ptr = None{};
+                }
                 this->refs.push_back(RefCell{.ref = ptr});
             }
             for (size_t i = 0; i < free_vars.size(); ++i) {

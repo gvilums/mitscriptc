@@ -1,6 +1,7 @@
 #include "vm.h"
 
 #include <iostream>
+#include <algorithm>
 
 #include "instructions.h"
 #include "types.h"
@@ -8,10 +9,13 @@
 
 ProgVal get_unary_operand(std::vector<StackVal>& stack) {
     if (stack.empty()) {
-        throw std::string{"empty stack for unary operation"};
+        throw std::string{"error: empty stack for unary operation"};
     }
     StackVal operand = stack.back();
     stack.pop_back();
+    // if (!std::holds_alternative<ProgVal>(operand)) {
+    //     throw std::string{"error: expected program variable"};
+    // }
     return std::get<ProgVal>(operand);
 }
 
@@ -97,6 +101,10 @@ bool VM::step() {
             throw std::string{
                 "error: trying to load reference from empty stack"};
         }
+        // if (!std::holds_alternative<RefCell>(frame->opstack.back())) {
+        //     throw std::string{
+        //         "error: stack must hold reference when executing LoadRef"};
+        // }
         RefCell ref_cell = std::get<RefCell>(frame->opstack.back());
         frame->opstack.pop_back();
         frame->opstack.push_back(*ref_cell.ref);
@@ -116,6 +124,10 @@ bool VM::step() {
             throw std::string{
                 "error: trying to store to reference with stack of size 1"};
         }
+        // if (!std::holds_alternative<RefCell>(frame->opstack.back())) {
+        //     throw std::string{
+        //         "error: stack must hold reference when executing StoreRef"};
+        // }
         RefCell ref_cell = std::get<RefCell>(frame->opstack.back());
         frame->opstack.pop_back();
         *ref_cell.ref = val;
@@ -126,6 +138,9 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::Neg) {
         auto val = get_unary_operand(frame->opstack);
+        // if (!std::holds_alternative<int>(frame->opstack.back())) {
+        //     throw std::string{"error: stack must hold int when executing Neg"};
+        // }
         frame->opstack.push_back(-std::get<int>(val));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Add) {
@@ -147,14 +162,26 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::Sub) {
         auto [x, y] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<int>(x) ||
+        //     !std::holds_alternative<int>(y)) {
+        //     throw std::string{"error: stack must hold ints executing Sub"};
+        // }
         frame->opstack.push_back(std::get<int>(x) - std::get<int>(y));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Mul) {
         auto [x, y] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<int>(x) ||
+        //     !std::holds_alternative<int>(y)) {
+        //     throw std::string{"error: stack must hold ints executing Mul"};
+        // }
         frame->opstack.push_back(std::get<int>(x) * std::get<int>(y));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Div) {
         auto [x, y] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<int>(x) ||
+        //     !std::holds_alternative<int>(y)) {
+        //     throw std::string{"error: stack must hold ints when executing Div"};
+        // }
         int divisor = std::get<int>(y);
         if (divisor == 0) {
             throw std::string{"error: division by zero"};
@@ -163,26 +190,50 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::Gt) {
         auto [l, r] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<int>(l) ||
+        //     !std::holds_alternative<int>(r)) {
+        //     throw std::string{"error: stack must hold ints when executing Gt"};
+        // }
         frame->opstack.push_back(std::get<int>(l) > std::get<int>(r));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Geq) {
         auto [l, r] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<int>(l) ||
+        //     !std::holds_alternative<int>(r)) {
+        //     throw std::string{"error: stack must hold ints when executing Geq"};
+        // }
         frame->opstack.push_back(std::get<int>(l) >= std::get<int>(r));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Eq) {
         auto [l, r] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<int>(l) ||
+        //     !std::holds_alternative<int>(r)) {
+        //     throw std::string{"error: stack must hold ints when executing Or"};
+        // }
         frame->opstack.push_back(value_eq(l, r));
         frame->iptr += 1;
     } else if (instr.operation == Operation::And) {
         auto [l, r] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<bool>(l) ||
+        //     !std::holds_alternative<bool>(r)) {
+        //     throw std::string{
+        //         "error: stack must hold bools when executing And"};
+        // }
         frame->opstack.push_back(std::get<bool>(l) && std::get<bool>(r));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Or) {
         auto [l, r] = get_bin_operands(frame->opstack);
+        // if (!std::holds_alternative<bool>(l) ||
+        //     !std::holds_alternative<bool>(r)) {
+        //     throw std::string{"error: stack must hold bools when executing Or"};
+        // }
         frame->opstack.push_back(std::get<bool>(l) || std::get<bool>(r));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Not) {
         auto val = get_unary_operand(frame->opstack);
+        // if (!std::holds_alternative<bool>(val)) {
+        //     throw std::string{"error: stack must hold bool when executing neg"};
+        // }
         frame->opstack.push_back(!std::get<bool>(val));
         frame->iptr += 1;
     } else if (instr.operation == Operation::AllocClosure) {
@@ -193,9 +244,16 @@ bool VM::step() {
         }
         std::vector<RefCell> refs;
         for (size_t i = 0; i < m; ++i) {
+            // if (!std::holds_alternative<RefCell>(frame->opstack.back())) {
+            //     throw std::string{
+            //         "error: arguments for AllocClosure must be references"};
+            // }
             refs.push_back(std::get<RefCell>(frame->opstack.back()));
             frame->opstack.pop_back();
         }
+        // if (!std::holds_alternative<struct Function*>(frame->opstack.back())) {
+        //     throw std::string{"error: expected Function* for AllocClosure"};
+        // }
         struct Function* fn = std::get<struct Function*>(frame->opstack.back());
         frame->opstack.pop_back();
 
@@ -218,8 +276,13 @@ bool VM::step() {
         for (size_t i = 0; i < m; ++i) {
             args.push_back(get_unary_operand(frame->opstack));
         }
-        ClosureRef ref =
-            std::get<ClosureRef>(get_unary_operand(frame->opstack));
+        std::reverse(args.begin(), args.end());
+        ProgVal val = get_unary_operand(frame->opstack);
+        // if (!std::holds_alternative<ClosureRef>(val)) {
+        //     throw std::string{
+        //         "error: expected closure reference when calling closure"};
+        // }
+        ClosureRef ref = std::get<ClosureRef>(val);
         Closure& c = *ref.closure;
         frame->iptr += 1;
         if (c.type == FnType::DEFAULT) {
