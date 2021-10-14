@@ -223,6 +223,18 @@ public:
 		expr.children[0]->accept(*((Visitor*) this));
 		expr.children[1]->accept(*((Visitor*) this));
 		
+		if (expr.op == "<") {
+			rfun_->instructions.push_back(Instruction(Operation::Geq, std::nullopt));
+			rfun_->instructions.push_back(Instruction(Operation::Not, std::nullopt));
+			return;
+		}
+		
+		if (expr.op == "<=") {
+			rfun_->instructions.push_back(Instruction(Operation::Gt, std::nullopt));
+			rfun_->instructions.push_back(Instruction(Operation::Not, std::nullopt));
+			return;
+		}
+		
 		Operation op;
 		if (expr.op == "+") op = Operation::Add;
 		else if (expr.op == "-") op = Operation::Sub;

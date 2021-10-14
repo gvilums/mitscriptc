@@ -1,9 +1,4 @@
 x = 1;
-f = fun(y)
-{
-  g = fun(z)
-  {
-	a = fun(){return y;};	
-     return x + z;
-  };
-};
+while(x < 5) {
+	x = x + 1;
+}

@@ -142,7 +142,6 @@ class PrettyPrinter
 
     void print(const Instruction &inst, std::ostream &os)
     {
-
         switch (inst.operation)
         {
         case Operation::LoadConst:
