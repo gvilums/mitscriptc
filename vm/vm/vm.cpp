@@ -1,5 +1,7 @@
 #include "vm.h"
 
+#include <iostream>
+
 #include "value.h"
 #include "../instructions.h"
 #include "../types.h"
@@ -33,7 +35,14 @@ std::pair<ProgVal, ProgVal> get_bin_operands(std::vector<StackVal>& stack) {
 }
 
 VM::VM(Function&& prog) : source(std::move(prog)) {
-
+    this->callstack.push_back(StackFrame(&this->source));
+    
+    ProgVal* print_closure = new ProgVal;
+    *print_closure = Closure{.type=FnType::PRINT, .fn=nullptr};
+    ProgVal* input_closure = new ProgVal;
+    *input_closure = Closure{.type=FnType::INPUT, .fn=nullptr};
+    ProgVal* intcast_closure = new ProgVal;
+    *intcast_closure = Closure{.type=FnType::INTCAST, .fn=nullptr};
 }
 
 void VM::exec() {
@@ -83,7 +92,7 @@ bool VM::step() {
     } else if (instr.operation == Operation::StoreReference) {
         ProgVal val = get_unary_operand(frame.opstack);
         if (frame.opstack.empty()) {
-            throw std::string{"error: trying to store to reference with with stack of size 1"};
+            throw std::string{"error: trying to store to reference with stack of size 1"};
         }
         RefCell ref_cell = std::get<RefCell>(frame.opstack.back());
         frame.opstack.pop_back();
@@ -91,15 +100,7 @@ bool VM::step() {
         frame.iptr += 1;
     } else if (instr.operation == Operation::PushReference) {
         int32_t i = instr.operand0.value();
-        size_t n_refvars = frame.local_ref_vars.size();
-        size_t n_freevars = frame.free_vars.size();
-        if (i < frame.local_ref_vars.size()) {
-            frame.opstack.push_back(frame.local_ref_vars[i]);
-        } else if (i < n_refvars + n_freevars) {
-            frame.opstack.push_back(frame.free_vars[i - n_refvars]);
-        } else {
-            throw std::string{"error: index for pushing ref out of bounds"};
-        }
+        frame.opstack.push_back(frame.refs[i]);
         frame.iptr += 1;
     } else if (instr.operation == Operation::Neg) {
         auto val = get_unary_operand(frame.opstack);
@@ -169,20 +170,71 @@ bool VM::step() {
         frame.opstack.pop_back();
 
         ProgVal* closure = new ProgVal;
-        *closure = Closure{.fn=fn, .refs=std::move(refs)};
+        *closure = Closure{.type=FnType::DEFAULT, .fn=fn, .refs=std::move(refs)};
         frame.opstack.push_back(RefCell{.ref=closure});
+        frame.iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {
-        
+        auto* map = new std::map<std::string, ProgVal>();
+        frame.opstack.push_back(Record{.internal=map});
+        frame.iptr += 1;
     } else if (instr.operation == Operation::Call) {
-
+        int32_t m = instr.operand0.value();
+        if (frame.opstack.size() <= m) {
+            throw std::string{"error: not enough stack arguments while calling closure"};
+        }
+        std::vector<ProgVal> args;
+        for (size_t i = 0; i < m; ++i) {
+            args.push_back(get_unary_operand(frame.opstack));
+        }
+        RefCell ref_cell = std::get<RefCell>(frame.opstack.back());
+        frame.opstack.pop_back();
+        Closure& c = std::get<Closure>(*ref_cell.ref);
+        if (c.type == FnType::DEFAULT) {
+            this->callstack.push_back(StackFrame(c.fn, std::move(args), c.refs));
+        } else if (c.type == FnType::PRINT) {
+            if (args.size() != 1) {
+                throw std::string{"error: print requires exactly one argument"};
+            }
+            std::cout << value_to_string(args[0]) << std::endl;
+        } else if (c.type == FnType::INPUT) {
+            if (!args.empty()) {
+                throw std::string{"error: input requires exactly zero arguments"};
+            }
+            std::string input;
+            std::getline(std::cin, input);
+            frame.opstack.push_back(input);
+        } else if (c.type == FnType::INTCAST) {
+            if (args.size() != 1) {
+                throw std::string{"error: intcast requires exactly one argument"};
+            }
+            frame.opstack.push_back(std::stoi(std::get<std::string>(args[0])));
+        } else {
+            throw std::string{"internal vm error: undefined function type"};
+        }
+        frame.iptr += 1;
     } else if (instr.operation == Operation::FieldLoad) {
-
+        auto val = get_unary_operand(frame.opstack);
+        std::string& field_name = fn.names_[instr.operand0.value()];
+        Record r = std::get<Record>(val);
+        frame.opstack.push_back(r.internal->at(field_name));
+        frame.iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
-
+        auto [record_val, val] = get_bin_operands(frame.opstack);
+        std::string& field_name = fn.names_[instr.operand0.value()];
+        Record r = std::get<Record>(record_val);
+        r.internal->insert_or_assign(field_name, val);
+        frame.iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
-
+        auto [record_val, index] = get_bin_operands(frame.opstack);
+        Record r = std::get<Record>(record_val);
+        frame.opstack.push_back(r.internal->at(value_to_string(index)));
+        frame.iptr += 1;
     } else if (instr.operation == Operation::IndexStore) {
-
+        auto value = get_unary_operand(frame.opstack);
+        auto [record_val, index] = get_bin_operands(frame.opstack);
+        Record r = std::get<Record>(record_val);
+        r.internal->insert_or_assign(value_to_string(index), value);
+        frame.iptr += 1;
     } else if (instr.operation == Operation::Return) {
         if (frame.opstack.empty()) {
             throw std::string{"error: called return on empty stack"};
@@ -230,8 +282,4 @@ bool VM::step() {
         throw std::string{"internal vm error: invalid opcode"};
     }
     return true;
-}
-
-int main() {
-    return 0;
 }

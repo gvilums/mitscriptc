@@ -13,10 +13,11 @@ using ProgVal = std::variant<None, int, bool, std::string, Record, Closure>;
 using StackVal = std::variant<ProgVal, RefCell, Function*>;
 
 
-enum class BuiltinFn {
+enum class FnType {
+    DEFAULT,
     PRINT,
     INPUT,
-    TO_STRING
+    INTCAST
 };
 
 struct Record {
@@ -29,6 +30,7 @@ struct RefCell {
 };
 
 struct Closure {
+    FnType type;
     Function* fn;
     std::vector<RefCell> refs;
 };
