@@ -1,0 +1,15 @@
+x = 0;
+get = fun(){
+  global x;
+  x = x + 1;
+  return x;
+};
+
+r = {x:get(); y:get(); z:get(); a:get(); b:get();};
+
+print("P" + r.x);
+print("P" + r.y);
+print("P" + r.z);
+print("P" + r.a);
+print("P" + r.b);
+

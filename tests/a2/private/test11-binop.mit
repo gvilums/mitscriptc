@@ -1,0 +1,43 @@
+print("Should print: 1hi");
+print(1 + "hi");
+
+print("Should print: 2");
+print(1 + 1);
+
+print("Should print: hi1");
+print("hi" + 1);
+
+print("Should print: 3");
+print(9 / 3);
+
+print("Should print: 9");
+print(3 * 3);
+
+print("Should print: {hello:9 }");
+print({ hello: (5*2 - 1); });
+
+print("Should print: True");
+print(true == true);
+print(false == false);
+print((100 + 30 + 4) == 134);
+x = {};
+print(x == x);
+print(1 < 2);
+print(2 > 1);
+print(2 >= 1);
+print(1 <= 2);
+print("hello" == ("hell" + "o"));
+print(!false);
+
+print("Should print: False");
+print(1 < 1);
+print(2 > 2);
+print(1 >= 2);
+print(2 <= 1);
+print(1 == x);
+print(x == print);
+y = {};
+print(x == y);
+print("hello" == "hel");
+print(!true);
+
