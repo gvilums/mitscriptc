@@ -56,8 +56,7 @@ void VM::exec() {
     if (this->callstack.empty()) {
         return;
     }
-    StackFrame& f = this->callstack.back();
-    while (this->callstack.size() > 1 || f.iptr < f.ctx->instructions.size()) {
+    while (this->callstack.size() > 1 || this->callstack.back().iptr < this->callstack.back().ctx->instructions.size()) {
         this->step();
     }
 }
@@ -280,6 +279,7 @@ bool VM::step() {
             StackVal v = frame->opstack.back();
             frame->opstack.push_back(v);
         }
+        frame->iptr += 1;
     } else if (instr.operation == Operation::Swap) {
         size_t stack_size = frame->opstack.size();
         if (stack_size < 2) {
