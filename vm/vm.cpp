@@ -66,16 +66,16 @@ bool VM::step() {
     auto instr = fn.instructions[frame.iptr];
     
     if (instr.operation == Operation::LoadConst) {
-        frame.opstack.push_back(value_from_constant(fn.constants_[instr.operand0.value()]));
+        frame.opstack.push_back(value_from_constant(fn.constants_.at(instr.operand0.value())));
         frame.iptr += 1;
     } else if (instr.operation == Operation::LoadGlobal) {
-        frame.opstack.push_back(globals[fn.names_[instr.operand0.value()]]);
+        frame.opstack.push_back(globals.at(fn.names_.at(instr.operand0.value())));
         frame.iptr += 1;
     } else if (instr.operation == Operation::LoadLocal) {
-        frame.opstack.push_back(frame.locals[instr.operand0.value()]);
+        frame.opstack.push_back(frame.locals.at(instr.operand0.value()));
         frame.iptr += 1;
     } else if (instr.operation == Operation::LoadFunc) {
-        frame.opstack.push_back(fn.functions_[instr.operand0.value()]);
+        frame.opstack.push_back(fn.functions_.at(instr.operand0.value()));
         frame.iptr += 1;
     } else if (instr.operation == Operation::LoadReference) {
         if (frame.opstack.empty()) {
@@ -87,12 +87,12 @@ bool VM::step() {
         frame.iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         ProgVal val = get_unary_operand(frame.opstack);
-        std::string& name = fn.names_[instr.operand0.value()];
+        std::string& name = fn.names_.at(instr.operand0.value());
         this->globals[name] = val;
         frame.iptr += 1;
     } else if (instr.operation == Operation::StoreLocal) {
         ProgVal val = get_unary_operand(frame.opstack);
-        frame.locals[instr.operand0.value()] = val;
+        frame.locals.at(instr.operand0.value()) = val;
         frame.iptr += 1;
     } else if (instr.operation == Operation::StoreReference) {
         ProgVal val = get_unary_operand(frame.opstack);
@@ -105,7 +105,7 @@ bool VM::step() {
         frame.iptr += 1;
     } else if (instr.operation == Operation::PushReference) {
         int32_t i = instr.operand0.value();
-        frame.opstack.push_back(frame.refs[i]);
+        frame.opstack.push_back(frame.refs.at(i));
         frame.iptr += 1;
     } else if (instr.operation == Operation::Neg) {
         auto val = get_unary_operand(frame.opstack);
@@ -200,7 +200,7 @@ bool VM::step() {
             if (args.size() != 1) {
                 throw std::string{"error: print requires exactly one argument"};
             }
-            std::cout << value_to_string(args[0]) << std::endl;
+            std::cout << value_to_string(args.at(0)) << std::endl;
         } else if (c.type == FnType::INPUT) {
             if (!args.empty()) {
                 throw std::string{"error: input requires exactly zero arguments"};
@@ -212,20 +212,20 @@ bool VM::step() {
             if (args.size() != 1) {
                 throw std::string{"error: intcast requires exactly one argument"};
             }
-            frame.opstack.push_back(std::stoi(std::get<std::string>(args[0])));
+            frame.opstack.push_back(std::stoi(std::get<std::string>(args.at(0))));
         } else {
             throw std::string{"internal vm error: undefined function type"};
         }
         frame.iptr += 1;
     } else if (instr.operation == Operation::FieldLoad) {
         auto val = get_unary_operand(frame.opstack);
-        std::string& field_name = fn.names_[instr.operand0.value()];
+        std::string& field_name = fn.names_.at(instr.operand0.value());
         RecordCell r = std::get<RecordCell>(val);
         frame.opstack.push_back(r.internal->at(field_name));
         frame.iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = get_bin_operands(frame.opstack);
-        std::string& field_name = fn.names_[instr.operand0.value()];
+        std::string& field_name = fn.names_.at(instr.operand0.value());
         RecordCell r = std::get<RecordCell>(record_val);
         r.internal->insert_or_assign(field_name, val);
         frame.iptr += 1;
