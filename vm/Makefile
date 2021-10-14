@@ -24,4 +24,4 @@ MITScript.g.intermediate: MITScript.g
 	java -Xmx500M -cp "bin/antlr-4.7.2-complete.jar:${CLASSPATH}" org.antlr.v4.Tool -Dlanguage=Cpp MITScript.g
 
 clean:
-	rm -f MITScript.h MITScript.cpp mitscript-parser mitscript-parse-tree mitscript MITScript.interp  MITScript.tokens
+	rm -f MITScript.h MITScript.cpp MITScript.interp  MITScript.tokens bc-lexer.cpp bc-lexer.h bc-parser.cpp bc-parser.h interpreter
