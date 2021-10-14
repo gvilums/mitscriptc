@@ -43,6 +43,10 @@ VM::VM(Function&& prog) : source(std::move(prog)) {
     *input_closure = Closure{.type=FnType::INPUT, .fn=nullptr};
     ProgVal* intcast_closure = new ProgVal;
     *intcast_closure = Closure{.type=FnType::INTCAST, .fn=nullptr};
+    
+    this->globals["print"] = RefCell{.ref=print_closure};
+    this->globals["input"] = RefCell{.ref=input_closure};
+    this->globals["intcast"] = RefCell{.ref=intcast_closure};
 }
 
 void VM::exec() {
