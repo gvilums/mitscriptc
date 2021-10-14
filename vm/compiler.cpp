@@ -33,6 +33,10 @@ int main(int argc, const char *argv[])
   tokens.fill();
 
   AST::Program* program = Program(tokens);
+  if (!program) {
+  	  std::cout << "Parsing failed" << std::endl;
+  	  return 1;
+  }
   
   Compiler compiler;
   program->accept(compiler);

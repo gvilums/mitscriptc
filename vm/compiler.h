@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AST.h"
-#include "../types.h"
+#include "types.h"
 #include "FreeVariables.h"
 #include "Assigns.h"
 #include <set>
@@ -33,8 +33,9 @@ public:
 	}
 
 	void visit(AST::Program& expr){
-		for(auto c : expr.children) 
+		for(auto c : expr.children)  {
 			c->accept(*((Visitor*) this));
+		}
 	}
 	
 	void visit(AST::Block& expr){
@@ -292,7 +293,7 @@ public:
 			rfun_->instructions.push_back(Instruction(Operation::Dup, std::nullopt));
 			p.second->accept(*((Visitor*) this));
 			
-			rfun_->instructions.push_back(Instruction(Operation::FieldLoad, rfun_->names_.size()));
+			rfun_->instructions.push_back(Instruction(Operation::FieldStore, rfun_->names_.size()));
 			rfun_->names_.push_back(p.first);
 		}
 	}
