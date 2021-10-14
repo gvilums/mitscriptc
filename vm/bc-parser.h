@@ -167,7 +167,7 @@ union BCSTYPE
 
 
     	Constant* constant;
-    	vector<Constant *>* constantlist;
+    	vector<Constant>* constantlist;
 
 #line 173 "bc-parser.h"
 

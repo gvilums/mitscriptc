@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AST.h"
-#include "types.h"
+#include "../types.h"
 #include "FreeVariables.h"
 #include "Assigns.h"
 #include <set>

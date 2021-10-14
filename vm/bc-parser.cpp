@@ -237,7 +237,7 @@ union BCSTYPE
 
 
     	Constant* constant;
-    	vector<Constant *>* constantlist;
+    	vector<Constant>* constantlist;
 
 #line 243 "bc-parser.cpp"
 
@@ -1749,7 +1749,7 @@ yyreduce:
 
   case 16:
 #line 243 "bc-parser.yy"
-       { (yyval.constantlist) = new vector<Constant *>(); }
+       { (yyval.constantlist) = new vector<Constant>(); }
 #line 1754 "bc-parser.cpp"
     break;
 
@@ -1764,9 +1764,9 @@ yyreduce:
   case 18:
 #line 251 "bc-parser.yy"
 {
-	auto list = new vector<Constant *>();
+	auto list = new vector<Constant>();
 
-	list->insert(list->begin(), (yyvsp[0].constant));
+	list->insert(list->begin(), *(yyvsp[0].constant));
 
 	(yyval.constantlist) = list;
 }
@@ -1778,7 +1778,7 @@ yyreduce:
 {
 	auto list = (yyvsp[0].constantlist);
 
-	list->insert(list->begin(), (yyvsp[-2].constant));
+	list->insert(list->begin(), *(yyvsp[-2].constant));
 
 	(yyval.constantlist) = list;
 }

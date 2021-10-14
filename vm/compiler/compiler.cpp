@@ -7,7 +7,7 @@
 #include "AST.h"
 #include "parsercode.cpp"
 #include "compiler.h"
-#include "prettyprinter.h"
+#include "../prettyprinter.h"
 
 int main(int argc, const char *argv[])
 {
