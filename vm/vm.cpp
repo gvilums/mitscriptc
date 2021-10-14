@@ -317,7 +317,11 @@ bool VM::step() {
         auto val = get_unary_operand(frame->opstack);
         std::string& field_name = fn->names_.at(instr.operand0.value());
         RecordCell r = std::get<RecordCell>(val);
-        frame->opstack.push_back(r.internal->at(field_name));
+        if (r.internal->find(field_name) == r.internal->end()) {
+            frame->opstack.push_back(None{});
+        } else {
+            frame->opstack.push_back(r.internal->at(field_name));
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = get_bin_operands(frame->opstack);
@@ -327,8 +331,13 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = get_bin_operands(frame->opstack);
+        std::string index_string = value_to_string(index);
         RecordCell r = std::get<RecordCell>(record_val);
-        frame->opstack.push_back(r.internal->at(value_to_string(index)));
+        if (r.internal->find(index_string) == r.internal->end()) {
+            frame->opstack.push_back(None{});
+        } else {
+            frame->opstack.push_back(r.internal->at(index_string));
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::IndexStore) {
         auto value = get_unary_operand(frame->opstack);
