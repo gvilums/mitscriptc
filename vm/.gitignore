@@ -3,6 +3,7 @@ bc-parser*
 vm/vm_test
 interpreter
 compilertest
+compiler
 vmtest
 mitscript
 vgout.txt

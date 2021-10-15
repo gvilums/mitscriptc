@@ -36,9 +36,6 @@ return this;
 
 modN = fun(lst, N){
   rv = List();
-  print(lst);
-  print(N);
-  print(rv);
   lst.forall(fun(n){
      while(n >= N){ n = n - N; }
      rv.plus(n);
@@ -54,10 +51,11 @@ l.plus(5);
 // l.plus(15);
 // l.plus(6);
 BASE = 10;
-print("After read");
-l = modN(l, BASE);
+// print("After read");
+// l = modN(l, BASE);
 print("After Mod");
 l.print();
+print(plus);
 l2 = plus(l, l, BASE);
 print("After plus");
 l4 = plus(l2, l2, BASE);
