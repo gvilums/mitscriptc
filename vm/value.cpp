@@ -18,19 +18,7 @@ bool value_eq(ProgVal l, ProgVal r) {
                        return l == r;
                    },
                    [](RecordCell lrec, RecordCell rrec) -> bool {
-                       auto& l = *lrec.internal;
-                       auto& r = *rrec.internal;
-                       auto l_iter = l.cbegin();
-                       auto r_iter = r.cbegin();
-                       while (l_iter != l.cend() && r_iter != r.cend()) {
-                           if (l_iter->first != r_iter->first ||
-                               !value_eq(l_iter->second, r_iter->second)) {
-                               return false;
-                           }
-                           l_iter++;
-                           r_iter++;
-                       }
-                       return l_iter == l.cend() && r_iter == r.cend();
+                       return lrec.internal == rrec.internal;
                    },
                    [](auto x, auto y) -> bool { return false; }},
         l, r);
