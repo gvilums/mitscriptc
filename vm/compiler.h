@@ -60,7 +60,7 @@ public:
 				globals_.insert(s);
 			}
 			
-			if (count(rfun_->names_.begin(), rfun_->names_.end(), s)) {
+			if (globals_.count(s)) {
 				int idx = find(rfun_->names_.begin(), rfun_->names_.end(), s) - rfun_->names_.begin();
 				expr.Expr->accept(*((Visitor*) this));
 				rfun_->instructions.push_back(Instruction(Operation::StoreGlobal, idx));
@@ -320,13 +320,13 @@ public:
 			rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
 			rfun_->constants_.push_back(val.substr(1, val.size() - 2));
 		} else {
-			auto it = find(rfun_->names_.begin(), rfun_->names_.end(), val);
-			if (it != rfun_->names_.end()) {
+			if (globals_.count(val)) {
+				auto it = find(rfun_->names_.begin(), rfun_->names_.end(), val);
 				rfun_->instructions.push_back(Instruction(Operation::LoadGlobal, int(it - rfun_->names_.begin())));
 				return;
 			}
 			
-			it = find(rfun_->free_vars_.begin(), rfun_->free_vars_.end(), val);
+			auto it = find(rfun_->free_vars_.begin(), rfun_->free_vars_.end(), val);
 			if (it != rfun_->free_vars_.end()) {
 				rfun_->instructions.push_back(Instruction(Operation::PushReference, int(it - rfun_->free_vars_.begin()) + rfun_->local_reference_vars_.size()));
 				rfun_->instructions.push_back(Instruction(Operation::LoadReference, std::nullopt));
