@@ -346,7 +346,14 @@ public:
 			}
 				
 			it = find(rfun_->local_vars_.begin(), rfun_->local_vars_.end(), val);
-			rfun_->instructions.push_back(Instruction(Operation::LoadLocal, int(it - rfun_->local_vars_.begin())));
+			if (it != rfun_->local_vars_.end()) {
+				rfun_->instructions.push_back(Instruction(Operation::LoadLocal, int(it - rfun_->local_vars_.begin())));
+				return;
+			}
+			
+			rfun_->names_.push_back(val);
+			globals_.insert(val);
+			
 		}
 	}
 	

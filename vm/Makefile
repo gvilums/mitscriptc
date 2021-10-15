@@ -9,8 +9,8 @@ bc-parser.cpp: bc-parser.yy
 bc-lexer.cpp: bc-lexer.lex
 	flex -P bc --outfile=bc-lexer.cpp --header-file=bc-lexer.h bc-lexer.lex
 
-compilertest: MITScriptLexer.cpp MITScriptParser.cpp compiler.cpp utils.cpp
-	g++-11 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp compiler.cpp lib/libantlr4-runtime.a -o compilertest
+compiler: MITScriptLexer.cpp MITScriptParser.cpp compiler.cpp utils.cpp
+	g++-11 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp compiler.cpp lib/libantlr4-runtime.a -o compiler
 
 MITScriptLexer.cpp MITScriptParser.cpp: MITScript.g.intermediate
 	@# Empty recipe
