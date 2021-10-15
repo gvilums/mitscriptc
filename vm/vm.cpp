@@ -13,30 +13,31 @@ ProgVal get_unary_operand(std::vector<StackVal>& stack) {
     }
     StackVal operand = stack.back();
     stack.pop_back();
-    return std::get<ProgVal>(operand);
+    try {
+        return std::get<ProgVal>(operand);
+    } catch (const std::bad_variant_access& e) {
+        throw std::string{"error: expected program value on stack"};
+    }
 }
 
 std::pair<ProgVal, ProgVal> get_bin_operands(std::vector<StackVal>& stack) {
     size_t stack_size = stack.size();
     if (stack_size < 2) {
-        throw std::string{"stack holds too few operands for binary operation"};
+        throw std::string{"error: stack holds too few operands for binary operation"};
     }
     StackVal lop = stack[stack_size - 2];
     StackVal rop = stack[stack_size - 1];
 
     stack.pop_back();
     stack.pop_back();
-
-    return std::visit(
-        overloaded{[](ProgVal x, ProgVal y) -> std::pair<ProgVal, ProgVal> {
-                       return std::pair{x, y};
-                   },
-                   [](auto x, auto y) -> std::pair<ProgVal, ProgVal> {
-                       throw std::string{
-                           "stack operands for binary operation must be "
-                           "program values"};
-                   }},
-        lop, rop);
+    return std::visit(overloaded{
+        [](ProgVal x, ProgVal y) -> std::pair<ProgVal, ProgVal> {
+            return std::pair{x, y};
+        },
+        [](auto x, auto y) -> std::pair<ProgVal, ProgVal> {
+            throw std::string{"error: expected program values on stack"};
+        },
+    }, lop, rop);
 }
 
 VM::VM(struct Function* prog) {
@@ -116,8 +117,7 @@ bool VM::step() {
     } else if (instr.operation == Operation::StoreReference) {
         ProgVal val = get_unary_operand(frame->opstack);
         if (frame->opstack.empty()) {
-            throw std::string{
-                "error: trying to store to reference with stack of size 1"};
+            throw std::string{"error: trying to store to reference with stack of size 1"};
         }
         RefCell ref_cell = std::get<RefCell>(frame->opstack.back());
         frame->opstack.pop_back();
@@ -129,35 +129,37 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::Neg) {
         auto val = get_unary_operand(frame->opstack);
-        // if (!std::holds_alternative<int>(frame->opstack.back())) {
-        //     throw std::string{"error: stack must hold int when executing Neg"};
-        // }
-        frame->opstack.push_back(-std::get<int>(val));
+        try {
+            frame->opstack.push_back(-std::get<int>(val));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to int in negation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Add) {
         auto ops = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::visit(
-            overloaded{[](int x, int y) -> ProgVal { return x + y; },
-                       [](const std::string& l,
-                          const std::string& r) -> ProgVal { return l + r; },
-                       [](const std::string& l, auto r) -> ProgVal {
-                           return l + value_to_string(r);
-                       },
-                       [](auto l, const std::string& r) -> ProgVal {
-                           return value_to_string(l) + r;
-                       },
-                       [](auto l, auto r) -> ProgVal {
-                           throw std::string{"invalid operands for add"};
-                       }},
-            ops.first, ops.second));
+        frame->opstack.push_back(std::visit(overloaded{
+            [](int x, int y) -> ProgVal { return x + y; },
+            [](const std::string& l, const std::string& r) -> ProgVal { return l + r; },
+            [](const std::string& l, auto r) -> ProgVal { return l + value_to_string(r); },
+            [](auto l, const std::string& r) -> ProgVal { return value_to_string(l) + r; },
+            [](auto l, auto r) -> ProgVal { throw std::string{"error: invalid cast in '+' operator"};}
+        }, ops.first, ops.second));
         frame->iptr += 1;
     } else if (instr.operation == Operation::Sub) {
         auto [x, y] = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::get<int>(x) - std::get<int>(y));
+        try {
+            frame->opstack.push_back(std::get<int>(x) - std::get<int>(y));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to int in '-' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Mul) {
         auto [x, y] = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::get<int>(x) * std::get<int>(y));
+        try {
+            frame->opstack.push_back(std::get<int>(x) * std::get<int>(y));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to int in '*' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Div) {
         auto [x, y] = get_bin_operands(frame->opstack);
@@ -165,15 +167,27 @@ bool VM::step() {
         if (divisor == 0) {
             throw std::string{"error: division by zero"};
         }
-        frame->opstack.push_back(std::get<int>(x) / divisor);
+        try {
+            frame->opstack.push_back(std::get<int>(x) / divisor);
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to int in '/' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Gt) {
         auto [l, r] = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::get<int>(l) > std::get<int>(r));
+        try {
+            frame->opstack.push_back(std::get<int>(l) > std::get<int>(r));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to int in '>' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Geq) {
         auto [l, r] = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::get<int>(l) >= std::get<int>(r));
+        try {
+            frame->opstack.push_back(std::get<int>(l) >= std::get<int>(r));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to int in '>=' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Eq) {
         auto [l, r] = get_bin_operands(frame->opstack);
@@ -181,15 +195,27 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::And) {
         auto [l, r] = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::get<bool>(l) && std::get<bool>(r));
+        try {
+            frame->opstack.push_back(std::get<bool>(l) && std::get<bool>(r));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to bool in 'and' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Or) {
         auto [l, r] = get_bin_operands(frame->opstack);
-        frame->opstack.push_back(std::get<bool>(l) || std::get<bool>(r));
+        try {
+            frame->opstack.push_back(std::get<bool>(l) || std::get<bool>(r));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to bool in 'and' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::Not) {
         auto val = get_unary_operand(frame->opstack);
-        frame->opstack.push_back(!std::get<bool>(val));
+        try {
+            frame->opstack.push_back(!std::get<bool>(val));
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to bool in 'not' operation"};
+        }
         frame->iptr += 1;
     } else if (instr.operation == Operation::AllocClosure) {
         int32_t m = instr.operand0.value();
@@ -199,11 +225,20 @@ bool VM::step() {
         }
         std::vector<RefCell> refs;
         for (size_t i = 0; i < m; ++i) {
-            refs.push_back(std::get<RefCell>(frame->opstack.back()));
+            try {
+                refs.push_back(std::get<RefCell>(frame->opstack.back()));
+            } catch (const std::bad_variant_access& e) {
+                throw std::string{"error: expected reference as argument to AllocClosure"};
+            }
             frame->opstack.pop_back();
         }
         std::reverse(refs.begin(), refs.end());
-        struct Function* fn = std::get<struct Function*>(frame->opstack.back());
+        struct Function* fn;
+        try {
+            fn = std::get<struct Function*>(frame->opstack.back());
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: expected function pointer as argument to AllocClosure"};
+        }
         frame->opstack.pop_back();
 
         Closure* closure = new Closure;
@@ -218,8 +253,7 @@ bool VM::step() {
     } else if (instr.operation == Operation::Call) {
         int32_t m = instr.operand0.value();
         if (frame->opstack.size() <= m) {
-            throw std::string{
-                "error: not enough stack arguments while calling closure"};
+            throw std::string{"error: not enough stack arguments while calling closure"};
         }
         std::vector<ProgVal> args;
         for (size_t i = 0; i < m; ++i) {
@@ -227,11 +261,19 @@ bool VM::step() {
         }
         std::reverse(args.begin(), args.end());
         ProgVal val = get_unary_operand(frame->opstack);
-        ClosureRef ref = std::get<ClosureRef>(val);
+        ClosureRef ref;
+        try {
+            ref = std::get<ClosureRef>(val);
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to closure in function call"};
+        }
         Closure& c = *ref.closure;
         frame->iptr += 1;
         if (c.type == FnType::DEFAULT) {
             // note: this invalidates frame
+            if (c.fn->parameter_count_ != m) {
+                throw std::string{"error: invalid parameter count for function call"};
+            }
             this->callstack.push_back(
                 StackFrame(c.fn, std::move(args), c.refs));
         } else if (c.type == FnType::PRINT) {
@@ -260,13 +302,17 @@ bool VM::step() {
     } else if (instr.operation == Operation::FieldLoad) {
         auto val = get_unary_operand(frame->opstack);
         std::string& field_name = fn->names_.at(instr.operand0.value());
-        RecordCell r = std::get<RecordCell>(val);
-        if (r.internal->find(field_name) == r.internal->end()) {
-            frame->opstack.push_back(None{});
-        } else {
-            frame->opstack.push_back(r.internal->at(field_name));
-        }
+        try {
+            RecordCell r = std::get<RecordCell>(val);
+            if (r.internal->find(field_name) == r.internal->end()) {
+                frame->opstack.push_back(None{});
+            } else {
+                frame->opstack.push_back(r.internal->at(field_name));
+            }
         frame->iptr += 1;
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to record in field load"};
+        }
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = get_bin_operands(frame->opstack);
         std::string& field_name = fn->names_.at(instr.operand0.value());
@@ -276,13 +322,17 @@ bool VM::step() {
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = get_bin_operands(frame->opstack);
         std::string index_string = value_to_string(index);
-        RecordCell r = std::get<RecordCell>(record_val);
-        if (r.internal->find(index_string) == r.internal->end()) {
-            frame->opstack.push_back(None{});
-        } else {
-            frame->opstack.push_back(r.internal->at(index_string));
+        try {
+            RecordCell r = std::get<RecordCell>(record_val);
+            if (r.internal->find(index_string) == r.internal->end()) {
+                frame->opstack.push_back(None{});
+            } else {
+                frame->opstack.push_back(r.internal->at(index_string));
+            }
+            frame->iptr += 1;
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to record in index load"};
         }
-        frame->iptr += 1;
     } else if (instr.operation == Operation::IndexStore) {
         auto value = get_unary_operand(frame->opstack);
         auto [record_val, index] = get_bin_operands(frame->opstack);
@@ -312,10 +362,14 @@ bool VM::step() {
             throw std::string{"error: called if on empty stack"};
         }
         auto val = get_unary_operand(frame->opstack);
-        if (std::get<bool>(val)) {
-            frame->iptr += instr.operand0.value();
-        } else {
-            frame->iptr += 1;
+        try {
+            if (std::get<bool>(val)) {
+                frame->iptr += instr.operand0.value();
+            } else {
+                frame->iptr += 1;
+            }
+        } catch (const std::bad_variant_access& e) {
+            throw std::string{"error: invalid cast to bool in 'if' condition"};
         }
     } else if (instr.operation == Operation::Dup) {
         if (frame->opstack.empty()) {
