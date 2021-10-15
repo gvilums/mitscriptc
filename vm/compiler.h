@@ -351,6 +351,8 @@ public:
 				return;
 			}
 			
+			
+			rfun_->instructions.push_back(Instruction(Operation::LoadGlobal, int(it - rfun_->names_.begin())));
 			rfun_->names_.push_back(val);
 			globals_.insert(val);
 			
