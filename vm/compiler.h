@@ -320,6 +320,11 @@ public:
 			rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
 			rfun_->constants_.push_back(val.substr(1, val.size() - 2));
 		} else {
+			if (global_scope_ && !count(rfun_->names_.begin(), rfun_->names_.end(), val)) {
+				rfun_->names_.push_back(val);
+				globals_.insert(val);
+			}
+		
 			if (globals_.count(val)) {
 				auto it = find(rfun_->names_.begin(), rfun_->names_.end(), val);
 				rfun_->instructions.push_back(Instruction(Operation::LoadGlobal, int(it - rfun_->names_.begin())));
