@@ -1,7 +1,7 @@
-all: interpreter
+all: mitscript
 
-interpreter: MITScriptLexer.cpp MITScriptParser.cpp interpreter.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
-	g++-11 -g -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp interpreter.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o interpreter 
+mitscript: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
+	g++-11 -g -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
 
 bc-parser.cpp: bc-parser.yy
 	bison -Dapi.prefix={bc} --output=bc-parser.cpp --defines=bc-parser.h bc-parser.yy
@@ -21,4 +21,4 @@ MITScript.g.intermediate: MITScript.g
 	java -Xmx500M -cp "bin/antlr-4.7.2-complete.jar:${CLASSPATH}" org.antlr.v4.Tool -Dlanguage=Cpp MITScript.g
 
 clean:
-	rm -f MITScript.h MITScript.cpp MITScript.interp  MITScript.tokens bc-lexer.cpp bc-lexer.h bc-parser.cpp bc-parser.h interpreter
+	rm -f MITScript.h MITScript.cpp MITScript.interp  MITScript.tokens bc-lexer.cpp bc-lexer.h bc-parser.cpp bc-parser.h mitscript

@@ -4,6 +4,7 @@ vm/vm_test
 interpreter
 compilertest
 vmtest
+mitscript
 vgout.txt
 
 bc-lexer.h

@@ -36,6 +36,10 @@ int main(int argc, const char* argv[]) {
         tokens.fill();
 
         AST::Program* program = Program(tokens);
+        if (!program) {
+            std::cout << "ERROR: parse error" << std::endl;
+            return 1;
+        }
 
         program->accept(compiler);
         fn = compiler.get_function();
@@ -50,7 +54,7 @@ int main(int argc, const char* argv[]) {
         bcset_in(file, scanner);
 
         if (bcparse(scanner, fn) == 1) {
-            cout << "Parsing failed" << endl;
+            cout << "ERROR: parse error" << endl;
             return 1;
         }
     } else {
@@ -63,6 +67,7 @@ int main(int argc, const char* argv[]) {
         vm.exec();
     } catch (std::string s) {
         std::cout << s << std::endl;
+        return 1;
     }
 
     return 0;
