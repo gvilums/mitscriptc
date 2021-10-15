@@ -37,7 +37,6 @@ std::string value_to_string(ProgVal val) {
                     out.append(p.first);
                     out.push_back(':');
                     out.append(value_to_string(p.second));
-                    out.push_back(',');
                     out.push_back(' ');
                 }
                 out.push_back('}');
