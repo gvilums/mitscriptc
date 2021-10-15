@@ -84,6 +84,9 @@ bool VM::step() {
         frame->iptr += 1;
     } else if (instr.operation == Operation::LoadGlobal) {
         std::string name = fn->names_.at(instr.operand0.value());
+        if (this->globals.find(name) == this->globals.end()) {
+            throw std::string{"error: uninitialized global variable"};
+        }
         frame->opstack.push_back(this->globals.at(name));
         frame->iptr += 1;
     } else if (instr.operation == Operation::LoadLocal) {
