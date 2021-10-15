@@ -86,7 +86,7 @@ bool VM::step() {
     } else if (instr.operation == Operation::LoadGlobal) {
         std::string name = fn->names_.at(instr.operand0.value());
         if (this->globals.find(name) == this->globals.end()) {
-            throw std::string{"error: uninitialized global variable"};
+            throw std::string{"error: uninitialized variable"};
         }
         frame->opstack.push_back(this->globals.at(name));
         frame->iptr += 1;
