@@ -252,6 +252,7 @@ bool VM::step() {
             refs.push_back(std::get<RefCell>(frame->opstack.back()));
             frame->opstack.pop_back();
         }
+        std::reverse(refs.begin(), refs.end());
         // if (!std::holds_alternative<struct Function*>(frame->opstack.back())) {
         //     throw std::string{"error: expected Function* for AllocClosure"};
         // }

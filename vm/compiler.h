@@ -6,6 +6,7 @@
 #include "Assigns.h"
 #include <set>
 
+
 using namespace std;
 
 class Compiler : public Visitor {
@@ -177,6 +178,7 @@ public:
 			if (count(glob_var.begin(), glob_var.end(), s)) continue;
 			if (count(expr.arguments.begin(), expr.arguments.end(), s)) continue;
 			if (count(ass_var.begin(), ass_var.end(), s)) continue;
+			if (count(rfun_->free_vars_.begin(), rfun_->free_vars_.end(), s)) continue;
 			
 			if (!globals_.count(s))
 				rfun_->free_vars_.push_back(s); 
@@ -210,7 +212,8 @@ public:
 		
 		// finding local decl
 		
-		tfun->instructions.push_back(Instruction(Operation::LoadFunc, tfun->functions_.size() - 1));
+		tfun->instructions.push_back(Instruction(Operation::LoadFunc, tfun->functions_.size() - 1));	
+		// std::reverse(rfun_->free_vars_.begin(), rfun_->free_vars_.end());
 		for (auto s : rfun_->free_vars_) {
 			auto it = find(tfun->local_reference_vars_.begin(), tfun->local_reference_vars_.end(), s);
 			if (it != tfun->local_reference_vars_.end()) {
