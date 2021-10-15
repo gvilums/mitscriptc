@@ -18,7 +18,7 @@ private:
 	
 public:	
 	Compiler(){
-		rfun_ = (struct Function*) malloc(sizeof(struct Function));
+		rfun_ =  new struct Function;
 		rfun_->names_.push_back("print");
 		rfun_->names_.push_back("intcast");
 		rfun_->names_.push_back("input");
@@ -140,7 +140,7 @@ public:
 		bool tscope = global_scope_;
 		std::set<string> tglobals = globals_;
 		
-		rfun_ = (struct Function*) malloc(sizeof(struct Function));
+		rfun_ = new struct Function;
 		global_scope_ = false;
 		
 		rfun_->parameter_count_ = expr.arguments.size();
