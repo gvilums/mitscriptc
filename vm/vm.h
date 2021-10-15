@@ -44,7 +44,7 @@ class VM {
                 }
                 // a local ref var is also a local var
                 if (j != -1) {
-                    *ptr = this->locals.at(i);
+                    *ptr = this->locals.at(j);
                 } else {
                     *ptr = None{};
                 }
