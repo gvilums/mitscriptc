@@ -1,5 +1,8 @@
 all: mitscript
 
+test: release
+	(cd tests; ./test.sh ../mitscript)
+
 release: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
 	g++-11 -O3 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
 

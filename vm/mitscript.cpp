@@ -13,6 +13,7 @@
 #include "vm.h"
 
 int main(int argc, const char* argv[]) {
+    std::ios_base::sync_with_stdio(false);
     if (argc != 3) {
         std::cout << "Usage: mitscript <type> <filename>\n";
         return 1;
@@ -58,7 +59,7 @@ int main(int argc, const char* argv[]) {
             return 1;
         }
     } else {
-        std::cout << "invalid flag" << std::endl;
+        std::cout << "ERROR: invalid flag" << std::endl;
         return 1;
     }
 
@@ -67,6 +68,9 @@ int main(int argc, const char* argv[]) {
         vm.exec();
     } catch (std::string s) {
         std::cout << s << std::endl;
+        return 1;
+    } catch (...) {
+        std::cout << "ERROR: runtime exception" << std::endl;
         return 1;
     }
 

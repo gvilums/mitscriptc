@@ -11,16 +11,17 @@ ProgVal value_from_constant(Constant c) {
 
 bool value_eq(ProgVal l, ProgVal r) {
     return std::visit(
-        overloaded{[](None, None) -> bool { return true; },
-                   [](bool l, bool r) -> bool { return l == r; },
-                   [](int x, int y) -> bool { return x == y; },
-                   [](const std::string& l, const std::string& r) -> bool {
-                       return l == r;
-                   },
-                   [](RecordCell lrec, RecordCell rrec) -> bool {
-                       return lrec.internal == rrec.internal;
-                   },
-                   [](auto x, auto y) -> bool { return false; }},
+        overloaded{
+            [](None, None) -> bool { return true; },
+            [](bool l, bool r) -> bool { return l == r; },
+            [](int x, int y) -> bool { return x == y; },
+            [](const std::string& l, const std::string& r) -> bool {
+                return l == r;
+            },
+            [](RecordCell lrec, RecordCell rrec) -> bool {
+                return lrec.internal == rrec.internal;
+            },
+            [](auto x, auto y) -> bool { return false; }},
         l, r);
 }
 
