@@ -13,7 +13,10 @@ using ProgVal =
     std::variant<None, int, bool, std::string, RecordCell, ClosureRef>;
 using StackVal = std::variant<ProgVal, RefCell, struct Function*>;
 
-enum class FnType { DEFAULT, PRINT, INPUT, INTCAST };
+enum class FnType { DEFAULT,
+                    PRINT,
+                    INPUT,
+                    INTCAST };
 
 struct RecordCell {
     // pointer to hashmap holding record state
