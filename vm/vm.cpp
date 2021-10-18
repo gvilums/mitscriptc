@@ -30,11 +30,13 @@ auto VM::get_binary_ops() -> std::pair<Value, Value> {
     return std::pair{lop, rop};
 }
 
-VM::VM(struct Function* prog) {
-    this->source = prog;
-    this->globals = std::map<std::string, Value>();
-    this->callstack = std::vector<StackFrame>();
-    this->callstack.emplace_back(StackFrame{this->source, 0, 0});
+VM::VM(struct Function* prog) : source(prog) { }
+
+void VM::reset() {
+    this->ctx = this->source;
+    this->base_index = 0;
+    this->iptr = 0;
+    this->num_locals = 0;
 
     auto* print_closure = new Closure;
     *print_closure = Closure{.type = FnType::PRINT, .fn = nullptr};
@@ -43,49 +45,48 @@ VM::VM(struct Function* prog) {
     auto* intcast_closure = new Closure;
     *intcast_closure = Closure{.type = FnType::INTCAST, .fn = nullptr};
 
-    this->globals["print"] = ClosureRef{.closure = print_closure};
-    this->globals["input"] = ClosureRef{.closure = input_closure};
-    this->globals["intcast"] = ClosureRef{.closure = intcast_closure};
+    this->globals = {
+        { "print", ClosureRef{print_closure} },
+        { "input", ClosureRef{input_closure} },
+        { "intcast", ClosureRef{intcast_closure} }
+    };
 }
 
 void VM::exec() {
-    if (this->callstack.empty()) {
-        return;
-    }
-    while (!this->callstack.empty() &&
-           this->callstack.back().iptr < this->callstack.back().ctx->instructions.size()) {
+    this->reset();
+    while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
         this->step();
     }
 }
 
 auto VM::step() -> bool {
-    if (this->callstack.empty()) {
+    if (this->ctx == nullptr) {
         return false;
     }
-    StackFrame* frame = &this->callstack.back();
-    struct Function* fn = frame->ctx;
-    if (frame->iptr >= fn->instructions.size()) {
+
+    struct Function* fn = this->ctx;
+    if (this->iptr >= fn->instructions.size()) {
         throw std::string{"instruction pointer overran instruction list"};
     }
-    Instruction instr = fn->instructions[frame->iptr];
+    Instruction instr = fn->instructions[this->iptr];
 
     if (instr.operation == Operation::LoadConst) {
         Value v = value_from_constant(fn->constants_.at(instr.operand0.value()));
         this->opstack.push_back(v);
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::LoadGlobal) {
         std::string name = fn->names_.at(instr.operand0.value());
         if (this->globals.find(name) == this->globals.end()) {
             throw std::string{"ERROR: uninitialized variable"};
         }
         this->opstack.push_back(this->globals.at(name));
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::LoadLocal) {
         this->opstack.push_back(this->opstack.at(this->base_index + instr.operand0.value()));
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::LoadFunc) {
-        this->opstack.push_back(fn->functions_.at(instr.operand0.value()));
-        frame->iptr += 1;
+        this->opstack.emplace_back(fn->functions_.at(instr.operand0.value()));
+        this->iptr += 1;
     } else if (instr.operation == Operation::LoadReference) {
         if (this->opstack.empty()) {
             throw std::string{"ERROR: trying to load reference from empty stack"};
@@ -93,16 +94,16 @@ auto VM::step() -> bool {
         ValueRef ref_cell = std::get<ValueRef>(this->opstack.back());
         this->opstack.pop_back();
         this->opstack.push_back(*ref_cell.ref);
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
         std::string& name = fn->names_.at(instr.operand0.value());
         this->globals[name] = val;
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::StoreLocal) {
         Value val = this->get_unary_op();
         this->opstack.at(this->base_index + instr.operand0.value()) = val;
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::StoreReference) {
         Value val = this->get_unary_op();
         if (this->opstack.empty()) {
@@ -110,19 +111,19 @@ auto VM::step() -> bool {
         }
         ValueRef ref_cell = std::get<ValueRef>(this->get_unary_op());
         *ref_cell.ref = val;
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::PushReference) {
         int32_t i = instr.operand0.value();
-        this->opstack.push_back(this->opstack.at(this->base_index + frame->num_locals + i));
-        frame->iptr += 1;
+        this->opstack.push_back(this->opstack.at(this->base_index + this->num_locals + i));
+        this->iptr += 1;
     } else if (instr.operation == Operation::Neg) {
         auto val = this->get_unary_op();
         try {
-            this->opstack.push_back(-std::get<int>(val));
+            this->opstack.emplace_back(-std::get<int>(val));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to int in negation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Add) {
         auto ops = this->get_binary_ops();
         this->opstack.push_back(std::visit(
@@ -135,23 +136,23 @@ auto VM::step() -> bool {
                     throw std::string{"ERROR: invalid cast in '+' operator"};
                 }},
             ops.first, ops.second));
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Sub) {
         auto [x, y] = this->get_binary_ops();
         try {
-            this->opstack.push_back(std::get<int>(x) - std::get<int>(y));
+            this->opstack.emplace_back(std::get<int>(x) - std::get<int>(y));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to int in '-' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Mul) {
         auto [x, y] = this->get_binary_ops();
         try {
-            this->opstack.push_back(std::get<int>(x) * std::get<int>(y));
+            this->opstack.emplace_back(std::get<int>(x) * std::get<int>(y));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to int in '*' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Div) {
         auto [x, y] = this->get_binary_ops();
         int divisor = std::get<int>(y);
@@ -159,55 +160,55 @@ auto VM::step() -> bool {
             throw std::string{"ERROR: division by zero"};
         }
         try {
-            this->opstack.push_back(std::get<int>(x) / divisor);
+            this->opstack.emplace_back(std::get<int>(x) / divisor);
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to int in '/' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Gt) {
         auto [l, r] = this->get_binary_ops();
         try {
-            this->opstack.push_back(std::get<int>(l) > std::get<int>(r));
+            this->opstack.emplace_back(std::get<int>(l) > std::get<int>(r));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to int in '>' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Geq) {
         auto [l, r] = this->get_binary_ops();
         try {
-            this->opstack.push_back(std::get<int>(l) >= std::get<int>(r));
+            this->opstack.emplace_back(std::get<int>(l) >= std::get<int>(r));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to int in '>=' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Eq) {
         auto [l, r] = this->get_binary_ops();
-        this->opstack.push_back(value_eq(l, r));
-        frame->iptr += 1;
+        this->opstack.emplace_back(value_eq(l, r));
+        this->iptr += 1;
     } else if (instr.operation == Operation::And) {
         auto [l, r] = this->get_binary_ops();
         try {
-            this->opstack.push_back(std::get<bool>(l) && std::get<bool>(r));
+            this->opstack.emplace_back(std::get<bool>(l) && std::get<bool>(r));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to bool in 'and' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Or) {
         auto [l, r] = this->get_binary_ops();
         try {
-            this->opstack.push_back(std::get<bool>(l) || std::get<bool>(r));
+            this->opstack.emplace_back(std::get<bool>(l) || std::get<bool>(r));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to bool in 'and' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Not) {
         auto val = this->get_unary_op();
         try {
-            this->opstack.push_back(!std::get<bool>(val));
+            this->opstack.emplace_back(!std::get<bool>(val));
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to bool in 'not' operation"};
         }
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::AllocClosure) {
         int32_t m = instr.operand0.value();
         if (this->opstack.size() <= m) {
@@ -233,12 +234,12 @@ auto VM::step() -> bool {
 
         auto* closure = new Closure;
         *closure = Closure{.type = FnType::DEFAULT, .fn = fn, .refs = std::move(refs)};
-        this->opstack.push_back(ClosureRef{.closure = closure});
-        frame->iptr += 1;
+        this->opstack.emplace_back(ClosureRef{.closure = closure});
+        this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {
         auto* map = new std::map<std::string, Value>();
-        this->opstack.push_back(RecordRef{.internal = map});
-        frame->iptr += 1;
+        this->opstack.emplace_back(RecordRef{.internal = map});
+        this->iptr += 1;
     } else if (instr.operation == Operation::Call) {
         int32_t n_params = instr.operand0.value();
         if (this->opstack.size() <= n_params) {
@@ -257,7 +258,7 @@ auto VM::step() -> bool {
             throw std::string{"ERROR: invalid cast to closure in function call"};
         }
         Closure& c = *ref.closure;
-        frame->iptr += 1;
+        this->iptr += 1;
         if (c.type == FnType::DEFAULT) {
             // note: this invalidates frame
             if (c.fn->parameter_count_ != n_params) {
@@ -265,8 +266,16 @@ auto VM::step() -> bool {
             }
             
             // push rbp to stack
+            this->opstack.emplace_back(this->ctx);
+            this->opstack.emplace_back(this->num_locals);
+            this->opstack.emplace_back(this->iptr);
             this->opstack.emplace_back(this->base_index);
+
             this->base_index = this->opstack.size();
+            this->ctx = c.fn;
+            this->iptr = 0;
+            this->num_locals = c.fn->local_vars_.size();
+
             // push arguments to stack as local variables
             this->opstack.insert(this->opstack.end(), args.begin(), args.end());
             for (size_t i = 0; i < c.fn->local_vars_.size() - n_params; ++i) {
@@ -288,14 +297,11 @@ auto VM::step() -> bool {
                 } else {
                     *ptr = None{};
                 }
-                this->opstack.push_back(ValueRef{.ref = ptr});
+                this->opstack.emplace_back(ValueRef{.ref = ptr});
             }
             for (auto ref : c.refs) {
                 this->opstack.emplace_back(ref);
             }
-
-            StackFrame new_frame{.ctx=c.fn, .iptr=0, .num_locals=c.fn->local_vars_.size()};
-            this->callstack.push_back(new_frame);
         } else if (c.type == FnType::PRINT) {
             if (args.size() != 1) {
                 throw std::string{"ERROR: print requires exactly one argument"};
@@ -307,12 +313,12 @@ auto VM::step() -> bool {
             }
             std::string input;
             std::getline(std::cin, input);
-            this->opstack.push_back(input);
+            this->opstack.emplace_back(input);
         } else if (c.type == FnType::INTCAST) {
             if (args.size() != 1) {
                 throw std::string{"ERROR: intcast requires exactly one argument"};
             }
-            this->opstack.push_back(std::stoi(std::get<std::string>(args.at(0))));
+            this->opstack.emplace_back(std::stoi(std::get<std::string>(args.at(0))));
         } else {
             throw std::string{"ICE: undefined function type"};
         }
@@ -322,11 +328,11 @@ auto VM::step() -> bool {
         try {
             RecordRef r = std::get<RecordRef>(val);
             if (r.internal->find(field_name) == r.internal->end()) {
-                this->opstack.push_back(None{});
+                this->opstack.emplace_back(None{});
             } else {
                 this->opstack.push_back(r.internal->at(field_name));
             }
-            frame->iptr += 1;
+            this->iptr += 1;
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to record in field load"};
         }
@@ -335,7 +341,7 @@ auto VM::step() -> bool {
         std::string& field_name = fn->names_.at(instr.operand0.value());
         RecordRef r = std::get<RecordRef>(record_val);
         r.internal->insert_or_assign(field_name, val);
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = this->get_binary_ops();
         std::string index_string = value_to_string(index);
@@ -346,7 +352,7 @@ auto VM::step() -> bool {
             } else {
                 this->opstack.push_back(r.internal->at(index_string));
             }
-            frame->iptr += 1;
+            this->iptr += 1;
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to record in index load"};
         }
@@ -355,11 +361,11 @@ auto VM::step() -> bool {
         auto [record_val, index] = this->get_binary_ops();
         RecordRef r = std::get<RecordRef>(record_val);
         r.internal->insert_or_assign(value_to_string(index), value);
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Return) {
         // returning from final frame
-        this->callstack.pop_back();
         if (this->base_index == 0) {
+            this->ctx = nullptr;
             this->opstack.resize(0);
         } else {
             if (this->opstack.empty()) {
@@ -367,25 +373,31 @@ auto VM::step() -> bool {
             }
             Value retval = this->opstack.back();
             size_t old_base = std::get<size_t>(this->opstack.at(this->base_index - 1));
-            this->opstack.at(this->base_index - 1) = retval;
-            this->opstack.resize(this->base_index);
+            size_t old_iptr = std::get<size_t>(this->opstack.at(this->base_index - 2));
+            size_t old_num_locals = std::get<size_t>(this->opstack.at(this->base_index - 3));
+            struct Function* old_ctx = std::get<struct Function*>(this->opstack.at(this->base_index - 4));
+            this->opstack.resize(this->base_index - 4);
+            this->opstack.push_back(retval);
             this->base_index = old_base;
+            this->iptr = old_iptr;
+            this->num_locals = old_num_locals;
+            this->ctx = old_ctx;
         }
     } else if (instr.operation == Operation::Pop) {
         if (this->opstack.empty()) {
             throw std::string{"ERROR: called pop on empty opstack"};
         }
         this->opstack.pop_back();
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Goto) {
-        frame->iptr += instr.operand0.value();
+        this->iptr += instr.operand0.value();
     } else if (instr.operation == Operation::If) {
         auto val = this->get_unary_op();
         try {
             if (std::get<bool>(val)) {
-                frame->iptr += instr.operand0.value();
+                this->iptr += instr.operand0.value();
             } else {
-                frame->iptr += 1;
+                this->iptr += 1;
             }
         } catch (const std::bad_variant_access& e) {
             throw std::string{"ERROR: invalid cast to bool in 'if' condition"};
@@ -396,7 +408,7 @@ auto VM::step() -> bool {
         }
         Value v = this->opstack.back();
         this->opstack.push_back(v);
-        frame->iptr += 1;
+        this->iptr += 1;
     } else if (instr.operation == Operation::Swap) {
         size_t stack_size = this->opstack.size();
         if (stack_size < 2) {
@@ -405,7 +417,7 @@ auto VM::step() -> bool {
         Value tmp = this->opstack.back();
         this->opstack.back() = this->opstack[stack_size - 2];
         this->opstack[stack_size - 2] = tmp;
-        frame->iptr += 1;
+        this->iptr += 1;
     } else {
         throw std::string{"ICE: invalid opcode"};
     }

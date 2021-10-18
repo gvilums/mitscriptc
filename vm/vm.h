@@ -12,17 +12,18 @@
 
 class VM {
    private:
-    struct StackFrame {
-        struct Function* ctx;
-        size_t iptr;
-        size_t num_locals;
-    };
-
     struct Function* source;
-    std::vector<StackFrame> callstack;
     std::map<std::string, Value> globals;
     std::vector<Value> opstack;
+
     size_t base_index = 0;
+    size_t iptr = 0;
+    size_t num_locals = 0;
+    struct Function* ctx;
+
+    auto get_unary_op() -> Value;
+    auto get_binary_ops() -> std::pair<Value, Value>;
+    void reset();
 
    public:
     VM(struct Function* prog);
@@ -31,6 +32,4 @@ class VM {
 
     void exec();
     auto step() -> bool;
-    auto get_unary_op() -> Value;
-    auto get_binary_ops() -> std::pair<Value, Value>;
 };
