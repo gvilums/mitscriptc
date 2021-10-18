@@ -6,9 +6,7 @@
 
 class PrettyPrinter {
    public:
-    PrettyPrinter()
-        : indent_(0) {
-    }
+    PrettyPrinter() = default;
 
     void print(const struct Function& function, std::ostream& os) {
         print_indent(os) << "function\n";
@@ -21,7 +19,7 @@ class PrettyPrinter {
 
         print_indent(os) << "functions =";
 
-        if (0 == function.functions_.size()) {
+        if (function.functions_.empty()) {
             os << " [],\n";
         } else {
             os << "\n";
@@ -92,7 +90,7 @@ class PrettyPrinter {
         --indent_;
     }
 
-    std::ostream& print_indent(std::ostream& os) {
+    auto print_indent(std::ostream& os) const -> std::ostream& {
         for (size_t i = 0; i < indent_; ++i) {
             os << "\t";
         }
@@ -311,15 +309,15 @@ class PrettyPrinter {
     }
 
     void print(const InstructionList& ilist, std::ostream& os) {
-        for (size_t i = 0; i < ilist.size(); ++i) {
+        for (auto i : ilist) {
             print_indent(os);
 
-            print(ilist[i], os);
+            print(i, os);
 
             os << "\n";
         }
     }
 
-   private:
-    size_t indent_;
+   
+    size_t indent_{};
 };

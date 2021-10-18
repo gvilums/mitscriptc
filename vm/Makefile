@@ -3,6 +3,9 @@ all: mitscript
 test: release
 	(cd tests; ./test.sh ../mitscript)
 
+profile: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
+	g++-11 -pg -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
+
 release: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
 	g++-11 -O3 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
 
@@ -27,4 +30,4 @@ MITScript.g.intermediate: MITScript.g
 	java -Xmx500M -cp "bin/antlr-4.7.2-complete.jar:${CLASSPATH}" org.antlr.v4.Tool -Dlanguage=Cpp MITScript.g
 
 clean:
-	rm -f MITScript.h MITScript.cpp MITScript.interp  MITScript.tokens bc-lexer.cpp bc-lexer.h bc-parser.cpp bc-parser.h mitscript compiler
+	rm -f MITScript.h MITScript.cpp MITScript.interp  MITScript.tokens bc-lexer.cpp bc-lexer.h bc-parser.cpp bc-parser.h mitscript compiler cachegrind.out* gmon.out gprof.out

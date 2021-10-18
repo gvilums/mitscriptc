@@ -5,38 +5,40 @@
 
 #include "types.h"
 
-struct RecordCell;
-struct RefCell;
+struct RecordRef;
+struct ValueRef;
 struct ClosureRef;
 
-using ProgVal =
-    std::variant<None, int, bool, std::string, RecordCell, ClosureRef>;
-using StackVal = std::variant<ProgVal, RefCell, struct Function*>;
+using ProgVal = std::variant<None, int, bool, std::string, RecordRef, ClosureRef>;
+using StackVal = std::variant<ProgVal, ValueRef, struct Function*>;
+
+// possible values on the program stack
+using Value = std::variant<None, int, bool, std::string, RecordRef, ClosureRef, ValueRef, struct Function*, size_t>;
 
 enum class FnType { DEFAULT,
                     PRINT,
                     INPUT,
                     INTCAST };
 
-struct RecordCell {
+struct RecordRef {
     // pointer to hashmap holding record state
-    std::map<std::string, ProgVal>* internal;
+    std::map<std::string, Value>* internal;
 };
 
-struct RefCell {
-    ProgVal* ref;
+struct ValueRef {
+    Value* ref;
 };
 
 struct Closure {
     FnType type;
     struct Function* fn;
-    std::vector<RefCell> refs;
+    std::vector<ValueRef> refs;
 };
 
 struct ClosureRef {
     Closure* closure;
 };
 
-ProgVal value_from_constant(Constant c);
-std::string value_to_string(ProgVal v);
-bool value_eq(ProgVal l, ProgVal r);
+auto value_from_constant(Constant c) -> Value;
+auto value_to_string(Value v) -> std::string;
+auto value_eq(Value l, Value r) -> bool;

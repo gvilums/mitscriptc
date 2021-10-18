@@ -7,6 +7,7 @@ compiler
 vmtest
 mitscript
 vgout.txt
+code.mit
 
 bc-lexer.h
 bc-lexer.cpp
@@ -19,3 +20,6 @@ MITScript.interp
 MITScript.tokens
 
 tests/tmp.out
+cachegrind.out*
+gmon.out
+gprof.out
