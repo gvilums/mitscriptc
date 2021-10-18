@@ -9,9 +9,6 @@ struct RecordRef;
 struct ValueRef;
 struct ClosureRef;
 
-using ProgVal = std::variant<None, int, bool, std::string, RecordRef, ClosureRef>;
-using StackVal = std::variant<ProgVal, ValueRef, struct Function*>;
-
 // possible values on the program stack
 using Value = std::variant<None, int, bool, std::string, RecordRef, ClosureRef, ValueRef, struct Function*, size_t>;
 

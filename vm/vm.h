@@ -15,6 +15,7 @@ class VM {
     struct Function* source;
     std::map<std::string, Value> globals;
     std::vector<Value> opstack;
+    std::vector<Value> arg_stage;
 
     size_t base_index = 0;
     size_t iptr = 0;

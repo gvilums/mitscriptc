@@ -38,12 +38,9 @@ void VM::reset() {
     this->iptr = 0;
     this->num_locals = 0;
 
-    auto* print_closure = new Closure;
-    *print_closure = Closure{.type = FnType::PRINT, .fn = nullptr};
-    auto* input_closure = new Closure;
-    *input_closure = Closure{.type = FnType::INPUT, .fn = nullptr};
-    auto* intcast_closure = new Closure;
-    *intcast_closure = Closure{.type = FnType::INTCAST, .fn = nullptr};
+    auto* print_closure = new Closure{FnType::PRINT, nullptr};
+    auto* input_closure = new Closure{FnType::INPUT, nullptr};
+    auto* intcast_closure = new Closure{FnType::INTCAST, nullptr};
 
     this->globals = {
         { "print", ClosureRef{print_closure} },
@@ -64,18 +61,17 @@ auto VM::step() -> bool {
         return false;
     }
 
-    struct Function* fn = this->ctx;
-    if (this->iptr >= fn->instructions.size()) {
+    if (this->iptr >= this->ctx->instructions.size()) {
         throw std::string{"instruction pointer overran instruction list"};
     }
-    Instruction instr = fn->instructions[this->iptr];
+    Instruction instr = this->ctx->instructions[this->iptr];
 
     if (instr.operation == Operation::LoadConst) {
-        Value v = value_from_constant(fn->constants_.at(instr.operand0.value()));
+        Value v = value_from_constant(this->ctx->constants_.at(instr.operand0.value()));
         this->opstack.push_back(v);
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadGlobal) {
-        std::string name = fn->names_.at(instr.operand0.value());
+        std::string name = this->ctx->names_.at(instr.operand0.value());
         if (this->globals.find(name) == this->globals.end()) {
             throw std::string{"ERROR: uninitialized variable"};
         }
@@ -85,7 +81,7 @@ auto VM::step() -> bool {
         this->opstack.push_back(this->opstack.at(this->base_index + instr.operand0.value()));
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadFunc) {
-        this->opstack.emplace_back(fn->functions_.at(instr.operand0.value()));
+        this->opstack.emplace_back(this->ctx->functions_.at(instr.operand0.value()));
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadReference) {
         if (this->opstack.empty()) {
@@ -97,7 +93,7 @@ auto VM::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
-        std::string& name = fn->names_.at(instr.operand0.value());
+        std::string& name = this->ctx->names_.at(instr.operand0.value());
         this->globals[name] = val;
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreLocal) {
@@ -215,15 +211,16 @@ auto VM::step() -> bool {
             throw std::string{"ERROR: not enough stack arguments while allocating closure"};
         }
         std::vector<ValueRef> refs;
-        for (size_t i = 0; i < m; ++i) {
+        refs.reserve(m);
+        for (size_t i = this->opstack.size() - m; i < this->opstack.size(); ++i) {
             try {
-                refs.push_back(std::get<ValueRef>(this->opstack.back()));
+                refs.push_back(std::get<ValueRef>(this->opstack.at(i)));
             } catch (const std::bad_variant_access& e) {
                 throw std::string{"ERROR: expected reference as argument to AllocClosure"};
             }
-            this->opstack.pop_back();
         }
-        std::reverse(refs.begin(), refs.end());
+        this->opstack.resize(this->opstack.size() - m);
+        
         struct Function* fn;
         try {
             fn = std::get<struct Function*>(this->opstack.back());
@@ -232,8 +229,7 @@ auto VM::step() -> bool {
             throw std::string{"ERROR: expected function pointer as argument to AllocClosure"};
         }
 
-        auto* closure = new Closure;
-        *closure = Closure{.type = FnType::DEFAULT, .fn = fn, .refs = std::move(refs)};
+        auto* closure = new Closure{FnType::DEFAULT, fn, std::move(refs)};
         this->opstack.emplace_back(ClosureRef{.closure = closure});
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {
@@ -245,11 +241,16 @@ auto VM::step() -> bool {
         if (this->opstack.size() <= n_params) {
             throw std::string{"ERROR: not enough stack arguments while calling closure"};
         }
-        std::vector<Value> args;
-        for (size_t i = 0; i < n_params; ++i) {
-            args.push_back(this->get_unary_op());
-        }
-        std::reverse(args.begin(), args.end());
+        this->arg_stage.clear();
+        this->arg_stage.reserve(n_params);
+        this->arg_stage.insert(
+            this->arg_stage.begin(), 
+            std::next(this->opstack.begin(), this->opstack.size() - n_params), 
+            this->opstack.end()
+        );
+        this->opstack.resize(this->opstack.size() - n_params);
+        
+        
         Value val = this->get_unary_op();
         ClosureRef ref;
         try {
@@ -260,12 +261,10 @@ auto VM::step() -> bool {
         Closure& c = *ref.closure;
         this->iptr += 1;
         if (c.type == FnType::DEFAULT) {
-            // note: this invalidates frame
             if (c.fn->parameter_count_ != n_params) {
                 throw std::string{"ERROR: invalid parameter count for function call"};
             }
             
-            // push rbp to stack
             this->opstack.emplace_back(this->ctx);
             this->opstack.emplace_back(this->num_locals);
             this->opstack.emplace_back(this->iptr);
@@ -277,7 +276,7 @@ auto VM::step() -> bool {
             this->num_locals = c.fn->local_vars_.size();
 
             // push arguments to stack as local variables
-            this->opstack.insert(this->opstack.end(), args.begin(), args.end());
+            this->opstack.insert(this->opstack.end(), arg_stage.begin(), arg_stage.end());
             for (size_t i = 0; i < c.fn->local_vars_.size() - n_params; ++i) {
                 this->opstack.emplace_back(None{});
             }
@@ -303,28 +302,28 @@ auto VM::step() -> bool {
                 this->opstack.emplace_back(ref);
             }
         } else if (c.type == FnType::PRINT) {
-            if (args.size() != 1) {
+            if (arg_stage.size() != 1) {
                 throw std::string{"ERROR: print requires exactly one argument"};
             }
-            std::cout << value_to_string(args.at(0)) << '\n';
+            std::cout << value_to_string(arg_stage.at(0)) << '\n';
         } else if (c.type == FnType::INPUT) {
-            if (!args.empty()) {
+            if (!arg_stage.empty()) {
                 throw std::string{"ERROR: input requires exactly zero arguments"};
             }
             std::string input;
             std::getline(std::cin, input);
             this->opstack.emplace_back(input);
         } else if (c.type == FnType::INTCAST) {
-            if (args.size() != 1) {
+            if (arg_stage.size() != 1) {
                 throw std::string{"ERROR: intcast requires exactly one argument"};
             }
-            this->opstack.emplace_back(std::stoi(std::get<std::string>(args.at(0))));
+            this->opstack.emplace_back(std::stoi(std::get<std::string>(arg_stage.at(0))));
         } else {
             throw std::string{"ICE: undefined function type"};
         }
     } else if (instr.operation == Operation::FieldLoad) {
         auto val = this->get_unary_op();
-        std::string& field_name = fn->names_.at(instr.operand0.value());
+        std::string& field_name = this->ctx->names_.at(instr.operand0.value());
         try {
             RecordRef r = std::get<RecordRef>(val);
             if (r.internal->find(field_name) == r.internal->end()) {
@@ -338,7 +337,7 @@ auto VM::step() -> bool {
         }
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = this->get_binary_ops();
-        std::string& field_name = fn->names_.at(instr.operand0.value());
+        std::string& field_name = this->ctx->names_.at(instr.operand0.value());
         RecordRef r = std::get<RecordRef>(record_val);
         r.internal->insert_or_assign(field_name, val);
         this->iptr += 1;
