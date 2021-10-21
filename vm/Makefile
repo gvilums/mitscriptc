@@ -1,15 +1,15 @@
 all: mitscript
 
-test: release
+test: mitscript
 	(cd tests; ./test.sh ../mitscript)
 
 profile: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
 	g++-11 -pg -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
 
-release: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
+mitscript: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
 	g++-11 -O3 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
 
-mitscript: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
+debug: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
 	g++-11 -g -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
 
 bc-parser.cpp: bc-parser.yy

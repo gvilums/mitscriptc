@@ -12,6 +12,21 @@ struct ClosureRef;
 // possible values on the program stack
 using Value = std::variant<None, int, bool, std::string, RecordRef, ClosureRef, ValueRef, struct Function*, size_t>;
 
+// class NewValue {
+//     enum{NONE, NUM, BOOL, STRING, RECORD, CLOSURE, REFERENCE, FN_PTR, USIZE};
+//     union {
+//         None none;
+//         int num;
+//         bool boolean;
+//         std::string str;
+//         RecordRef record;
+//         ClosureRef closure;
+//         ValueRef reference;
+//         struct Function* fnptr;
+//         size_t usize;
+//     };
+// };
+
 enum class FnType { DEFAULT,
                     PRINT,
                     INPUT,
