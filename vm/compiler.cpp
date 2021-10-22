@@ -7,7 +7,6 @@
 #include "MITScript.h"
 #include "antlr4-runtime.h"
 #include "compiler.h"
-#include "Deallocator.h"
 #include "parsercode.h"
 
 
@@ -37,15 +36,14 @@ auto main(int argc, const char* argv[]) -> int {
         return 1;
     }
 
-    Compiler compiler;
-    program->accept(compiler);
-    // struct Function* fun = compiler.get_function();
+    // Compiler compiler;
+    // program->accept(compiler);
+   	// struct Function* fun = compiler.get_function();
     
     // PrettyPrinter printer;
     // printer.print(*fun, std::cout);
     
-    Deallocator deallocator;
-    program->accept(deallocator);
+  
     delete program;
 
     return 0;

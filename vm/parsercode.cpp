@@ -462,12 +462,13 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
         return NULL;
     if (!minus)
         return Expr;
+    else {
+    	AST::UnaryExpression* UnExpr = new AST::UnaryExpression();
+    	UnExpr->addChild(Expr);
+    	UnExpr->addOp("-");
 
-    AST::UnaryExpression* UnExpr = new AST::UnaryExpression();
-    UnExpr->addChild(Expr);
-    UnExpr->addOp("-");
-
-    return (AST::Expression*)UnExpr;
+    	return (AST::Expression*)UnExpr;
+    }
 }
 
 AST::Expression* LHS(antlr4::CommonTokenStream& tokens) {

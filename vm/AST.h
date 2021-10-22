@@ -18,9 +18,14 @@ using namespace std;
 class Visitor;
 
 namespace AST {
+
+
+
+
 class AST_node {
    public:
     virtual void accept(Visitor& v) = 0;
+    virtual ~AST_node() {};
 };
 
 class Statement : public AST_node {
@@ -28,6 +33,9 @@ class Statement : public AST_node {
     virtual string tostring() {
         return "statment";
     }
+    
+    virtual ~Statement() override {};
+    
 };
 
 class Program : public AST_node {
@@ -44,6 +52,12 @@ class Program : public AST_node {
     }
     void addChild(Statement* child) {
         children.push_back(child);
+    }
+    virtual ~Program() override {
+    	for (auto& c : children) {
+    		// c->~Statement();
+    		delete c;
+    	}
     }
 };
 
@@ -62,6 +76,12 @@ class Block : Statement {
     void addChild(Statement* child) {
         children.push_back(child);
     }
+    virtual ~Block() override {
+    	for (auto& c : children) {
+    		// c->~Statement();
+    		delete c;
+    	}
+    }
 };
 
 class Expression : public AST_node {
@@ -78,6 +98,7 @@ class Expression : public AST_node {
     virtual bool isStringConstant() {
         return false;
     }
+    virtual ~Expression() override {};
 };
 
 class BinaryExpression : Expression {
@@ -98,6 +119,12 @@ class BinaryExpression : Expression {
     }
     virtual void accept(Visitor& v) {
         v.visit(*this);
+    }
+    virtual ~BinaryExpression() override {
+    	for (auto& c : children) {
+    		// c->~Expression();
+    		delete c;
+    	}
     }
 };
 
@@ -120,6 +147,12 @@ class UnaryExpression : Expression {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~UnaryExpression() override {
+    	for (auto& c : children) {
+    		// c->~Expression();
+    		delete c;
+    	}
+    }
 };
 
 class FunctionDeclaration : Expression {
@@ -141,6 +174,10 @@ class FunctionDeclaration : Expression {
     }
     virtual void accept(Visitor& v) {
         v.visit(*this);
+    }
+    virtual ~FunctionDeclaration() override {
+    	// block->~Block();
+    	delete block;
     }
 };
 
@@ -168,6 +205,14 @@ class Call : Expression, Statement {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~Call() override {
+    	for (auto& c : arguments) {
+    		// c->~Expression();
+    		delete c;
+    	}
+    	// expr->~Expression();
+    	delete expr;
+    }
 };
 
 class FieldDereference : Expression {
@@ -188,6 +233,10 @@ class FieldDereference : Expression {
     }
     bool isFieldDereference() override {
         return true;
+    }
+    virtual ~FieldDereference() override {
+    	// baseexpr->~Expression();
+    	delete baseexpr;
     }
 };
 
@@ -210,6 +259,12 @@ class IndexExpression : Expression {
     bool isIndexExpression() override {
         return true;
     }
+    virtual ~IndexExpression() override {
+    	// baseexpr->~Expression();
+    	// index->~Expression();
+    	delete baseexpr;
+    	delete index;
+    }
 };
 
 class Record : Expression {
@@ -229,6 +284,12 @@ class Record : Expression {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~Record() override {
+    	for (auto& p : dict) {
+    		// p.second->~Expression();
+    		delete p.second;
+    	}
+    }
 };
 
 class IntegerConstant : Expression {
@@ -246,6 +307,7 @@ class IntegerConstant : Expression {
     int getVal() {
         return stoi(val);
     }
+    virtual ~IntegerConstant() override {}
 };
 
 class StringConstant : Expression {
@@ -266,6 +328,7 @@ class StringConstant : Expression {
     bool isStringConstant() override {
         return true;
     }
+    virtual ~StringConstant() override {}
 };
 
 class BoolConstant : Expression {
@@ -283,6 +346,7 @@ class BoolConstant : Expression {
     bool getVal() {
         return val == "true";
     }
+    virtual ~BoolConstant() override {}
 };
 
 class NoneConstant : Expression {
@@ -293,6 +357,7 @@ class NoneConstant : Expression {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~NoneConstant() override {}
 };
 
 class Global : Statement {
@@ -321,6 +386,10 @@ class Return : Statement {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~Return() override {
+    	// Expr->~Expression();
+    	delete Expr;
+    }
 };
 
 class Assignment : Statement {
@@ -338,6 +407,12 @@ class Assignment : Statement {
     }
     virtual void accept(Visitor& v) {
         v.visit(*this);
+    }
+    virtual ~Assignment() override {
+    	// Expr->~Expression();
+    	// Lhs->~Expression();
+    	delete Expr;
+    	delete Lhs;
     }
 };
 
@@ -360,6 +435,12 @@ class IfStatement : Statement {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~IfStatement() override {
+    	delete Expr;
+    	for (auto& c : children) {
+    		delete c;
+    	}
+    }
 };
 
 class WhileLoop : Statement {
@@ -380,6 +461,13 @@ class WhileLoop : Statement {
     }
     virtual void accept(Visitor& v) {
         v.visit(*this);
+    }
+    virtual ~WhileLoop() override {
+    	delete Expr;
+    	for (auto& c : children) {
+    		delete c;
+    	}
+    	
     }
 };
 
