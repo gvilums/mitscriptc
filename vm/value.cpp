@@ -5,11 +5,14 @@
 #include <string>
 #include <variant>
 
+namespace VM {
+
 auto value_from_constant(Constant c) -> Value {
     return std::visit([](auto x) -> Value { return x; }, c);
 }
 
-Value::Value(const Value& other) : tag{other.tag} {
+Value::Value(const Value& other)
+    : tag{other.tag} {
     if (other.tag == NONE) {
         this->none = None{};
     } else if (other.tag == NUM) {
@@ -33,7 +36,8 @@ Value::Value(const Value& other) : tag{other.tag} {
     }
 }
 
-Value::Value(Value&& other) noexcept : tag{other.tag} {
+Value::Value(Value&& other) noexcept
+    : tag{other.tag} {
     if (other.tag == NONE) {
         this->none = None{};
     } else if (other.tag == NUM) {
@@ -107,7 +111,7 @@ auto Value::operator=(Value&& other) noexcept -> Value& {
         this->usize = other.usize;
     } else {
         std::terminate();
-    } 
+    }
     return *this;
 }
 
@@ -178,7 +182,7 @@ auto Value::to_string() const -> std::string {
     }
     if (this->tag == RECORD) {
         std::string out{"{"};
-        for (const auto& p : *this->record.internal) {
+        for (const auto& p : this->record.internal->fields) {
             out.append(p.first);
             out.push_back(':');
             out.append(p.second.to_string());
@@ -192,3 +196,4 @@ auto Value::to_string() const -> std::string {
     }
     throw std::string{"ERROR: trying to convert non-program-value to string"};
 }
+};  // namespace VM

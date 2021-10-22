@@ -10,7 +10,8 @@
 #include "types.h"
 #include "value.h"
 
-class VM {
+namespace VM {
+class VirtualMachine {
    private:
     struct Function* source;
     std::map<std::string, Value> globals;
@@ -27,10 +28,11 @@ class VM {
     void reset();
 
    public:
-    VM(struct Function* prog);
-    VM(const VM&) = delete;
-    auto operator=(const VM&) -> VM& = delete;
+    VirtualMachine(struct Function* prog);
+    VirtualMachine(const VirtualMachine&) = delete;
+    auto operator=(const VirtualMachine&) -> VirtualMachine& = delete;
 
     void exec();
     auto step() -> bool;
 };
+}  // namespace VM

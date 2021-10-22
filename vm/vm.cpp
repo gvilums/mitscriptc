@@ -7,7 +7,8 @@
 #include "types.h"
 #include "value.h"
 
-auto VM::get_unary_op() -> Value {
+namespace VM {
+auto VirtualMachine::get_unary_op() -> Value {
     if (this->opstack.empty()) {
         throw std::string{"ERROR: empty stack for unary operation"};
     }
@@ -16,7 +17,7 @@ auto VM::get_unary_op() -> Value {
     return operand;
 }
 
-auto VM::get_binary_ops() -> std::pair<Value, Value> {
+auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
     size_t stack_size = this->opstack.size();
     if (stack_size < 2) {
         throw std::string{"ERROR: stack holds too few operands for binary operation"};
@@ -26,13 +27,14 @@ auto VM::get_binary_ops() -> std::pair<Value, Value> {
 
     this->opstack.pop_back();
     this->opstack.pop_back();
-    
+
     return std::pair{lop, rop};
 }
 
-VM::VM(struct Function* prog) : source(prog) { }
+VirtualMachine::VirtualMachine(struct Function* prog)
+    : source(prog) {}
 
-void VM::reset() {
+void VirtualMachine::reset() {
     this->ctx = this->source;
     this->base_index = 0;
     this->iptr = 0;
@@ -43,20 +45,19 @@ void VM::reset() {
     auto* intcast_closure = new Closure{FnType::INTCAST, nullptr};
 
     this->globals = {
-        { "print", ClosureRef{print_closure} },
-        { "input", ClosureRef{input_closure} },
-        { "intcast", ClosureRef{intcast_closure} }
-    };
+        {"print", ClosureRef{print_closure}},
+        {"input", ClosureRef{input_closure}},
+        {"intcast", ClosureRef{intcast_closure}}};
 }
 
-void VM::exec() {
+void VirtualMachine::exec() {
     this->reset();
     while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
         this->step();
     }
 }
 
-auto VM::step() -> bool {
+auto VirtualMachine::step() -> bool {
     if (this->ctx == nullptr) {
         return false;
     }
@@ -171,7 +172,7 @@ auto VM::step() -> bool {
             refs.push_back(this->opstack.at(i).get_ref());
         }
         this->opstack.resize(this->opstack.size() - m);
-        
+
         struct Function* fn = this->opstack.back().get_fnptr();
         this->opstack.pop_back();
 
@@ -179,8 +180,8 @@ auto VM::step() -> bool {
         this->opstack.emplace_back(ClosureRef{.closure = closure});
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {
-        auto* map = new std::map<std::string, Value>();
-        this->opstack.emplace_back(RecordRef{.internal = map});
+        auto* rec = new Record;
+        this->opstack.emplace_back(RecordRef{.internal = rec});
         this->iptr += 1;
     } else if (instr.operation == Operation::Call) {
         int32_t n_params = instr.operand0.value();
@@ -190,13 +191,11 @@ auto VM::step() -> bool {
         this->arg_stage.clear();
         this->arg_stage.reserve(n_params);
         this->arg_stage.insert(
-            this->arg_stage.begin(), 
-            std::next(this->opstack.begin(), this->opstack.size() - n_params), 
-            this->opstack.end()
-        );
+            this->arg_stage.begin(),
+            std::next(this->opstack.begin(), this->opstack.size() - n_params),
+            this->opstack.end());
         this->opstack.resize(this->opstack.size() - n_params);
-        
-        
+
         Value val = this->get_unary_op();
         ClosureRef closure_ref = val.get_closure();
         Closure& c = *closure_ref.closure;
@@ -205,7 +204,7 @@ auto VM::step() -> bool {
             if (c.fn->parameter_count_ != n_params) {
                 throw std::string{"ERROR: invalid parameter count for function call"};
             }
-            
+
             this->opstack.emplace_back(this->ctx);
             this->opstack.emplace_back(this->num_locals);
             this->opstack.emplace_back(this->iptr);
@@ -269,33 +268,33 @@ auto VM::step() -> bool {
         auto val = this->get_unary_op();
         std::string& field_name = this->ctx->names_.at(instr.operand0.value());
         RecordRef r = val.get_record();
-        if (r.internal->find(field_name) == r.internal->end()) {
+        if (r.internal->fields.find(field_name) == r.internal->fields.end()) {
             this->opstack.emplace_back(None{});
         } else {
-            this->opstack.push_back(r.internal->at(field_name));
+            this->opstack.push_back(r.internal->fields.at(field_name));
         }
         this->iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = this->get_binary_ops();
         std::string& field_name = this->ctx->names_.at(instr.operand0.value());
         RecordRef r = record_val.get_record();
-        r.internal->insert_or_assign(field_name, val);
+        r.internal->fields.insert_or_assign(field_name, val);
         this->iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = this->get_binary_ops();
         std::string index_string = index.to_string();
         RecordRef r = record_val.get_record();
-        if (r.internal->find(index_string) == r.internal->end()) {
+        if (r.internal->fields.find(index_string) == r.internal->fields.end()) {
             this->opstack.emplace_back(None{});
         } else {
-            this->opstack.push_back(r.internal->at(index_string));
+            this->opstack.push_back(r.internal->fields.at(index_string));
         }
         this->iptr += 1;
     } else if (instr.operation == Operation::IndexStore) {
         auto value = this->get_unary_op();
         auto [record_val, index] = this->get_binary_ops();
         RecordRef r = record_val.get_record();
-        r.internal->insert_or_assign(index.to_string(), value);
+        r.internal->fields.insert_or_assign(index.to_string(), value);
         this->iptr += 1;
     } else if (instr.operation == Operation::Return) {
         // returning from final frame
@@ -354,3 +353,4 @@ auto VM::step() -> bool {
     }
     return true;
 }
+};  // namespace VM

@@ -12,7 +12,7 @@
 #include "parsercode.cpp"
 #include "vm.h"
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {
     std::ios_base::sync_with_stdio(false);
     if (argc != 3) {
         std::cout << "Usage: mitscript <type> <filename>\n";
@@ -64,7 +64,7 @@ int main(int argc, const char* argv[]) {
     }
 
     try {
-        VM vm(fn);
+        VM::VirtualMachine vm(fn);
         vm.exec();
     } catch (std::string s) {
         std::cout << s << std::endl;

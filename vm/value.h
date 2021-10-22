@@ -1,11 +1,13 @@
 #pragma once
 
+#include <exception>
 #include <map>
 #include <string>
 #include <utility>
-#include <exception>
 
 #include "types.h"
+
+namespace VM {
 
 class Value;
 
@@ -14,8 +16,12 @@ enum class FnType { DEFAULT,
                     INPUT,
                     INTCAST };
 
+struct Record {
+    std::map<std::string, Value> fields;
+};
+
 struct RecordRef {
-    std::map<std::string, Value>* internal;
+    Record* internal;
 };
 
 struct ValueRef {
@@ -36,7 +42,15 @@ struct ClosureRef {
 // using Value = std::variant<None, int, bool, std::string, RecordRef, ClosureRef, ValueRef, struct Function*, size_t>;
 
 class Value {
-    enum{NONE, NUM, BOOL, STRING, RECORD, CLOSURE, REFERENCE, FN_PTR, USIZE} tag;
+    enum { NONE,
+           NUM,
+           BOOL,
+           STRING,
+           RECORD,
+           CLOSURE,
+           REFERENCE,
+           FN_PTR,
+           USIZE } tag;
     union {
         None none;
         int num;
@@ -49,18 +63,30 @@ class Value {
         size_t usize;
     };
 
-   public: 
-    Value() : tag{NONE}, none{None{}} {}
-    Value(None none_val) : tag{NONE}, none{None{}} {}
-    Value(int n) : tag{NUM}, num{n} {}
-    Value(bool b) : tag{BOOL}, boolean{b} {}
-    Value(std::string s) : tag{STRING}, str{std::move(s)} {}
-    Value(RecordRef rec) : tag{RECORD}, record{rec} {}
-    Value(ClosureRef c) : tag{CLOSURE}, closure{c} {}
-    Value(ValueRef ref) : tag{REFERENCE}, reference{ref} {}
-    Value(struct Function* ptr) : tag{FN_PTR}, fnptr{ptr} {}
-    Value(size_t u) : tag{USIZE}, usize{u} {}
-    
+   public:
+    Value()
+        : tag{NONE}, none{None{}} {}
+    Value(None none_val)
+        : tag{NONE}, none{None{}} {}
+    Value(int n)
+        : tag{NUM}, num{n} {}
+    Value(bool b)
+        : tag{BOOL}, boolean{b} {}
+    Value(RecordRef rec)
+        : tag{RECORD}, record{rec} {}
+    Value(ClosureRef c)
+        : tag{CLOSURE}, closure{c} {}
+    Value(ValueRef ref)
+        : tag{REFERENCE}, reference{ref} {}
+    Value(struct Function* ptr)
+        : tag{FN_PTR}, fnptr{ptr} {}
+    Value(size_t u)
+        : tag{USIZE}, usize{u} {}
+    Value(std::string s)
+        : tag{STRING} {
+        ::new (&this->str) auto(std::move(s));
+    }
+
     Value(const Value& other);
     Value(Value&& other) noexcept;
 
@@ -69,7 +95,7 @@ class Value {
             this->str.~basic_string();
         }
     }
-    
+
     auto operator=(const Value& other) -> Value&;
     auto operator=(Value&& other) noexcept -> Value&;
 
@@ -79,14 +105,14 @@ class Value {
     friend auto operator>(Value const& lhs, Value const& rhs) -> bool;
 
     [[nodiscard]] auto to_string() const -> std::string;
-    
+
     inline auto get_bool() -> bool {
         if (this->tag == BOOL) {
             return this->boolean;
         }
         throw std::string{"ERROR: invalid cast to bool"};
     }
-    
+
     inline auto get_int() -> int {
         if (this->tag == NUM) {
             return this->num;
@@ -107,28 +133,28 @@ class Value {
         }
         throw std::string{"ERROR: invalid cast to record"};
     }
-    
+
     inline auto get_closure() -> ClosureRef {
         if (this->tag == CLOSURE) {
             return this->closure;
         }
         throw std::string{"ERROR: invalid cast to closure"};
     }
-    
+
     inline auto get_ref() -> ValueRef {
         if (this->tag == REFERENCE) {
             return this->reference;
         }
         throw std::string{"ERROR: invalid cast to reference"};
     }
-    
+
     inline auto get_fnptr() -> struct Function* {
         if (this->tag == FN_PTR) {
             return this->fnptr;
         }
         throw std::string{"ERROR: invalid cast to function pointer"};
     }
-    
+
     inline auto get_usize() -> size_t {
         if (this->tag == USIZE) {
             return this->usize;
@@ -137,5 +163,6 @@ class Value {
     }
 };
 
-
 auto value_from_constant(Constant c) -> Value;
+
+};  // namespace VM
