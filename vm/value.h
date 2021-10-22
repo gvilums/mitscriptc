@@ -38,9 +38,6 @@ struct ClosureRef {
     Closure* closure;
 };
 
-// possible values on the program stack
-// using Value = std::variant<None, int, bool, std::string, RecordRef, ClosureRef, ValueRef, struct Function*, size_t>;
-
 class Value {
     enum { NONE,
            NUM,
@@ -50,7 +47,7 @@ class Value {
            CLOSURE,
            REFERENCE,
            FN_PTR,
-           USIZE } tag;
+           USIZE } tag{NONE};
     union {
         None none;
         int num;
@@ -65,9 +62,9 @@ class Value {
 
    public:
     Value()
-        : tag{NONE}, none{None{}} {}
+        : none{None{}} {}
     Value(None none_val)
-        : tag{NONE}, none{None{}} {}
+        : none{None{}} {}
     Value(int n)
         : tag{NUM}, num{n} {}
     Value(bool b)

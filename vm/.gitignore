@@ -6,6 +6,7 @@ compilertest
 compiler
 vmtest
 mitscript
+mitscriptc
 vgout.txt
 code.mit
 

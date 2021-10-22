@@ -9,7 +9,7 @@
 #include "bc-lexer.h"
 #include "bc-parser.h"
 #include "compiler.h"
-#include "parsercode.cpp"
+#include "parsercode.h"
 #include "vm.h"
 
 auto main(int argc, const char* argv[]) -> int {
