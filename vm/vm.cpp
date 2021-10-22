@@ -192,7 +192,7 @@ auto VirtualMachine::step() -> bool {
         this->arg_stage.reserve(n_params);
         this->arg_stage.insert(
             this->arg_stage.begin(),
-            std::next(this->opstack.begin(), this->opstack.size() - n_params),
+            std::next(this->opstack.begin(), (long)this->opstack.size() - n_params),
             this->opstack.end());
         this->opstack.resize(this->opstack.size() - n_params);
 

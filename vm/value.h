@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 
+#include "../gc/gc.h"
 #include "types.h"
 
 namespace VM {
@@ -38,7 +39,7 @@ struct ClosureRef {
     Closure* closure;
 };
 
-class Value {
+class Value : public Collectable {
     enum { NONE,
            NUM,
            BOOL,
@@ -87,7 +88,7 @@ class Value {
     Value(const Value& other);
     Value(Value&& other) noexcept;
 
-    ~Value() {
+    ~Value() override {
         if (this->tag == STRING) {
             this->str.~basic_string();
         }
@@ -102,6 +103,8 @@ class Value {
     friend auto operator>(Value const& lhs, Value const& rhs) -> bool;
 
     [[nodiscard]] auto to_string() const -> std::string;
+    
+    void follow(CollectedHeap& heap) override;
 
     inline auto get_bool() -> bool {
         if (this->tag == BOOL) {

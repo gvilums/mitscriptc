@@ -196,4 +196,20 @@ auto Value::to_string() const -> std::string {
     }
     throw std::string{"ERROR: trying to convert non-program-value to string"};
 }
+
+void Value::follow(CollectedHeap& heap) {
+    if (this->tag == RECORD) {
+        for (auto& [key, val] : this->record.internal->fields) {
+            heap.markSuccessors(&val);
+        }
+    }
+    if (this->tag == CLOSURE) {
+        for (auto& val_ref : this->closure.closure->refs) {
+            heap.markSuccessors(val_ref.ref);
+        }
+    }
+    if (this->tag == REFERENCE) {
+        heap.markSuccessors(this->reference.ref);
+    }
+}
 };  // namespace VM

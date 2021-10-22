@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 class CollectedHeap;
 
 // Any object that inherits from collectable can be created and tracked by the
@@ -13,6 +15,8 @@ class Collectable {
     // the CollectedHeap (since it is declared as friend below).  You can think of
     // these fields as the header for the object, which will include metadata that
     // is useful for the garbage collector.
+    bool marked{false};
+    Collectable* next{nullptr};
 
    protected:
     /*
@@ -47,6 +51,10 @@ class CollectedHeap {
     */
     template <typename T>
     T* allocate() {
+        Collectable* allocation = new T;
+        allocation->next = this->head;
+        this->head = allocation;
+        return allocation;
     }
 
     /*
@@ -56,6 +64,10 @@ class CollectedHeap {
     */
     template <typename T, typename Arg>
     T* allocate(Arg a) {
+        Collectable* allocation = new T(a);
+        allocation->next = this->head;
+        this->head = allocation;
+        return allocation;
     }
 
     /*
@@ -69,6 +81,8 @@ class CollectedHeap {
     about other Collectable otjects pointed to by itself.
     */
     void markSuccessors(Collectable* next) {
+        next->marked = true;
+        next->follow(*this);
     }
 
     /*
@@ -86,5 +100,43 @@ class CollectedHeap {
     */
     template <typename Iterator>
     void gc(Iterator begin, Iterator end) {
+        // no current allocations
+        if (this->head == nullptr) {
+            return;
+        }
+        // mark all root node successors
+        for (auto i = begin; i != end; ++i) {
+            markSuccessors(&*i);
+        }
+
+        // free unmarked heads
+        while (this->head != nullptr && !this->head->marked) {
+            Collectable* next = this->head->next;
+            delete this->head;
+            this->head = next;
+        }
+
+        // if we just cleared the entire heap, return
+        if (this->head == nullptr) {
+            return;
+        }
+
+        Collectable* prev = this->head;
+        Collectable* current = this->head->next;
+
+        while (current != nullptr) {
+            if (!current->marked) {
+                Collectable* next = current->next;
+                delete current;
+                current = next;
+                prev->next = current;
+            } else {
+                prev = current;
+                current = current->next;
+            }
+        }
     }
+
+   private:
+    Collectable* head;
 };
