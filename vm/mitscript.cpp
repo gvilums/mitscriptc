@@ -44,6 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
 
         program->accept(compiler);
         fn = compiler.get_function();
+        delete program;
     } else if (flag == "-b") {
         std::FILE* file = std::fopen(argv[2], "r");
         if (file == nullptr) {
@@ -73,6 +74,7 @@ auto main(int argc, const char* argv[]) -> int {
         std::cout << "ERROR: runtime exception" << std::endl;
         return 1;
     }
+    
 
     return 0;
 }
