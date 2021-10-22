@@ -9,9 +9,107 @@ auto value_from_constant(Constant c) -> Value {
     return std::visit([](auto x) -> Value { return x; }, c);
 }
 
-// Value::Value(const Value& other) : tag{other.tag} {
+Value::Value(const Value& other) : tag{other.tag} {
+    if (other.tag == NONE) {
+        this->none = None{};
+    } else if (other.tag == NUM) {
+        this->num = other.num;
+    } else if (other.tag == BOOL) {
+        this->boolean = other.boolean;
+    } else if (other.tag == STRING) {
+        ::new (&this->str) auto(other.str);
+    } else if (other.tag == RECORD) {
+        this->record = other.record;
+    } else if (other.tag == CLOSURE) {
+        this->closure = other.closure;
+    } else if (other.tag == REFERENCE) {
+        this->reference = other.reference;
+    } else if (other.tag == FN_PTR) {
+        this->fnptr = other.fnptr;
+    } else if (other.tag == USIZE) {
+        this->usize = other.usize;
+    } else {
+        std::terminate();
+    }
+}
 
-// }
+Value::Value(Value&& other) noexcept : tag{other.tag} {
+    if (other.tag == NONE) {
+        this->none = None{};
+    } else if (other.tag == NUM) {
+        this->num = other.num;
+    } else if (other.tag == BOOL) {
+        this->boolean = other.boolean;
+    } else if (other.tag == STRING) {
+        ::new (&this->str) auto(std::move(other.str));
+    } else if (other.tag == RECORD) {
+        this->record = other.record;
+    } else if (other.tag == CLOSURE) {
+        this->closure = other.closure;
+    } else if (other.tag == REFERENCE) {
+        this->reference = other.reference;
+    } else if (other.tag == FN_PTR) {
+        this->fnptr = other.fnptr;
+    } else if (other.tag == USIZE) {
+        this->usize = other.usize;
+    } else {
+        std::terminate();
+    }
+}
+
+auto Value::operator=(const Value& other) -> Value& {
+    this->~Value();
+    this->tag = other.tag;
+    if (other.tag == NONE) {
+        this->none = None{};
+    } else if (other.tag == NUM) {
+        this->num = other.num;
+    } else if (other.tag == BOOL) {
+        this->boolean = other.boolean;
+    } else if (other.tag == STRING) {
+        ::new (&this->str) auto(other.str);
+    } else if (other.tag == RECORD) {
+        this->record = other.record;
+    } else if (other.tag == CLOSURE) {
+        this->closure = other.closure;
+    } else if (other.tag == REFERENCE) {
+        this->reference = other.reference;
+    } else if (other.tag == FN_PTR) {
+        this->fnptr = other.fnptr;
+    } else if (other.tag == USIZE) {
+        this->usize = other.usize;
+    } else {
+        std::terminate();
+    }
+    return *this;
+}
+
+auto Value::operator=(Value&& other) noexcept -> Value& {
+    this->~Value();
+    this->tag = other.tag;
+    if (other.tag == NONE) {
+        this->none = None{};
+    } else if (other.tag == NUM) {
+        this->num = other.num;
+    } else if (other.tag == BOOL) {
+        this->boolean = other.boolean;
+    } else if (other.tag == STRING) {
+        ::new (&this->str) auto(std::move(other.str));
+    } else if (other.tag == RECORD) {
+        this->record = other.record;
+    } else if (other.tag == CLOSURE) {
+        this->closure = other.closure;
+    } else if (other.tag == REFERENCE) {
+        this->reference = other.reference;
+    } else if (other.tag == FN_PTR) {
+        this->fnptr = other.fnptr;
+    } else if (other.tag == USIZE) {
+        this->usize = other.usize;
+    } else {
+        std::terminate();
+    } 
+    return *this;
+}
 
 auto operator+(const Value& lhs, const Value& rhs) -> Value {
     if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
