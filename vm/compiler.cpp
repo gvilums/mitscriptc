@@ -7,10 +7,11 @@
 #include "MITScript.h"
 #include "antlr4-runtime.h"
 #include "compiler.h"
-#include "parsercode.cpp"
 #include "Deallocator.h"
+#include "parsercode.h"
 
-int main(int argc, const char* argv[]) {
+
+auto main(int argc, const char* argv[]) -> int {
     if (argc != 2) {
         std::cout << "Usage: mitscript <filename>\n";
         return 1;
@@ -31,7 +32,7 @@ int main(int argc, const char* argv[]) {
     tokens.fill();
 
     AST::Program* program = Program(tokens);
-    if (!program) {
+    if (program == nullptr) {
         std::cout << "Parsing failed" << std::endl;
         return 1;
     }

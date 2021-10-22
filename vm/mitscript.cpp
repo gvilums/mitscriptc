@@ -9,10 +9,10 @@
 #include "bc-lexer.h"
 #include "bc-parser.h"
 #include "compiler.h"
-#include "parsercode.cpp"
+#include "parsercode.h"
 #include "vm.h"
 
-int main(int argc, const char* argv[]) {
+auto main(int argc, const char* argv[]) -> int {
     std::ios_base::sync_with_stdio(false);
     if (argc != 3) {
         std::cout << "Usage: mitscript <type> <filename>\n";
@@ -37,7 +37,7 @@ int main(int argc, const char* argv[]) {
         tokens.fill();
 
         AST::Program* program = Program(tokens);
-        if (!program) {
+        if (program == nullptr) {
             std::cout << "ERROR: parse error" << std::endl;
             return 1;
         }
@@ -46,7 +46,7 @@ int main(int argc, const char* argv[]) {
         fn = compiler.get_function();
     } else if (flag == "-b") {
         std::FILE* file = std::fopen(argv[2], "r");
-        if (!file) {
+        if (file == nullptr) {
             std::cout << "Failed to open file: " << argv[2] << std::endl;
             return 1;
         }
@@ -64,7 +64,7 @@ int main(int argc, const char* argv[]) {
     }
 
     try {
-        VM vm(fn);
+        VM::VirtualMachine vm(fn);
         vm.exec();
     } catch (std::string s) {
         std::cout << s << std::endl;
