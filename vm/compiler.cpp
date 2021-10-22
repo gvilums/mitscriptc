@@ -8,6 +8,7 @@
 #include "antlr4-runtime.h"
 #include "compiler.h"
 #include "parsercode.cpp"
+#include "Deallocator.h"
 
 int main(int argc, const char* argv[]) {
     if (argc != 2) {
@@ -37,10 +38,14 @@ int main(int argc, const char* argv[]) {
 
     Compiler compiler;
     program->accept(compiler);
-    struct Function* fun = compiler.get_function();
-
-    PrettyPrinter printer;
-    printer.print(*fun, std::cout);
+    // struct Function* fun = compiler.get_function();
+    
+    // PrettyPrinter printer;
+    // printer.print(*fun, std::cout);
+    
+    Deallocator deallocator;
+    program->accept(deallocator);
+    delete program;
 
     return 0;
 }

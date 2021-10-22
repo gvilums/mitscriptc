@@ -11,15 +11,15 @@ using namespace std;
 
 class Compiler : public Visitor {
    private:
-    bool global_scope_;
-    struct Function* rfun_;
-    None none_;
-    std::set<std::string> globals_;
+    bool global_scope_; // falg indicating whether we are in the global scope
+    struct Function* rfun_; // current function pointer
+    None none_; // none value
+    std::set<std::string> globals_; // set of global variables seen so far
 
    public:
     Compiler() {
         rfun_ = new struct Function;
-        rfun_->names_.push_back("print");
+        rfun_->names_.push_back("print"); // add predefined functions
         rfun_->names_.push_back("intcast");
         rfun_->names_.push_back("input");
         globals_.insert("print");
@@ -28,24 +28,24 @@ class Compiler : public Visitor {
         global_scope_ = true;
     }
 
-    struct Function* get_function() {
+    struct Function* get_function() { // return current function pointer
         return rfun_;
     }
 
-    void visit(AST::Program& expr) {
+    void visit(AST::Program& expr) { // visit recursively all children
         for (auto c : expr.children) {
             c->accept(*((Visitor*)this));
         }
     }
 
-    void visit(AST::Block& expr) {
+    void visit(AST::Block& expr) { // visit recursively all children
         for (auto c : expr.children)
             c->accept(*((Visitor*)this));
     }
 
     void visit(AST::Global& expr) {}
 
-    void visit(AST::Return& expr) {
+    void visit(AST::Return& expr) { // visit expression & push return operation
         expr.Expr->accept(*((Visitor*)this));
         rfun_->instructions.push_back(Instruction(Operation::Return, std::nullopt));
     }
@@ -134,19 +134,17 @@ class Compiler : public Visitor {
     }
 
     void visit(AST::FunctionDeclaration& expr) {
-        struct Function* tfun = rfun_;
-        bool tscope = global_scope_;
-        std::set<string> tglobals = globals_;
+        struct Function* tfun = rfun_; // save current function into temporal variable
+        bool tscope = global_scope_; // save global_scope_ flag
+        std::set<string> tglobals = globals_; // save current global variables
 
-        rfun_ = new struct Function;
-        global_scope_ = false;
-
-        rfun_->parameter_count_ = expr.arguments.size();
+        rfun_ = new struct Function; // create new function
+        global_scope_ = false; // if we declare new function we are not anymore in the global scope
+        rfun_->parameter_count_ = expr.arguments.size(); // initialize fields of new function
         tfun->functions_.push_back(rfun_);
 
-        // finding local decl
-
-        FreeVariables freeVar;
+ 
+        FreeVariables freeVar; // use visitor class to resolve all variable types, see FreeVariables.h for further explanations
         expr.block->accept(freeVar);
         vector<string> free_var = freeVar.getFreeVariables();
         vector<string> cur_var = freeVar.getCurVariables();
