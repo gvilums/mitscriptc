@@ -9,43 +9,88 @@ auto value_from_constant(Constant c) -> Value {
     return std::visit([](auto x) -> Value { return x; }, c);
 }
 
-auto value_eq(Value l, Value r) -> bool {
-    return std::visit(
-        overloaded{
-            [](None x, None y) -> bool { return true; },
-            [](bool l, bool r) -> bool { return l == r; },
-            [](int x, int y) -> bool { return x == y; },
-            [](const std::string& l, const std::string& r) -> bool {
-                return l == r;
-            },
-            [](RecordRef lrec, RecordRef rrec) -> bool {
-                return lrec.internal == rrec.internal;
-            },
-            // TODO think about this
-            [](auto x, auto y) -> bool { return false; }},
-        l, r);
+// Value::Value(const Value& other) : tag{other.tag} {
+
+// }
+
+auto operator+(const Value& lhs, const Value& rhs) -> Value {
+    if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
+        return {lhs.num + rhs.num};
+    }
+    if (lhs.tag == Value::STRING && rhs.tag == Value::STRING) {
+        return {lhs.str + rhs.str};
+    }
+    if (lhs.tag == Value::STRING) {
+        return {lhs.str + rhs.to_string()};
+    }
+    if (rhs.tag == Value::STRING) {
+        return {lhs.to_string() + rhs.str};
+    }
+    throw std::string{"ERROR: invalid cast in '+' operation"};
 }
 
-auto value_to_string(Value val) -> std::string {
-    return std::visit(
-        overloaded{
-            [](None x) -> std::string { return std::string{"None"}; },
-            [](bool b) -> std::string { return b ? "true" : "false"; },
-            [](int i) -> std::string { return std::to_string(i); },
-            [](std::string s) -> std::string { return s; },
-            [](RecordRef r) -> std::string {
-                std::string out{"{"};
-                for (const auto& p : *r.internal) {
-                    out.append(p.first);
-                    out.push_back(':');
-                    out.append(value_to_string(p.second));
-                    out.push_back(' ');
-                }
-                out.push_back('}');
-                return out;
-            },
-            [](ClosureRef c) -> std::string { return std::string{"FUNCTION"}; },
-            [](auto x) -> std::string { throw std::string{"ERROR: cannot convert non-value to string"}; },
-        },
-        val);
+auto operator==(const Value& lhs, const Value& rhs) -> bool {
+    if (lhs.tag == rhs.tag) {
+        if (lhs.tag == Value::NONE) {
+            return true;
+        }
+        if (lhs.tag == Value::NUM) {
+            return lhs.num == rhs.num;
+        }
+        if (lhs.tag == Value::BOOL) {
+            return lhs.boolean == rhs.boolean;
+        }
+        if (lhs.tag == Value::STRING) {
+            return lhs.str == rhs.str;
+        }
+        if (lhs.tag == Value::RECORD) {
+            return lhs.record.internal == rhs.record.internal;
+        }
+    }
+    // TODO think about throwing error on comparison of non-program-variables
+    return false;
+}
+
+auto operator>=(Value const& lhs, Value const& rhs) -> bool {
+    if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
+        return lhs.num >= rhs.num;
+    }
+    throw std::string{"ERROR: invalid cast to int in comparison"};
+}
+
+auto operator>(Value const& lhs, Value const& rhs) -> bool {
+    if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
+        return lhs.num > rhs.num;
+    }
+    throw std::string{"ERROR: invalid cast to int in comparison"};
+}
+
+auto Value::to_string() const -> std::string {
+    if (this->tag == NONE) {
+        return "None";
+    }
+    if (this->tag == BOOL) {
+        return this->boolean ? "true" : "false";
+    }
+    if (this->tag == NUM) {
+        return std::to_string(this->num);
+    }
+    if (this->tag == STRING) {
+        return this->str;
+    }
+    if (this->tag == RECORD) {
+        std::string out{"{"};
+        for (const auto& p : *this->record.internal) {
+            out.append(p.first);
+            out.push_back(':');
+            out.append(p.second.to_string());
+            out.push_back(' ');
+        }
+        out.push_back('}');
+        return out;
+    }
+    if (this->tag == CLOSURE) {
+        return "FUNCTION";
+    }
+    throw std::string{"ERROR: trying to convert non-program-value to string"};
 }
