@@ -11,6 +11,16 @@ auto value_from_constant(Constant c) -> Value {
     return std::visit([](auto x) -> Value { return x; }, c);
 }
 
+void Value::destroy_contents() {
+    if (this->tag == STRING) {
+        this->str.~basic_string();
+    }
+}
+
+Value::~Value() {
+    this->destroy_contents();
+}
+
 Value::Value(const Value& other)
     : tag{other.tag} {
     if (other.tag == NONE) {
@@ -54,7 +64,7 @@ Value::Value(Value&& other) noexcept
 }
 
 auto Value::operator=(const Value& other) -> Value& {
-    // this->~Value();
+    this->destroy_contents();
     this->tag = other.tag;
     if (other.tag == NONE) {
         this->none = None{};
@@ -77,7 +87,7 @@ auto Value::operator=(const Value& other) -> Value& {
 }
 
 auto Value::operator=(Value&& other) noexcept -> Value& {
-    // this->~Value();
+    this->destroy_contents();
     this->tag = other.tag;
     if (other.tag == NONE) {
         this->none = None{};
@@ -286,7 +296,9 @@ void HeapObject::trace() {
         return;
     }
     this->marked = true;
-    // TODO think if need to gc value
+    if (this->tag == VALUE) {
+        this->val.trace();
+    }
     if (this->tag == RECORD) {
         for (auto& [key, val] : this->rec.fields) {
             val.trace();

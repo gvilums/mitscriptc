@@ -19,7 +19,8 @@ class VirtualMachine {
     std::vector<Value> opstack;
     std::vector<Value> arg_stage;
 
-    size_t heap_size;
+    size_t heap_size{0};
+    size_t max_heap_size{(size_t)-1};
 
     size_t base_index = 0;
     size_t iptr = 0;
@@ -35,9 +36,11 @@ class VirtualMachine {
     template<typename T>
     auto alloc(T t) -> HeapObject*;
     void gc_collect();
+    void gc_check();
 
    public:
     VirtualMachine(struct Function* prog);
+    VirtualMachine(struct Function* prog, size_t heap_limit);
     VirtualMachine(const VirtualMachine&) = delete;
     auto operator=(const VirtualMachine&) -> VirtualMachine& = delete;
 

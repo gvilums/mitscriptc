@@ -5,6 +5,8 @@
 #include <string>
 #include <utility>
 
+#include <iostream>
+
 #include "../gc/gc.h"
 #include "types.h"
 
@@ -81,11 +83,9 @@ class Value {
     Value(const Value& other);
     Value(Value&& other) noexcept;
 
-    ~Value() {
-        if (this->tag == STRING) {
-            this->str.~basic_string();
-        }
-    }
+    ~Value();
+    
+    void destroy_contents();
 
     auto operator=(const Value& other) -> Value&;
     auto operator=(Value&& other) noexcept -> Value&;
@@ -131,12 +131,15 @@ class HeapObject {
 
    public:
     HeapObject(Value v) : tag{VALUE} {
+        // std::cout << "allocated value " << v.to_string() <<std::endl;
         ::new (&this->val) auto(std::move(v));
     }
     HeapObject(Record r) : tag{RECORD} {
+        // std::cout << "allocated record" << std::endl;
         ::new (&this->rec) auto(std::move(r));
     }
     HeapObject(Closure c) : tag{CLOSURE} {
+        // std::cout << "allocated closure of type " << (int)c.type << std::endl;
         ::new (&this->closure) auto(std::move(c));
     }
     

@@ -12,9 +12,10 @@ namespace VM {
 
 template<typename T>
 auto VirtualMachine::alloc(T t) -> HeapObject* {
-    // std::cout << "allocation" << std::endl;
     // std::cout << "previous head: " << this->heap_head << std::endl;
     auto* obj = new HeapObject(std::move(t));
+    this->heap_size += sizeof(HeapObject);
+    // std::cout << "at address " << obj << std::endl;
     obj->next = this->heap_head;
     this->heap_head = obj;
     // std::cout << "new head: " << this->heap_head << std::endl;
@@ -31,12 +32,20 @@ void VirtualMachine::gc_collect() {
     for (auto& val : this->opstack) {
         val.trace();
     }
+    for (auto& [_, val] : this->globals) {
+        val.trace();
+    }
+    // maybe unnecessary
+    for (auto& val : this->arg_stage) {
+        val.trace();
+    }
 
     // free unmarked heads
     while (this->heap_head != nullptr && !this->heap_head->marked) {
         HeapObject* next = this->heap_head->next;
         // std::cout << "deleting head at " << this->heap_head << std::endl;
         delete this->heap_head;
+        this->heap_size -= sizeof(HeapObject);
         this->heap_head = next;
     }
 
@@ -53,8 +62,9 @@ void VirtualMachine::gc_collect() {
     while (current != nullptr) {
         if (!current->marked) {
             HeapObject* next = current->next;
-            // std::cout << "deletion in list" << std::endl;
+            // std::cout << "deletion in list at " << current << std::endl;
             delete current;
+            this->heap_size -= sizeof(HeapObject);
             current = next;
             prev->next = current;
         } else {
@@ -64,6 +74,13 @@ void VirtualMachine::gc_collect() {
         }
     }
     // sweep
+}
+
+void VirtualMachine::gc_check() {
+    const size_t map_overhead = 8;
+    const size_t value_size = sizeof(Value);
+    // heuristic for total memory consumption
+    size_t total_mem = this->heap_size + this->opstack.size() * value_size + this->globals.size() * map_overhead;
 }
 
 auto VirtualMachine::get_unary_op() -> Value {
@@ -91,6 +108,9 @@ auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
 
 VirtualMachine::VirtualMachine(struct Function* prog)
     : source(prog) {}
+    
+VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit) 
+    : source{prog}, max_heap_size{heap_limit} {}
 
 void VirtualMachine::reset() {
     this->ctx = this->source;
@@ -113,6 +133,7 @@ void VirtualMachine::exec() {
     while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
         this->step();
         // temporary: gc collect after every bytecode instr
+        // this->gc_collect();
     }
     this->gc_collect();
 }
