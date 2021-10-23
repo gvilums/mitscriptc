@@ -19,9 +19,6 @@ class Visitor;
 
 namespace AST {
 
-
-
-
 class AST_node {
    public:
     virtual void accept(Visitor& v) = 0;
