@@ -36,12 +36,12 @@ auto main(int argc, const char* argv[]) -> int {
         return 1;
     }
 
-    Compiler compiler;
-    program->accept(compiler);
-   	struct Function* fun = compiler.get_function();
+    // Compiler compiler;
+    // program->accept(compiler);
+   	// struct Function* fun = compiler.get_function();
     
-    PrettyPrinter printer;
-    printer.print(*fun, std::cout);
+    // PrettyPrinter printer;
+    // printer.print(*fun, std::cout);
     
   
     delete program;

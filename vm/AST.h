@@ -25,7 +25,7 @@ namespace AST {
 class AST_node {
    public:
     virtual void accept(Visitor& v) = 0;
-    virtual ~AST_node() {};
+    virtual ~AST_node() {}
 };
 
 class Statement : public AST_node {
@@ -34,7 +34,7 @@ class Statement : public AST_node {
         return "statment";
     }
     
-    virtual ~Statement() override {};
+    virtual ~Statement() override {}
     
 };
 
@@ -235,7 +235,6 @@ class FieldDereference : Expression {
         return true;
     }
     virtual ~FieldDereference() override {
-    	// baseexpr->~Expression();
     	delete baseexpr;
     }
 };
@@ -260,8 +259,6 @@ class IndexExpression : Expression {
         return true;
     }
     virtual ~IndexExpression() override {
-    	// baseexpr->~Expression();
-    	// index->~Expression();
     	delete baseexpr;
     	delete index;
     }
@@ -286,7 +283,6 @@ class Record : Expression {
     }
     virtual ~Record() override {
     	for (auto& p : dict) {
-    		// p.second->~Expression();
     		delete p.second;
     	}
     }
@@ -372,6 +368,7 @@ class Global : Statement {
     virtual void accept(Visitor& v) {
         v.visit(*this);
     }
+    virtual ~Global() override {}
 };
 
 class Return : Statement {
@@ -387,7 +384,6 @@ class Return : Statement {
         v.visit(*this);
     }
     virtual ~Return() override {
-    	// Expr->~Expression();
     	delete Expr;
     }
 };
@@ -409,10 +405,8 @@ class Assignment : Statement {
         v.visit(*this);
     }
     virtual ~Assignment() override {
-    	// Expr->~Expression();
-    	// Lhs->~Expression();
-    	delete Expr;
     	delete Lhs;
+    	delete Expr;
     }
 };
 
@@ -471,7 +465,4 @@ class WhileLoop : Statement {
     }
 };
 
-}  // namespace AST
-
-// You need to define classes that inherit from Expression and Statement
-// for all the different kinds of expressions and statements in the language.
+}

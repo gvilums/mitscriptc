@@ -78,17 +78,17 @@ class Compiler : public Visitor {
                 rfun_->instructions.push_back(Instruction(Operation::StoreLocal, idx));
             }
         } else if (expr.Lhs->isFieldDereference()) {
-            AST::FieldDereference exp = *((AST::FieldDereference*)expr.Lhs);
+            AST::FieldDereference* exp = ((AST::FieldDereference*)expr.Lhs);
 
-            exp.baseexpr->accept(*((Visitor*)this));
+            exp->baseexpr->accept(*((Visitor*)this));
             expr.Expr->accept(*((Visitor*)this));
             rfun_->instructions.push_back(Instruction(Operation::FieldStore, rfun_->names_.size()));
-            rfun_->names_.push_back(exp.field);
+            rfun_->names_.push_back(exp->field);
         } else if (expr.Lhs->isIndexExpression()) {
-            AST::IndexExpression exp = *((AST::IndexExpression*)expr.Lhs);
+            AST::IndexExpression* exp = ((AST::IndexExpression*)expr.Lhs);
 
-            exp.baseexpr->accept(*((Visitor*)this));
-            exp.index->accept(*((Visitor*)this));
+            exp->baseexpr->accept(*((Visitor*)this));
+            exp->index->accept(*((Visitor*)this));
             expr.Expr->accept(*((Visitor*)this));
             rfun_->instructions.push_back(Instruction(Operation::IndexStore, std::nullopt));
         }
