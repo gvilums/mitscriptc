@@ -1,5 +1,9 @@
 #pragma once
 
+#include <cstddef>
+#include <utility>
+#include <iostream>
+
 class CollectedHeap;
 
 // Any object that inherits from collectable can be created and tracked by the
@@ -13,6 +17,8 @@ class Collectable {
     // the CollectedHeap (since it is declared as friend below).  You can think of
     // these fields as the header for the object, which will include metadata that
     // is useful for the garbage collector.
+    bool marked{false};
+    Collectable* next{nullptr};
 
    protected:
     /*
@@ -25,6 +31,7 @@ class Collectable {
     object is marked and marking it.
     */
     virtual void follow(CollectedHeap& heap) = 0;
+    // virtual auto size() -> size_t = 0;
 
     friend CollectedHeap;
 };
@@ -40,6 +47,7 @@ class Collectable {
 */
 class CollectedHeap {
    public:
+    
     /*
     This method allocates an object of type T using the default constructor (with
     no parameters).  T must be a subclass of Collectable.  Before returning the
@@ -47,6 +55,11 @@ class CollectedHeap {
     */
     template <typename T>
     T* allocate() {
+        this->total_allocation += sizeof(T);
+        T* allocation = new T;
+        static_cast<Collectable*>(allocation)->next = this->head;
+        this->head = allocation;
+        return allocation;
     }
 
     /*
@@ -56,6 +69,20 @@ class CollectedHeap {
     */
     template <typename T, typename Arg>
     T* allocate(Arg a) {
+        this->total_allocation += sizeof(T);
+        T* allocation = new T(a);
+        static_cast<Collectable*>(allocation)->next = this->head;
+        this->head = allocation;
+        return allocation;
+    }
+    
+    template<typename T, typename... Args>
+    T* allocate(Args&&... arg) {
+        this->total_allocation += sizeof(T);
+        T* allocation = new T(std::forward<Args>(arg)...);
+        static_cast<Collectable*>(allocation)->next = this->head;
+        this->head = allocation;
+        return allocation;
     }
 
     /*
@@ -69,6 +96,10 @@ class CollectedHeap {
     about other Collectable otjects pointed to by itself.
     */
     void markSuccessors(Collectable* next) {
+        if (!next->marked) {
+            next->marked = true;
+            next->follow(*this);
+        }
     }
 
     /*
@@ -86,5 +117,61 @@ class CollectedHeap {
     */
     template <typename Iterator>
     void gc(Iterator begin, Iterator end) {
+        // no current allocations
+        if (this->head == nullptr) {
+            return;
+        }
+        // mark all root node successors
+        for (auto i = begin; i != end; i++) {
+            markSuccessors(*i);
+        }
+
+        // free unmarked heads
+        while (this->head != nullptr && !this->head->marked) {
+            // std::cout << "traversing objects at head" << std::endl;
+            Collectable* next = this->head->next;
+            // this->total_allocation -= this->head->size();
+            delete this->head;
+            this->head = next;
+        }
+
+        // if we just cleared the entire heap, return
+        if (this->head == nullptr) {
+            return;
+        }
+
+        // unmark head as we'll skip it in the following
+        this->head->marked = false;
+        Collectable* prev = this->head;
+        Collectable* current = this->head->next;
+
+        while (current != nullptr) {
+            // std::cout << "traversing objects" << std::endl;
+            if (!current->marked) {
+                Collectable* next = current->next;
+                // this->total_allocation -= current->size();
+                delete current;
+                current = next;
+                prev->next = current;
+            } else {
+                current->marked = false;
+                prev = current;
+                current = current->next;
+            }
+        }
     }
+    
+    auto count_alive() -> size_t {
+        size_t count = 0;
+        auto* current = this->head;
+        while (current != nullptr) {
+            count += 1;
+            current = current->next;
+        }
+        return count;
+    }
+
+   private:
+    Collectable* head{nullptr};
+    size_t total_allocation{0};
 };

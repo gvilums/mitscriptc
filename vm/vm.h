@@ -6,17 +6,29 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <limits>
 
+// #include "../gc/gc.h"
 #include "types.h"
 #include "value.h"
+
+#include "allocator.h"
 
 namespace VM {
 class VirtualMachine {
    private:
     struct Function* source;
-    std::map<std::string, Value> globals;
-    std::vector<Value> opstack;
-    std::vector<Value> arg_stage;
+    std::map<
+        std::string, 
+        Value,
+        std::less<std::string>,
+        Allocation::TrackingAlloc<std::pair<const std::string, Value>>
+    > globals;
+    std::vector<Value, Allocation::TrackingAlloc<Value>> opstack;
+    std::vector<Value, Allocation::TrackingAlloc<Value>> arg_stage;
+
+    size_t heap_size{0};
+    size_t max_heap_size{std::numeric_limits<size_t>::max()};
 
     size_t base_index = 0;
     size_t iptr = 0;
@@ -27,8 +39,16 @@ class VirtualMachine {
     auto get_binary_ops() -> std::pair<Value, Value>;
     void reset();
 
+    HeapObject* heap_head{nullptr};
+
+    template <typename T>
+    auto alloc(T t) -> HeapObject*;
+    void gc_collect();
+    void gc_check();
+
    public:
     VirtualMachine(struct Function* prog);
+    VirtualMachine(struct Function* prog, size_t heap_limit);
     VirtualMachine(const VirtualMachine&) = delete;
     auto operator=(const VirtualMachine&) -> VirtualMachine& = delete;
 

@@ -17,3 +17,5 @@ Diagnostics:
       - performance*
       - portability*
       - readability*
+    Remove:
+      - modernize-use-trailing-return-type
