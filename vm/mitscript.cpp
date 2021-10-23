@@ -14,18 +14,27 @@
 
 auto main(int argc, const char* argv[]) -> int {
     std::ios_base::sync_with_stdio(false);
-    if (argc != 3) {
-        std::cout << "Usage: mitscript <type> <filename>\n";
+    auto mem_limit = (size_t)-1;
+
+    std::string flag;
+    std::string filename;
+    if (argc == 3) {
+        flag = argv[1];
+        filename = argv[2];
+    } else if (argc == 5) {
+        mem_limit = std::atoi(argv[2]) * (1 << 20);
+        flag = argv[3];
+        filename = argv[4];
+    } else {
+        std::cout << "Usage: mitscript [-mem N] <type> <filename>\n";
         return 1;
     }
-
-    std::string flag{argv[1]};
 
     Compiler compiler;
     struct Function* fn;
     if (flag == "-s") {
         std::ifstream file;
-        file.open(argv[2]);
+        file.open(filename);
         if (!file.is_open()) {
             std::cout << "Failed to open file: " << argv[2] << "\n";
             return 1;
@@ -45,7 +54,7 @@ auto main(int argc, const char* argv[]) -> int {
         program->accept(compiler);
         fn = compiler.get_function();
     } else if (flag == "-b") {
-        std::FILE* file = std::fopen(argv[2], "r");
+        std::FILE* file = std::fopen(filename.c_str(), "r");
         if (file == nullptr) {
             std::cout << "Failed to open file: " << argv[2] << std::endl;
             return 1;
@@ -64,7 +73,8 @@ auto main(int argc, const char* argv[]) -> int {
     }
 
     try {
-        VM::VirtualMachine vm(fn);
+        // temporary
+        VM::VirtualMachine vm(fn, mem_limit);
         vm.exec();
     } catch (std::string s) {
         std::cout << s << std::endl;

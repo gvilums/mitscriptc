@@ -77,10 +77,14 @@ void VirtualMachine::gc_collect() {
 }
 
 void VirtualMachine::gc_check() {
+    const double collection_threshold = 0.8;
     const size_t map_overhead = 8;
     const size_t value_size = sizeof(Value);
     // heuristic for total memory consumption
     size_t total_mem = this->heap_size + this->opstack.size() * value_size + this->globals.size() * map_overhead;
+    if ((double)total_mem > collection_threshold * (double)this->max_heap_size) {
+        this->gc_collect();
+    }
 }
 
 auto VirtualMachine::get_unary_op() -> Value {
@@ -130,10 +134,15 @@ void VirtualMachine::reset() {
 
 void VirtualMachine::exec() {
     this->reset();
+    // size_t i = 0;
     while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
         this->step();
         // temporary: gc collect after every bytecode instr
-        // this->gc_collect();
+        // if (i % 50 == 0) {
+            // this->gc_collect();
+        // }
+        this->gc_check();
+        // i += 1;
     }
     this->gc_collect();
 }
