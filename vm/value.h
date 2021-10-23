@@ -7,8 +7,9 @@
 
 #include <iostream>
 
-#include "../gc/gc.h"
+// #include "../gc/gc.h"
 #include "types.h"
+#include "allocator.h"
 
 namespace VM {
 
@@ -21,18 +22,26 @@ enum class FnType { DEFAULT,
                     INTCAST };
 
 struct Record {
-    std::map<std::string, Value> fields;
+    using MapType = std::map<
+        std::string, 
+        Value,
+        std::less<std::string>,
+        Allocation::TrackingAlloc<std::pair<const std::string, Value>>
+    >;
+    MapType fields;
 };
 
 
 struct Closure {
+    using VecType = std::vector<HeapObject*, Allocation::TrackingAlloc<HeapObject*>>;
+
     FnType type;
     struct Function* fn;
-    std::vector<HeapObject*> refs;
+    VecType refs;
 
     Closure(FnType type, struct Function* fn)
         : type{type}, fn{fn} {}
-    Closure(FnType type, struct Function* fn, std::vector<HeapObject*> refs)
+    Closure(FnType type, struct Function* fn, VecType refs)
         : type{type}, fn{fn}, refs{std::move(refs)} {}
 
 };

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <limits>
 
 #include "AST.h"
 #include "MITScript.h"
@@ -14,7 +15,7 @@
 
 auto main(int argc, const char* argv[]) -> int {
     std::ios_base::sync_with_stdio(false);
-    auto mem_limit = (size_t)-1;
+    auto mem_limit = std::numeric_limits<size_t>::max();
 
     std::string flag;
     std::string filename;
@@ -22,7 +23,8 @@ auto main(int argc, const char* argv[]) -> int {
         flag = argv[1];
         filename = argv[2];
     } else if (argc == 5) {
-        mem_limit = std::atoi(argv[2]) * (1 << 20);
+        const size_t megabyte = 1000000;
+        mem_limit = std::atoi(argv[2]) * megabyte;
         flag = argv[3];
         filename = argv[4];
     } else {

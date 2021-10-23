@@ -6,6 +6,7 @@
 #include "instructions.h"
 #include "types.h"
 #include "value.h"
+#include "allocator.h"
 
 
 namespace VM {
@@ -23,6 +24,7 @@ auto VirtualMachine::alloc(T t) -> HeapObject* {
 }
 
 void VirtualMachine::gc_collect() {
+    // std::cout << "starting gc" << std::endl;
     // no current allocations
     if (this->heap_head == nullptr) {
         return;
@@ -48,11 +50,14 @@ void VirtualMachine::gc_collect() {
         this->heap_size -= sizeof(HeapObject);
         this->heap_head = next;
     }
+    
 
     // if we just cleared the entire heap, return
     if (this->heap_head == nullptr) {
         return;
     }
+
+    // std::cout << "live object" << std::endl;
 
     // unmark head as we'll skip it in the following
     this->heap_head->marked = false;
@@ -68,6 +73,7 @@ void VirtualMachine::gc_collect() {
             current = next;
             prev->next = current;
         } else {
+            // std::cout << "live object" << std::endl;
             current->marked = false;
             prev = current;
             current = current->next;
@@ -77,13 +83,15 @@ void VirtualMachine::gc_collect() {
 }
 
 void VirtualMachine::gc_check() {
-    const double collection_threshold = 0.8;
-    const size_t map_overhead = 8;
-    const size_t value_size = sizeof(Value);
-    // heuristic for total memory consumption
-    size_t total_mem = this->heap_size + this->opstack.size() * value_size + this->globals.size() * map_overhead;
-    if ((double)total_mem > collection_threshold * (double)this->max_heap_size) {
+    size_t total_mem = Allocation::total_alloc + this->heap_size;
+    if (total_mem > this->max_heap_size) {
+        // std::cout << "allocation at gc trigger:" << std::endl; 
+        // std::cout << Allocation::total_alloc << std::endl;
+        // std::cout << this->heap_size << std::endl;
         this->gc_collect();
+        // std::cout << "allocation stats after gc:" << std::endl; 
+        // std::cout << Allocation::total_alloc << std::endl;
+        // std::cout << this->heap_size << std::endl;
     }
 }
 
@@ -137,14 +145,14 @@ void VirtualMachine::exec() {
     // size_t i = 0;
     while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
         this->step();
-        // temporary: gc collect after every bytecode instr
-        // if (i % 50 == 0) {
-            // this->gc_collect();
-        // }
         this->gc_check();
-        // i += 1;
+        // this->gc_collect();
     }
+    this->opstack.clear();
+    this->globals.clear();
+    this->arg_stage.clear();
     this->gc_collect();
+
 }
 
 auto VirtualMachine::step() -> bool {
@@ -255,7 +263,7 @@ auto VirtualMachine::step() -> bool {
         if (this->opstack.size() <= m) {
             throw std::string{"ERROR: not enough stack arguments while allocating closure"};
         }
-        std::vector<HeapObject*> refs;
+        Closure::VecType refs;
         refs.reserve(m);
         for (size_t i = this->opstack.size() - m; i < this->opstack.size(); ++i) {
             refs.push_back(this->opstack.at(i).get_heap_ref());
