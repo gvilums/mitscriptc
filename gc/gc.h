@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <utility>
+#include <iostream>
 
 class CollectedHeap;
 
@@ -29,6 +31,7 @@ class Collectable {
     object is marked and marking it.
     */
     virtual void follow(CollectedHeap& heap) = 0;
+    // virtual auto size() -> size_t = 0;
 
     friend CollectedHeap;
 };
@@ -44,6 +47,7 @@ class Collectable {
 */
 class CollectedHeap {
    public:
+    
     /*
     This method allocates an object of type T using the default constructor (with
     no parameters).  T must be a subclass of Collectable.  Before returning the
@@ -51,8 +55,9 @@ class CollectedHeap {
     */
     template <typename T>
     T* allocate() {
-        Collectable* allocation = new T;
-        allocation->next = this->head;
+        this->total_allocation += sizeof(T);
+        T* allocation = new T;
+        static_cast<Collectable*>(allocation)->next = this->head;
         this->head = allocation;
         return allocation;
     }
@@ -64,8 +69,18 @@ class CollectedHeap {
     */
     template <typename T, typename Arg>
     T* allocate(Arg a) {
-        Collectable* allocation = new T(a);
-        allocation->next = this->head;
+        this->total_allocation += sizeof(T);
+        T* allocation = new T(a);
+        static_cast<Collectable*>(allocation)->next = this->head;
+        this->head = allocation;
+        return allocation;
+    }
+    
+    template<typename T, typename... Args>
+    T* allocate(Args&&... arg) {
+        this->total_allocation += sizeof(T);
+        T* allocation = new T(std::forward<Args>(arg)...);
+        static_cast<Collectable*>(allocation)->next = this->head;
         this->head = allocation;
         return allocation;
     }
@@ -81,8 +96,10 @@ class CollectedHeap {
     about other Collectable otjects pointed to by itself.
     */
     void markSuccessors(Collectable* next) {
-        next->marked = true;
-        next->follow(*this);
+        if (!next->marked) {
+            next->marked = true;
+            next->follow(*this);
+        }
     }
 
     /*
@@ -105,13 +122,15 @@ class CollectedHeap {
             return;
         }
         // mark all root node successors
-        for (auto i = begin; i != end; ++i) {
-            markSuccessors(&*i);
+        for (auto i = begin; i != end; i++) {
+            markSuccessors(*i);
         }
 
         // free unmarked heads
         while (this->head != nullptr && !this->head->marked) {
+            // std::cout << "traversing objects at head" << std::endl;
             Collectable* next = this->head->next;
+            // this->total_allocation -= this->head->size();
             delete this->head;
             this->head = next;
         }
@@ -121,22 +140,38 @@ class CollectedHeap {
             return;
         }
 
+        // unmark head as we'll skip it in the following
+        this->head->marked = false;
         Collectable* prev = this->head;
         Collectable* current = this->head->next;
 
         while (current != nullptr) {
+            // std::cout << "traversing objects" << std::endl;
             if (!current->marked) {
                 Collectable* next = current->next;
+                // this->total_allocation -= current->size();
                 delete current;
                 current = next;
                 prev->next = current;
             } else {
+                current->marked = false;
                 prev = current;
                 current = current->next;
             }
         }
     }
+    
+    auto count_alive() -> size_t {
+        size_t count = 0;
+        auto* current = this->head;
+        while (current != nullptr) {
+            count += 1;
+            current = current->next;
+        }
+        return count;
+    }
 
    private:
-    Collectable* head;
+    Collectable* head{nullptr};
+    size_t total_allocation{0};
 };

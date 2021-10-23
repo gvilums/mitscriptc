@@ -11,6 +11,7 @@
 namespace VM {
 
 class Value;
+class HeapObject;
 
 enum class FnType { DEFAULT,
                     PRINT,
@@ -21,42 +22,38 @@ struct Record {
     std::map<std::string, Value> fields;
 };
 
-struct RecordRef {
-    Record* internal;
-};
-
-struct ValueRef {
-    Value* ref;
-};
 
 struct Closure {
     FnType type;
     struct Function* fn;
-    std::vector<ValueRef> refs;
+    std::vector<HeapObject*> refs;
+
+    Closure(FnType type, struct Function* fn)
+        : type{type}, fn{fn} {}
+    Closure(FnType type, struct Function* fn, std::vector<HeapObject*> refs)
+        : type{type}, fn{fn}, refs{std::move(refs)} {}
+
 };
 
-struct ClosureRef {
-    Closure* closure;
-};
 
-class Value : public Collectable {
-    enum { NONE,
+class Value {
+   public:
+    enum ValueTag { NONE,
            NUM,
            BOOL,
            STRING,
-           RECORD,
-           CLOSURE,
-           REFERENCE,
+           HEAP_REF,
            FN_PTR,
-           USIZE } tag{NONE};
+           USIZE };
+
+   private:
+    ValueTag tag{NONE};
     union {
         None none;
         int num;
         bool boolean;
         std::string str;
-        RecordRef record;
-        ClosureRef closure;
-        ValueRef reference;
+        HeapObject* heap_ref;
         struct Function* fnptr;
         size_t usize;
     };
@@ -70,12 +67,8 @@ class Value : public Collectable {
         : tag{NUM}, num{n} {}
     Value(bool b)
         : tag{BOOL}, boolean{b} {}
-    Value(RecordRef rec)
-        : tag{RECORD}, record{rec} {}
-    Value(ClosureRef c)
-        : tag{CLOSURE}, closure{c} {}
-    Value(ValueRef ref)
-        : tag{REFERENCE}, reference{ref} {}
+    Value(HeapObject* ref)
+        : tag{HEAP_REF}, heap_ref{ref} {}
     Value(struct Function* ptr)
         : tag{FN_PTR}, fnptr{ptr} {}
     Value(size_t u)
@@ -88,7 +81,7 @@ class Value : public Collectable {
     Value(const Value& other);
     Value(Value&& other) noexcept;
 
-    ~Value() override {
+    ~Value() {
         if (this->tag == STRING) {
             this->str.~basic_string();
         }
@@ -104,63 +97,68 @@ class Value : public Collectable {
 
     [[nodiscard]] auto to_string() const -> std::string;
     
-    void follow(CollectedHeap& heap) override;
+    void trace();
+    
+    auto get_tag() -> ValueTag;
+    auto get_bool() -> bool;
+    auto get_int() -> int;
+    auto get_string() -> std::string;
+    auto get_heap_ref() -> HeapObject*;
+    auto get_record() -> Record&;
+    auto get_val_ref() -> Value&;
+    auto get_closure() -> Closure&;
+    auto get_fnptr() -> struct Function*;
+    auto get_usize() -> size_t;
 
-    inline auto get_bool() -> bool {
-        if (this->tag == BOOL) {
-            return this->boolean;
-        }
-        throw std::string{"ERROR: invalid cast to bool"};
-    }
+};
 
-    inline auto get_int() -> int {
-        if (this->tag == NUM) {
-            return this->num;
-        }
-        throw std::string{"ERROR: invalid cast to int"};
-    }
+class VirtualMachine;
 
-    inline auto get_string() -> std::string {
-        if (this->tag == STRING) {
-            return this->str;
-        }
-        throw std::string{"ERROR: invalid cast to string"};
-    }
+class HeapObject {
+   public:
+    enum HeapTag {VALUE, RECORD, CLOSURE};
 
-    inline auto get_record() -> RecordRef {
-        if (this->tag == RECORD) {
-            return this->record;
-        }
-        throw std::string{"ERROR: invalid cast to record"};
-    }
+   private:
+    HeapTag tag;
+    union {
+        Value val;
+        Record rec;
+        Closure closure;
+    };
+    
+    bool marked{false};
+    HeapObject* next{nullptr};
 
-    inline auto get_closure() -> ClosureRef {
-        if (this->tag == CLOSURE) {
-            return this->closure;
-        }
-        throw std::string{"ERROR: invalid cast to closure"};
+   public:
+    HeapObject(Value v) : tag{VALUE} {
+        ::new (&this->val) auto(std::move(v));
     }
-
-    inline auto get_ref() -> ValueRef {
-        if (this->tag == REFERENCE) {
-            return this->reference;
-        }
-        throw std::string{"ERROR: invalid cast to reference"};
+    HeapObject(Record r) : tag{RECORD} {
+        ::new (&this->rec) auto(std::move(r));
     }
-
-    inline auto get_fnptr() -> struct Function* {
-        if (this->tag == FN_PTR) {
-            return this->fnptr;
-        }
-        throw std::string{"ERROR: invalid cast to function pointer"};
+    HeapObject(Closure c) : tag{CLOSURE} {
+        ::new (&this->closure) auto(std::move(c));
     }
-
-    inline auto get_usize() -> size_t {
-        if (this->tag == USIZE) {
-            return this->usize;
+    
+    ~HeapObject() {
+        if (this->tag == VALUE) {
+            this->val.~Value();
+        } else if (this->tag == RECORD) {
+            this->rec.~Record();
+        } else if (this->tag == CLOSURE) {
+            this->closure.~Closure();
         }
-        throw std::string{"ERROR: invalid cast to usize"};
     }
+    
+    void trace();
+    
+    auto get_value() -> Value&;
+    auto get_record() -> Record&;
+    auto get_closure() -> Closure&;
+    
+    friend VirtualMachine;
+    friend Value;
+    friend auto operator==(const Value& lhs, const Value& rhs) -> bool;
 };
 
 auto value_from_constant(Constant c) -> Value;

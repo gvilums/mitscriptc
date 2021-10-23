@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include "timerclass.h"
+#include "gc.h"
 #include "vm/types.h"
 
 using namespace std;

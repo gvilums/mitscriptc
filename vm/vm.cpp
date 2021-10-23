@@ -7,7 +7,65 @@
 #include "types.h"
 #include "value.h"
 
+
 namespace VM {
+
+template<typename T>
+auto VirtualMachine::alloc(T t) -> HeapObject* {
+    // std::cout << "allocation" << std::endl;
+    // std::cout << "previous head: " << this->heap_head << std::endl;
+    auto* obj = new HeapObject(std::move(t));
+    obj->next = this->heap_head;
+    this->heap_head = obj;
+    // std::cout << "new head: " << this->heap_head << std::endl;
+    return obj;
+}
+
+void VirtualMachine::gc_collect() {
+    // no current allocations
+    if (this->heap_head == nullptr) {
+        return;
+    }
+
+    // mark
+    for (auto& val : this->opstack) {
+        val.trace();
+    }
+
+    // free unmarked heads
+    while (this->heap_head != nullptr && !this->heap_head->marked) {
+        HeapObject* next = this->heap_head->next;
+        // std::cout << "deleting head at " << this->heap_head << std::endl;
+        delete this->heap_head;
+        this->heap_head = next;
+    }
+
+    // if we just cleared the entire heap, return
+    if (this->heap_head == nullptr) {
+        return;
+    }
+
+    // unmark head as we'll skip it in the following
+    this->heap_head->marked = false;
+    HeapObject* prev = this->heap_head;
+    HeapObject* current = this->heap_head->next;
+
+    while (current != nullptr) {
+        if (!current->marked) {
+            HeapObject* next = current->next;
+            // std::cout << "deletion in list" << std::endl;
+            delete current;
+            current = next;
+            prev->next = current;
+        } else {
+            current->marked = false;
+            prev = current;
+            current = current->next;
+        }
+    }
+    // sweep
+}
+
 auto VirtualMachine::get_unary_op() -> Value {
     if (this->opstack.empty()) {
         throw std::string{"ERROR: empty stack for unary operation"};
@@ -39,22 +97,24 @@ void VirtualMachine::reset() {
     this->base_index = 0;
     this->iptr = 0;
     this->num_locals = 0;
-
-    auto* print_closure = new Closure{FnType::PRINT, nullptr};
-    auto* input_closure = new Closure{FnType::INPUT, nullptr};
-    auto* intcast_closure = new Closure{FnType::INTCAST, nullptr};
+    
+    auto* print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
+    auto* input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
+    auto* intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
 
     this->globals = {
-        {"print", ClosureRef{print_closure}},
-        {"input", ClosureRef{input_closure}},
-        {"intcast", ClosureRef{intcast_closure}}};
+        {"print", {print_closure}},
+        {"input", {input_closure}},
+        {"intcast", {intcast_closure}}};
 }
 
 void VirtualMachine::exec() {
     this->reset();
     while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
         this->step();
+        // temporary: gc collect after every bytecode instr
     }
+    this->gc_collect();
 }
 
 auto VirtualMachine::step() -> bool {
@@ -88,9 +148,9 @@ auto VirtualMachine::step() -> bool {
         if (this->opstack.empty()) {
             throw std::string{"ERROR: trying to load reference from empty stack"};
         }
-        ValueRef ref_cell = this->opstack.back().get_ref();
+        Value& val = this->opstack.back().get_val_ref();
         this->opstack.pop_back();
-        this->opstack.push_back(*ref_cell.ref);
+        this->opstack.push_back(val);
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
@@ -106,8 +166,7 @@ auto VirtualMachine::step() -> bool {
         if (this->opstack.empty()) {
             throw std::string{"ERROR: trying to store to reference with stack of size 1"};
         }
-        ValueRef ref_cell = this->get_unary_op().get_ref();
-        *ref_cell.ref = std::move(val);
+        this->get_unary_op().get_val_ref() = std::move(val);
         this->iptr += 1;
     } else if (instr.operation == Operation::PushReference) {
         int32_t i = instr.operand0.value();
@@ -166,22 +225,22 @@ auto VirtualMachine::step() -> bool {
         if (this->opstack.size() <= m) {
             throw std::string{"ERROR: not enough stack arguments while allocating closure"};
         }
-        std::vector<ValueRef> refs;
+        std::vector<HeapObject*> refs;
         refs.reserve(m);
         for (size_t i = this->opstack.size() - m; i < this->opstack.size(); ++i) {
-            refs.push_back(this->opstack.at(i).get_ref());
+            refs.push_back(this->opstack.at(i).get_heap_ref());
         }
         this->opstack.resize(this->opstack.size() - m);
 
         struct Function* fn = this->opstack.back().get_fnptr();
         this->opstack.pop_back();
 
-        auto* closure = new Closure{FnType::DEFAULT, fn, std::move(refs)};
-        this->opstack.emplace_back(ClosureRef{.closure = closure});
+        auto* closure = this->alloc(Closure{FnType::DEFAULT, fn, std::move(refs)});
+        this->opstack.emplace_back(closure);
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {
-        auto* rec = new Record;
-        this->opstack.emplace_back(RecordRef{.internal = rec});
+        auto* rec = this->alloc(Record{});
+        this->opstack.emplace_back(rec);
         this->iptr += 1;
     } else if (instr.operation == Operation::Call) {
         int32_t n_params = instr.operand0.value();
@@ -196,9 +255,7 @@ auto VirtualMachine::step() -> bool {
             this->opstack.end());
         this->opstack.resize(this->opstack.size() - n_params);
 
-        Value val = this->get_unary_op();
-        ClosureRef closure_ref = val.get_closure();
-        Closure& c = *closure_ref.closure;
+        Closure& c = this->get_unary_op().get_closure();
         this->iptr += 1;
         if (c.type == FnType::DEFAULT) {
             if (c.fn->parameter_count_ != n_params) {
@@ -224,7 +281,6 @@ auto VirtualMachine::step() -> bool {
                 this->opstack.emplace_back(None{});
             }
             for (size_t i = 0; i < c.fn->local_reference_vars_.size(); ++i) {
-                auto* ptr = new Value;
                 std::string name = c.fn->local_reference_vars_.at(i);
                 int j = -1;
                 for (int k = 0; k < c.fn->local_vars_.size(); ++k) {
@@ -234,14 +290,15 @@ auto VirtualMachine::step() -> bool {
                     }
                 }
                 // a local ref var is also a local var
+                HeapObject* ptr;
                 if (j != -1) {
-                    *ptr = this->opstack.at(this->base_index + j);
+                    ptr = this->alloc(this->opstack.at(this->base_index + j));
                 } else {
-                    *ptr = None{};
+                    ptr = this->alloc(None{});
                 }
-                this->opstack.emplace_back(ValueRef{.ref = ptr});
+                this->opstack.emplace_back(ptr);
             }
-            for (auto ref : c.refs) {
+            for (auto* ref : c.refs) {
                 this->opstack.emplace_back(ref);
             }
         } else if (c.type == FnType::PRINT) {
@@ -265,36 +322,35 @@ auto VirtualMachine::step() -> bool {
             throw std::string{"ICE: undefined function type"};
         }
     } else if (instr.operation == Operation::FieldLoad) {
-        auto val = this->get_unary_op();
+        Record& r = this->get_unary_op().get_record();
         std::string& field_name = this->ctx->names_.at(instr.operand0.value());
-        RecordRef r = val.get_record();
-        if (r.internal->fields.find(field_name) == r.internal->fields.end()) {
+        if (r.fields.find(field_name) == r.fields.end()) {
             this->opstack.emplace_back(None{});
         } else {
-            this->opstack.push_back(r.internal->fields.at(field_name));
+            this->opstack.push_back(r.fields.at(field_name));
         }
         this->iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = this->get_binary_ops();
         std::string& field_name = this->ctx->names_.at(instr.operand0.value());
-        RecordRef r = record_val.get_record();
-        r.internal->fields.insert_or_assign(field_name, val);
+        Record& r = record_val.get_record();
+        r.fields.insert_or_assign(field_name, val);
         this->iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = this->get_binary_ops();
         std::string index_string = index.to_string();
-        RecordRef r = record_val.get_record();
-        if (r.internal->fields.find(index_string) == r.internal->fields.end()) {
+        Record& r = record_val.get_record();
+        if (r.fields.find(index_string) == r.fields.end()) {
             this->opstack.emplace_back(None{});
         } else {
-            this->opstack.push_back(r.internal->fields.at(index_string));
+            this->opstack.push_back(r.fields.at(index_string));
         }
         this->iptr += 1;
     } else if (instr.operation == Operation::IndexStore) {
         auto value = this->get_unary_op();
         auto [record_val, index] = this->get_binary_ops();
-        RecordRef r = record_val.get_record();
-        r.internal->fields.insert_or_assign(index.to_string(), value);
+        Record& r = record_val.get_record();
+        r.fields.insert_or_assign(index.to_string(), value);
         this->iptr += 1;
     } else if (instr.operation == Operation::Return) {
         // returning from final frame
