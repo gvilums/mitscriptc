@@ -9,6 +9,7 @@ mitscript
 mitscriptc
 vgout.txt
 code.mit
+massif*
 
 bc-lexer.h
 bc-lexer.cpp
