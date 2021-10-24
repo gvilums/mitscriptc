@@ -128,8 +128,8 @@ function
 			parameter_count = 0,
 			local_vars = [this],
 			local_ref_vars = [this],
-			free_vars = [v],
-			names = [head, val, plus, order, prt],
+			free_vars = [],
+			names = [head, plus, order, prt],
 			instructions = 
 			[
 				push_ref	0
@@ -138,24 +138,20 @@ function
 				load_const	0
 				field_store	0
 				dup
-				push_ref	1
-				load_ref
-				field_store	1
-				dup
 				load_func	0
 				push_ref	0
 				alloc_closure	1
-				field_store	2
+				field_store	1
 				dup
 				load_func	1
 				push_ref	0
 				alloc_closure	1
-				field_store	3
+				field_store	2
 				dup
 				load_func	2
 				push_ref	0
 				alloc_closure	1
-				field_store	4
+				field_store	3
 				store_ref
 				push_ref	0
 				load_ref
@@ -193,12 +189,11 @@ function
 	local_vars = [],
 	local_ref_vars = [],
 	free_vars = [],
-	names = [print, intcast, input, List, mod, N, v, l, i, plus, order, prt],
+	names = [print, intcast, input, List, mod, N, vl, l, i, plus, order, prt],
 	instructions = 
 	[
 		load_func	0
-		push_ref	0
-		alloc_closure	1
+		alloc_closure	0
 		store_global	3
 		load_func	1
 		alloc_closure	0

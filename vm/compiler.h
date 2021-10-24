@@ -15,6 +15,7 @@ class Compiler : public Visitor {
     struct Function* rfun_; // current function pointer
     None none_; // none value
     std::set<std::string> globals_; // set of global variables seen so far
+    std::set<std::string> ref_;
 
    public:
     Compiler() {
@@ -137,13 +138,16 @@ class Compiler : public Visitor {
         struct Function* tfun = rfun_; // save current function into temporal variable
         bool tscope = global_scope_; // save global_scope_ flag
         std::set<string> tglobals = globals_; // save current global variables
-
+		std::set<string> tref = ref_;
+		
         rfun_ = new struct Function; // create new function
         global_scope_ = false; // if we declare new function we are not anymore in the global scope
         rfun_->parameter_count_ = expr.arguments.size(); // initialize fields of new function
         tfun->functions_.push_back(rfun_);
-
- 
+        
+        for (auto s : tfun->local_reference_vars_)
+        	ref_.insert(s);
+  
         FreeVariables freeVar; // use visitor class to resolve all variable types, see FreeVariables.h for further explanations
         expr.block->accept(freeVar);
         vector<string> free_var = freeVar.getFreeVariables();
@@ -180,17 +184,21 @@ class Compiler : public Visitor {
             if (count(rfun_->free_vars_.begin(), rfun_->free_vars_.end(), s))
                 continue;
 
-            if (!globals_.count(s))
+            if (!globals_.count(s) && ref_.count(s))
                 rfun_->free_vars_.push_back(s);
         }
 
         for (auto s : expr.arguments) {
             // if (count(glob_var.begin(), glob_var.end(), s)) continue;
             rfun_->local_vars_.push_back(s);
-            if (count(nb_var.begin(), nb_var.end(), s))
+            if (count(nb_var.begin(), nb_var.end(), s)) {
                 rfun_->local_reference_vars_.push_back(s);
+            }
             if (globals_.count(s))
                 globals_.erase(s);
+            if (ref_.count(s))
+            	ref_.erase(s);
+           
         }
 
         for (auto s : ass_var) {
@@ -203,12 +211,16 @@ class Compiler : public Visitor {
                 rfun_->local_reference_vars_.push_back(s);
             if (globals_.count(s))
                 globals_.erase(s);
+            if (ref_.count(s))
+            	ref_.erase(s);
         }
 
         for (auto s : glob_var) {
             globals_.insert(s);
             if (!count(rfun_->names_.begin(), rfun_->names_.end(), s))
                 rfun_->names_.push_back(s);
+            if (ref_.count(s))
+            	ref_.erase(s);
         }
 
         // finding local decl
@@ -239,6 +251,7 @@ class Compiler : public Visitor {
         rfun_ = tfun;
         global_scope_ = tscope;
         globals_ = tglobals;
+        ref_ = tref;
     }
 
     void visit(AST::BinaryExpression& expr) {
@@ -334,6 +347,8 @@ class Compiler : public Visitor {
             rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
             rfun_->constants_.push_back(val.substr(1, val.size() - 2));
         } else {
+        	
+        
             if (global_scope_ && !count(rfun_->names_.begin(), rfun_->names_.end(), val)) {
                 rfun_->names_.push_back(val);
                 globals_.insert(val);

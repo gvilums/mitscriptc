@@ -1,7 +1,6 @@
 List = fun(){
 	this = {
 		head:None;
-		val:v;
 		plus:fun(vl){
 			this.head = {val:vl; cdr:this.head;};
 		};
@@ -35,13 +34,13 @@ mod = fun(a, b){
 
 N = 100;
 
-v = 7;
+vl = 7;
 
 l = List();
 i = 0;
 while(i < N){
-	v = mod((v * 33 + 7), 200);
-	l.plus(v);
+	vl = mod((vl * 33 + 7), 200);
+	l.plus(vl);
 	i = i + 1;
 }
 
