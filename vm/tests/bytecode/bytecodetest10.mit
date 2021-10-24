@@ -1,0 +1,49 @@
+x = 1;
+
+f = fun(){
+	x = {
+		x : 1;
+	};
+	this = {
+		increment1 : fun(y){
+			g = fun(){
+				x = x + y;
+				global x;
+				return x;
+			};
+			return g;
+		};
+		increment2 : fun(y){
+			g = fun(){
+				x.x = x.x + y;
+				return x.x;
+			};
+			return g;
+		};
+		get_val : fun(){
+			return x.x;
+		};
+	};
+	return this;
+};
+
+fact = f();
+
+f1 = fact.increment1(1);
+f2 = fact.increment1(2);
+f3 = fact.increment1(3);
+
+print(x + " " + fact.get_val());
+print(f1() + " " + fact.get_val());
+print(f2() + " " + fact.get_val());
+print(f3() + " " + fact.get_val());
+
+f1 = fact.increment2(1);
+f2 = fact.increment2(2);
+f3 = fact.increment2(3);
+
+print(x + " " + fact.get_val());
+print(x + " " + f1());
+print(x + " " + f2());
+print(x + " " + f3());
+
