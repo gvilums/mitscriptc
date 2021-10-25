@@ -1,0 +1,53 @@
+List = fun(){
+	this = {
+		head:None;
+		plus:fun(vl){
+			this.head = {car:vl; cdr:this.head;};
+		};
+		forall:fun(f){
+			t = this.head;
+			while(!(t == None)){
+				f(t.car);
+				t = t.cdr;
+			}
+		};	
+	};
+	return this;
+};
+
+Node = fun(l){
+	this = {
+		adj : List();
+		label:l;
+		addAdj : fun(e){
+			this.adj.plus(e);
+		};
+		vis : false;
+	};
+	return this; 
+};
+
+cc = fun(a){ // find connected component of a
+	visAdj = fun(v){
+		if (v.vis == false) {
+			v.vis = true;
+			cc(v);
+		}
+	};
+	print("visited node " + a.label);
+	a.adj.forall(visAdj);
+};
+
+
+a = Node("a");
+b = Node("b");
+c = Node("c");
+d = Node("d");
+
+a.addAdj(b);
+b.addAdj(c);
+a.addAdj(c);
+
+cc(a);
+
+
