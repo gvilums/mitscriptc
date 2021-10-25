@@ -1,0 +1,15 @@
+f = fun(x){
+	g = fun(){
+		
+		global f;
+		f = fun(x){
+			print(x);
+		}; 
+		
+		return f;
+	};
+	g();
+	return f(x);
+};
+
+print(f("ciao"));
