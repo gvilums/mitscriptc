@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 
 #include "instructions.h"
 #include "types.h"
@@ -85,13 +86,12 @@ void VirtualMachine::gc_collect() {
 void VirtualMachine::gc_check() {
     size_t total_mem = Allocation::total_alloc + this->heap_size;
     if (total_mem > this->max_heap_size) {
-        // std::cout << "allocation at gc trigger:" << std::endl; 
-        // std::cout << Allocation::total_alloc << std::endl;
-        // std::cout << this->heap_size << std::endl;
         this->gc_collect();
-        // std::cout << "allocation stats after gc:" << std::endl; 
-        // std::cout << Allocation::total_alloc << std::endl;
-        // std::cout << this->heap_size << std::endl;
+        size_t live_mem = Allocation::total_alloc + this->heap_size;
+        if (live_mem > this->max_heap_size) {
+            std::cerr << "WARNING: live program memory larger than limit, continuing without limit" << std::endl;
+            this->max_heap_size = std::numeric_limits<size_t>::max();
+        }
     }
 }
 
@@ -166,11 +166,11 @@ auto VirtualMachine::step() -> bool {
     Instruction instr = this->ctx->instructions[this->iptr];
 
     if (instr.operation == Operation::LoadConst) {
-        Value v = value_from_constant(this->ctx->constants_.at(instr.operand0.value()));
+        Value v{this->ctx->constants_.at(instr.operand0.value())};
         this->opstack.push_back(v);
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadGlobal) {
-        std::string name = this->ctx->names_.at(instr.operand0.value());
+        TrackedString name{this->ctx->names_.at(instr.operand0.value())};
         if (this->globals.find(name) == this->globals.end()) {
             throw std::string{"ERROR: uninitialized variable"};
         }
@@ -192,7 +192,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
-        std::string& name = this->ctx->names_.at(instr.operand0.value());
+        TrackedString name{this->ctx->names_.at(instr.operand0.value())};
         this->globals[name] = val;
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreLocal) {
@@ -263,7 +263,7 @@ auto VirtualMachine::step() -> bool {
         if (this->opstack.size() <= m) {
             throw std::string{"ERROR: not enough stack arguments while allocating closure"};
         }
-        Closure::VecType refs;
+        Closure::TrackedVec refs;
         refs.reserve(m);
         for (size_t i = this->opstack.size() - m; i < this->opstack.size(); ++i) {
             refs.push_back(this->opstack.at(i).get_heap_ref());
@@ -355,13 +355,13 @@ auto VirtualMachine::step() -> bool {
             if (arg_stage.size() != 1) {
                 throw std::string{"ERROR: intcast requires exactly one argument"};
             }
-            this->opstack.emplace_back(std::stoi(arg_stage.at(0).to_string()));
+            this->opstack.emplace_back(std::stoi(std::string{arg_stage.at(0).to_string()}));
         } else {
             throw std::string{"ICE: undefined function type"};
         }
     } else if (instr.operation == Operation::FieldLoad) {
         Record& r = this->get_unary_op().get_record();
-        std::string& field_name = this->ctx->names_.at(instr.operand0.value());
+        TrackedString field_name{this->ctx->names_.at(instr.operand0.value())};
         if (r.fields.find(field_name) == r.fields.end()) {
             this->opstack.emplace_back(None{});
         } else {
@@ -370,13 +370,13 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = this->get_binary_ops();
-        std::string& field_name = this->ctx->names_.at(instr.operand0.value());
+        TrackedString field_name{this->ctx->names_.at(instr.operand0.value())};
         Record& r = record_val.get_record();
         r.fields.insert_or_assign(field_name, val);
         this->iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = this->get_binary_ops();
-        std::string index_string = index.to_string();
+        TrackedString index_string = index.to_string();
         Record& r = record_val.get_record();
         if (r.fields.find(index_string) == r.fields.end()) {
             this->opstack.emplace_back(None{});

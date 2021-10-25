@@ -7,8 +7,23 @@
 
 namespace VM {
 
-auto value_from_constant(Constant c) -> Value {
-    return std::visit([](auto x) -> Value { return x; }, c);
+Value::Value(Constant c) {
+    if (std::holds_alternative<None>(c)) {
+        this->tag = NONE;
+        this->none = None{};
+    } else if (std::holds_alternative<bool>(c)) {
+        this->tag = BOOL;
+        this->boolean = std::get<bool>(c);
+    } else if (std::holds_alternative<int>(c)) {
+        this->tag = NUM;
+        this->num = std::get<int>(c);
+    } else if (std::holds_alternative<std::string>(c)) {
+        this->tag = STRING;
+        ::new (&this->str) auto(std::get<std::string>(c));
+    } else {
+        std::terminate();
+    }
+
 }
 
 void Value::destroy_contents() {
@@ -164,7 +179,7 @@ auto operator>(Value const& lhs, Value const& rhs) -> bool {
     throw std::string{"ERROR: invalid cast to int in comparison"};
 }
 
-auto Value::to_string() const -> std::string {
+auto Value::to_string() const -> TrackedString {
     if (this->tag == NONE) {
         return "None";
     }
@@ -172,14 +187,14 @@ auto Value::to_string() const -> std::string {
         return this->boolean ? "true" : "false";
     }
     if (this->tag == NUM) {
-        return std::to_string(this->num);
+        return TrackedString{std::to_string(this->num)};
     }
     if (this->tag == STRING) {
         return this->str;
     }
     if (this->tag == HEAP_REF) {
         if (this->heap_ref->tag == HeapObject::RECORD) {
-            std::string out{"{"};
+            TrackedString out{"{"};
             for (const auto& p : this->heap_ref->rec.fields) {
                 out.append(p.first);
                 out.push_back(':');
@@ -214,7 +229,7 @@ auto Value::get_int() -> int {
     throw std::string{"ERROR: invalid cast to int"};
 }
 
-auto Value::get_string() -> std::string {
+auto Value::get_string() -> TrackedString {
     if (this->tag == STRING) {
         return this->str;
     }

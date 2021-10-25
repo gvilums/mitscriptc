@@ -3,6 +3,7 @@
 #include <exception>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include <iostream>
@@ -12,9 +13,20 @@
 #include "allocator.h"
 
 namespace VM {
+    
 
 class Value;
 class HeapObject;
+
+using Allocation::TrackedString;
+
+using TrackedMap = std::map<
+    TrackedString,
+    Value,
+    std::less<>,
+    Allocation::TrackingAlloc<std::pair<const TrackedString, Value>>
+>;
+
 
 enum class FnType { DEFAULT,
                     PRINT,
@@ -22,26 +34,20 @@ enum class FnType { DEFAULT,
                     INTCAST };
 
 struct Record {
-    using MapType = std::map<
-        std::string, 
-        Value,
-        std::less<std::string>,
-        Allocation::TrackingAlloc<std::pair<const std::string, Value>>
-    >;
-    MapType fields;
+    TrackedMap fields;
 };
 
 
 struct Closure {
-    using VecType = std::vector<HeapObject*, Allocation::TrackingAlloc<HeapObject*>>;
+    using TrackedVec = std::vector<HeapObject*, Allocation::TrackingAlloc<HeapObject*>>;
 
     FnType type;
     struct Function* fn;
-    VecType refs;
+    TrackedVec refs;
 
     Closure(FnType type, struct Function* fn)
         : type{type}, fn{fn} {}
-    Closure(FnType type, struct Function* fn, VecType refs)
+    Closure(FnType type, struct Function* fn, TrackedVec refs)
         : type{type}, fn{fn}, refs{std::move(refs)} {}
 
 };
@@ -63,7 +69,7 @@ class Value {
         None none;
         int num;
         bool boolean;
-        std::string str;
+        TrackedString str;
         HeapObject* heap_ref;
         struct Function* fnptr;
         size_t usize;
@@ -84,10 +90,11 @@ class Value {
         : tag{FN_PTR}, fnptr{ptr} {}
     Value(size_t u)
         : tag{USIZE}, usize{u} {}
-    Value(std::string s)
+    Value(TrackedString s)
         : tag{STRING} {
         ::new (&this->str) auto(std::move(s));
     }
+    Value(Constant c);
 
     Value(const Value& other);
     Value(Value&& other) noexcept;
@@ -104,14 +111,14 @@ class Value {
     friend auto operator>=(Value const& lhs, Value const& rhs) -> bool;
     friend auto operator>(Value const& lhs, Value const& rhs) -> bool;
 
-    [[nodiscard]] auto to_string() const -> std::string;
+    [[nodiscard]] auto to_string() const -> TrackedString;
     
     void trace();
     
     auto get_tag() -> ValueTag;
     auto get_bool() -> bool;
     auto get_int() -> int;
-    auto get_string() -> std::string;
+    auto get_string() -> TrackedString;
     auto get_heap_ref() -> HeapObject*;
     auto get_record() -> Record&;
     auto get_val_ref() -> Value&;
@@ -172,7 +179,5 @@ class HeapObject {
     friend Value;
     friend auto operator==(const Value& lhs, const Value& rhs) -> bool;
 };
-
-auto value_from_constant(Constant c) -> Value;
 
 };  // namespace VM

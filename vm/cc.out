@@ -1,0 +1,2 @@
+java -Xmx500M -cp "bin/antlr-4.7.2-complete.jar:" org.antlr.v4.Tool -Dlanguage=Cpp MITScript.g
+g++-11 -O3 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp parsercode.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 

@@ -5,8 +5,10 @@
 #include <limits>
 #include <new>
 #include <vector>
+#include <string>
 
 namespace Allocation {
+
 
 static size_t total_alloc = 0;
 
@@ -18,7 +20,7 @@ struct TrackingAlloc {
 
     TrackingAlloc() = default;
     template <class U>
-    constexpr TrackingAlloc(const TrackingAlloc<U>&) noexcept {}
+    constexpr TrackingAlloc(const TrackingAlloc<U>& _) noexcept {}
 
     [[nodiscard]] auto allocate(std::size_t n) -> T* {
         if (n > std::numeric_limits<std::size_t>::max() / sizeof(T)) {
@@ -38,16 +40,23 @@ struct TrackingAlloc {
         total_alloc -= sizeof(T) * n;
         std::free(p);
     }
+    
+    template<class U>
+    bool operator==(const TrackingAlloc<U>& _) {
+        return true;
+    }
+
+    template<class U>
+    bool operator!=(const TrackingAlloc<U>& _) {
+        return false;
+    }
 };
+
+using TrackedString = std::basic_string<
+    char,
+    std::char_traits<char>,
+    TrackingAlloc<char>
+>;
 
 
 }  // namespace alloc
-
-template <class T, class U>
-auto operator==(const Allocation::TrackingAlloc<T>&, const Allocation::TrackingAlloc<U>&) -> bool {
-    return true;
-}
-template <class T, class U>
-auto operator!=(const Allocation::TrackingAlloc<T>&, const Allocation::TrackingAlloc<U>&) -> bool {
-    return false;
-}

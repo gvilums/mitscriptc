@@ -13,7 +13,7 @@ Diagnostics:
     Add:
       - bugprone*
       - clang-analyze*
-      - modernize*
+      # - modernize*
       - performance*
       - portability*
       - readability*

@@ -15,15 +15,11 @@
 #include "allocator.h"
 
 namespace VM {
+
 class VirtualMachine {
    private:
     struct Function* source;
-    std::map<
-        std::string, 
-        Value,
-        std::less<std::string>,
-        Allocation::TrackingAlloc<std::pair<const std::string, Value>>
-    > globals;
+    TrackedMap globals;
     std::vector<Value, Allocation::TrackingAlloc<Value>> opstack;
     std::vector<Value, Allocation::TrackingAlloc<Value>> arg_stage;
 

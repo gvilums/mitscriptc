@@ -10,6 +10,7 @@ mitscriptc
 vgout.txt
 code.mit
 massif*
+alloc_test
 
 bc-lexer.h
 bc-lexer.cpp
