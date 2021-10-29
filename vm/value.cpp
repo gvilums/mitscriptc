@@ -137,7 +137,7 @@ auto operator+(const Value& lhs, const Value& rhs) -> Value {
     if (rhs.tag == Value::STRING) {
         return {lhs.to_string() + rhs.str};
     }
-    throw std::string{"ERROR: invalid cast in '+' operation"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto operator==(const Value& lhs, const Value& rhs) -> bool {
@@ -169,14 +169,14 @@ auto operator>=(Value const& lhs, Value const& rhs) -> bool {
     if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
         return lhs.num >= rhs.num;
     }
-    throw std::string{"ERROR: invalid cast to int in comparison"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto operator>(Value const& lhs, Value const& rhs) -> bool {
     if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
         return lhs.num > rhs.num;
     }
-    throw std::string{"ERROR: invalid cast to int in comparison"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::to_string() const -> TrackedString {
@@ -208,7 +208,7 @@ auto Value::to_string() const -> TrackedString {
             return "FUNCTION";
         }
     }
-    throw std::string{"ERROR: trying to convert non-program-value to string"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_tag() -> ValueTag {
@@ -219,63 +219,63 @@ auto Value::get_bool() -> bool {
     if (this->tag == BOOL) {
         return this->boolean;
     }
-    throw std::string{"ERROR: invalid cast to bool"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_int() -> int {
     if (this->tag == NUM) {
         return this->num;
     }
-    throw std::string{"ERROR: invalid cast to int"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_string() -> TrackedString {
     if (this->tag == STRING) {
         return this->str;
     }
-    throw std::string{"ERROR: invalid cast to string"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_heap_ref() -> HeapObject* {
     if (this->tag == HEAP_REF) {
         return this->heap_ref;
     }
-    throw std::string{"ERROR: invalid cast to reference"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_record() -> Record& {
     if (this->tag == HEAP_REF) {
         return this->heap_ref->get_record();
     }
-    throw std::string{"ERROR: invalid cast to record"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_closure() -> Closure& {
     if (this->tag == HEAP_REF) {
         return this->heap_ref->get_closure();
     }
-    throw std::string{"ERROR: invalid cast to closure"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_val_ref() -> Value& {
     if (this->tag == HEAP_REF) {
         return this->heap_ref->get_value();
     }
-    throw std::string{"ERROR: invalid cast to reference"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_fnptr() -> struct Function* {
     if (this->tag == FN_PTR) {
         return this->fnptr;
     }
-    throw std::string{"ERROR: invalid cast to function pointer"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_usize() -> size_t {
     if (this->tag == USIZE) {
         return this->usize;
     }
-    throw std::string{"ERROR: invalid cast to usize"};
+    throw std::string{"IllegalCastException"};
 }
 
 void Value::trace() {
@@ -288,21 +288,21 @@ auto HeapObject::get_value() -> Value& {
     if (this->tag == VALUE) {
         return this->val;
     }
-    throw std::string{"ERROR: invalid cast to value"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto HeapObject::get_record() -> Record& {
     if (this->tag == RECORD) {
         return this->rec;
     }
-    throw std::string{"ERROR: invalid cast to record"};
+    throw std::string{"IllegalCastException"};
 }
 
 auto HeapObject::get_closure() -> Closure& {
     if (this->tag == CLOSURE) {
         return this->closure;
     }
-    throw std::string{"ERROR: invalid cast to closure"};
+    throw std::string{"IllegalCastException"};
 }
 
 void HeapObject::trace() {

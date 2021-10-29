@@ -16,7 +16,7 @@ template<typename T>
 auto VirtualMachine::alloc(T t) -> HeapObject* {
     // std::cout << "previous head: " << this->heap_head << std::endl;
     auto* obj = new HeapObject(std::move(t));
-    this->heap_size += sizeof(HeapObject);
+    this->heap_size += (sizeof(HeapObject));// + Allocation::ALLOC_OVERHEAD);
     // std::cout << "at address " << obj << std::endl;
     obj->next = this->heap_head;
     this->heap_head = obj;
@@ -48,7 +48,7 @@ void VirtualMachine::gc_collect() {
         HeapObject* next = this->heap_head->next;
         // std::cout << "deleting head at " << this->heap_head << std::endl;
         delete this->heap_head;
-        this->heap_size -= sizeof(HeapObject);
+        this->heap_size -= (sizeof(HeapObject) );//+ Allocation::ALLOC_OVERHEAD);
         this->heap_head = next;
     }
     
@@ -85,7 +85,7 @@ void VirtualMachine::gc_collect() {
 
 void VirtualMachine::gc_check() {
     size_t total_mem = Allocation::total_alloc + this->heap_size;
-    if (total_mem > this->max_heap_size) {
+    if (total_mem > this->max_heap_size * 2 / 3) {
         this->gc_collect();
         size_t live_mem = Allocation::total_alloc + this->heap_size;
         if (live_mem > this->max_heap_size) {
@@ -97,7 +97,7 @@ void VirtualMachine::gc_check() {
 
 auto VirtualMachine::get_unary_op() -> Value {
     if (this->opstack.empty()) {
-        throw std::string{"ERROR: empty stack for unary operation"};
+        throw std::string{"RuntimeException"};
     }
     Value operand = this->opstack.back();
     this->opstack.pop_back();
@@ -107,7 +107,7 @@ auto VirtualMachine::get_unary_op() -> Value {
 auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
     size_t stack_size = this->opstack.size();
     if (stack_size < 2) {
-        throw std::string{"ERROR: stack holds too few operands for binary operation"};
+        throw std::string{"RuntimeException"};
     }
     Value lop = this->opstack[stack_size - 2];
     Value rop = this->opstack[stack_size - 1];
@@ -161,7 +161,7 @@ auto VirtualMachine::step() -> bool {
     }
 
     if (this->iptr >= this->ctx->instructions.size()) {
-        throw std::string{"instruction pointer overran instruction list"};
+        throw std::string{"RuntimeException"};
     }
     Instruction instr = this->ctx->instructions[this->iptr];
 
@@ -172,7 +172,7 @@ auto VirtualMachine::step() -> bool {
     } else if (instr.operation == Operation::LoadGlobal) {
         TrackedString name{this->ctx->names_.at(instr.operand0.value())};
         if (this->globals.find(name) == this->globals.end()) {
-            throw std::string{"ERROR: uninitialized variable"};
+            throw std::string{"UninitializedVariableException"};
         }
         this->opstack.push_back(this->globals.at(name));
         this->iptr += 1;
@@ -184,7 +184,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadReference) {
         if (this->opstack.empty()) {
-            throw std::string{"ERROR: trying to load reference from empty stack"};
+            throw std::string{"RuntimeException"};
         }
         Value& val = this->opstack.back().get_val_ref();
         this->opstack.pop_back();
@@ -202,7 +202,7 @@ auto VirtualMachine::step() -> bool {
     } else if (instr.operation == Operation::StoreReference) {
         Value val = this->get_unary_op();
         if (this->opstack.empty()) {
-            throw std::string{"ERROR: trying to store to reference with stack of size 1"};
+            throw std::string{"RuntimeException"};
         }
         this->get_unary_op().get_val_ref() = std::move(val);
         this->iptr += 1;
@@ -230,7 +230,7 @@ auto VirtualMachine::step() -> bool {
         auto [x, y] = this->get_binary_ops();
         int divisor = y.get_int();
         if (divisor == 0) {
-            throw std::string{"ERROR: division by zero"};
+            throw std::string{"IllegalArithmeticException"};
         }
         this->opstack.emplace_back(x.get_int() / divisor);
         this->iptr += 1;
@@ -261,7 +261,7 @@ auto VirtualMachine::step() -> bool {
     } else if (instr.operation == Operation::AllocClosure) {
         int32_t m = instr.operand0.value();
         if (this->opstack.size() <= m) {
-            throw std::string{"ERROR: not enough stack arguments while allocating closure"};
+            throw std::string{"RuntimeException"};
         }
         Closure::TrackedVec refs;
         refs.reserve(m);
@@ -283,7 +283,7 @@ auto VirtualMachine::step() -> bool {
     } else if (instr.operation == Operation::Call) {
         int32_t n_params = instr.operand0.value();
         if (this->opstack.size() <= n_params) {
-            throw std::string{"ERROR: not enough stack arguments while calling closure"};
+            throw std::string{"RuntimeException"};
         }
         this->arg_stage.clear();
         this->arg_stage.reserve(n_params);
@@ -297,7 +297,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
         if (c.type == FnType::DEFAULT) {
             if (c.fn->parameter_count_ != n_params) {
-                throw std::string{"ERROR: invalid parameter count for function call"};
+                throw std::string{"RuntimeException"};
             }
 
             this->opstack.emplace_back(this->ctx);
@@ -341,23 +341,23 @@ auto VirtualMachine::step() -> bool {
             }
         } else if (c.type == FnType::PRINT) {
             if (arg_stage.size() != 1) {
-                throw std::string{"ERROR: print requires exactly one argument"};
+                throw std::string{"RuntimeException"};
             }
             std::cout << arg_stage.at(0).to_string() << '\n';
         } else if (c.type == FnType::INPUT) {
             if (!arg_stage.empty()) {
-                throw std::string{"ERROR: input requires exactly zero arguments"};
+                throw std::string{"RuntimeException"};
             }
             std::string input;
             std::getline(std::cin, input);
             this->opstack.emplace_back(input);
         } else if (c.type == FnType::INTCAST) {
             if (arg_stage.size() != 1) {
-                throw std::string{"ERROR: intcast requires exactly one argument"};
+                throw std::string{"RuntimeException"};
             }
             this->opstack.emplace_back(std::stoi(std::string{arg_stage.at(0).to_string()}));
         } else {
-            throw std::string{"ICE: undefined function type"};
+            throw std::string{"Internal Compiler Error: undefined function type"};
         }
     } else if (instr.operation == Operation::FieldLoad) {
         Record& r = this->get_unary_op().get_record();
@@ -397,7 +397,7 @@ auto VirtualMachine::step() -> bool {
             this->opstack.resize(0);
         } else {
             if (this->opstack.empty()) {
-                throw std::string{"ERROR: called return on empty stack"};
+                throw std::string{"RuntimeException"};
             }
             Value retval = this->opstack.back();
             size_t old_base = this->opstack.at(this->base_index - 1).get_usize();
@@ -413,7 +413,7 @@ auto VirtualMachine::step() -> bool {
         }
     } else if (instr.operation == Operation::Pop) {
         if (this->opstack.empty()) {
-            throw std::string{"ERROR: called pop on empty opstack"};
+            throw std::string{"RuntimeException"};
         }
         this->opstack.pop_back();
         this->iptr += 1;
@@ -428,7 +428,7 @@ auto VirtualMachine::step() -> bool {
         }
     } else if (instr.operation == Operation::Dup) {
         if (this->opstack.empty()) {
-            throw std::string{"ERROR: called dup on empty stack"};
+            throw std::string{"RuntimeException"};
         }
         Value v = this->opstack.back();
         this->opstack.push_back(v);
@@ -436,14 +436,14 @@ auto VirtualMachine::step() -> bool {
     } else if (instr.operation == Operation::Swap) {
         size_t stack_size = this->opstack.size();
         if (stack_size < 2) {
-            throw std::string{"ERROR: swap executed on stack with less than 2 elements"};
+            throw std::string{"RuntimeException"};
         }
         Value tmp = this->opstack.back();
         this->opstack.back() = this->opstack[stack_size - 2];
         this->opstack[stack_size - 2] = tmp;
         this->iptr += 1;
     } else {
-        throw std::string{"ICE: invalid opcode"};
+        throw std::string{"Internal Compiler Error: invalid opcode"};
     }
     return true;
 }

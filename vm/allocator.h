@@ -9,6 +9,7 @@
 
 namespace Allocation {
 
+const size_t ALLOC_OVERHEAD = 32;
 
 static size_t total_alloc = 0;
 
@@ -27,7 +28,7 @@ struct TrackingAlloc {
             throw std::bad_array_new_length();
         }
 
-        total_alloc += sizeof(T) * n;
+        total_alloc += (sizeof(T) * n);//+ ALLOC_OVERHEAD);
 
         if (auto p = static_cast<T*>(std::malloc(n * sizeof(T)))) {
             return p;
@@ -37,7 +38,7 @@ struct TrackingAlloc {
     }
 
     void deallocate(T* p, std::size_t n) noexcept {
-        total_alloc -= sizeof(T) * n;
+        total_alloc -= (sizeof(T) * n);// + ALLOC_OVERHEAD);
         std::free(p);
     }
     

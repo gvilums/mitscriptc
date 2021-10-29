@@ -80,10 +80,10 @@ auto main(int argc, const char* argv[]) -> int {
         VM::VirtualMachine vm(fn, mem_limit);
         vm.exec();
     } catch (std::string s) {
-        std::cout << s << std::endl;
+        std::cerr << s << std::endl;
         return 1;
     } catch (...) {
-        std::cout << "ERROR: runtime exception" << std::endl;
+        std::cerr << "RuntimeException" << std::endl;
         return 1;
     }
     
