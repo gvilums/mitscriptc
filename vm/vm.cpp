@@ -119,10 +119,16 @@ auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
 }
 
 VirtualMachine::VirtualMachine(struct Function* prog)
-    : source(prog) {}
+    : source(prog) {
+        this->print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
+        this->input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
+        this->intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
+    }
     
 VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit) 
-    : source{prog}, max_heap_size{heap_limit} {}
+    : VirtualMachine{prog} {
+        this->max_heap_size = heap_limit;
+    }
 
 void VirtualMachine::reset() {
     this->ctx = this->source;
@@ -130,39 +136,42 @@ void VirtualMachine::reset() {
     this->iptr = 0;
     this->num_locals = 0;
     
-    auto* print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
-    auto* input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
-    auto* intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
+    // auto* print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
+    // auto* input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
+    // auto* intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
 
-    this->globals = {
-        {"print", {print_closure}},
-        {"input", {input_closure}},
-        {"intcast", {intcast_closure}}};
+    // this->globals = {
+    //     {"print", {print_closure}},
+    //     {"input", {input_closure}},
+    //     {"intcast", {intcast_closure}}};
 }
 
 void VirtualMachine::exec() {
     this->reset();
-    // size_t i = 0;
-    while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
-        this->step();
+    while (this->step()) {
         this->gc_check();
-        // this->gc_collect();
     }
     this->opstack.clear();
     this->globals.clear();
     this->arg_stage.clear();
     this->gc_collect();
-
 }
 
 auto VirtualMachine::step() -> bool {
+    // return from global context
     if (this->ctx == nullptr) {
         return false;
     }
-
+    // iptr ran past instruction list
     if (this->iptr >= this->ctx->instructions.size()) {
+        // ok if in global frame, just end program
+        if (this->base_index == 0) {
+            return false;
+        }
+        // error in non-global frame
         throw std::string{"RuntimeException"};
     }
+
     Instruction instr = this->ctx->instructions[this->iptr];
 
     if (instr.operation == Operation::LoadConst) {
@@ -192,6 +201,20 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
+        // check if assigning builtins
+        if (val.get_tag() == Value::HEAP_REF) {
+            auto* ref_ptr = val.get_heap_ref();
+            if (ref_ptr->tag == HeapObject::CLOSURE) {
+                auto& closure = ref_ptr->get_closure();
+                if (closure.fn == this->source->functions_[0]) {
+                    val = Value{this->print_closure};
+                } else if (closure.fn == this->source->functions_[1]) {
+                    val = Value{this->input_closure};
+                } else if (closure.fn == this->source->functions_[2]) {
+                    val = Value{this->intcast_closure};
+                }
+            }
+        }
         TrackedString name{this->ctx->names_.at(instr.operand0.value())};
         this->globals[name] = val;
         this->iptr += 1;
