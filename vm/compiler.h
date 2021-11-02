@@ -20,6 +20,19 @@ class Compiler : public Visitor {
    public:
     Compiler() {
         rfun_ = new struct Function;
+        
+        struct Function* fprint = new struct Function;
+        fprint->parameter_count_ = 1;
+        struct Function* fintcast = new struct Function;
+        fintcast->parameter_count_ = 1;
+        struct Function* finput = new struct Function;
+        
+        rfun_->functions_.push_back(fprint);
+        rfun_->functions_.push_back(fintcast);
+        rfun_->functions_.push_back(finput);
+        
+    	// rfun_->instructions.push_back(Instruction(Operation::Geq, std::nullopt));
+        
         rfun_->names_.push_back("print"); // add predefined functions
         rfun_->names_.push_back("intcast");
         rfun_->names_.push_back("input");
