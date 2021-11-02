@@ -5,6 +5,18 @@ TIMEOUT=60
 TOTAL=0
 COUNT=0
 
+for filename in bad_bytecode/*.mitbc; do
+    echo $filename
+    OUT=$(timeout $TIMEOUT $INTERPRETER -b $filename 2>&1)
+    CODE=$?
+    if [[ $CODE -ne 0 ]]; then
+        COUNT=$((COUNT+1))
+    else
+        echo "Fail: $(basename $filename) (exit code $CODE) (OUT: $OUT)"
+    fi
+    TOTAL=$((TOTAL+1))
+done
+
 for filename in public/bad*.mit; do
     echo $filename
     OUT=$(timeout $TIMEOUT $INTERPRETER -s $filename 2>&1)
@@ -30,10 +42,32 @@ for filename in public/good*.mit; do
     rm -f tmp.out
 done
 
-echo "Passed $COUNT out of $TOTAL public tests"
+for filename in bytecode/*.mit; do
+    echo $filename
+    timeout $TIMEOUT $INTERPRETER -s $filename > tmp.out
+    CODE=$?
+    if diff tmp.out bytecode/$(basename $filename)bc.out; then
+        COUNT=$((COUNT+1))
+    else
+        echo "Fail: $(basename $filename) (exit code $CODE)"
+    fi
+    TOTAL=$((TOTAL+1))
+    rm -f tmp.out
+done
 
-PTOTAL=0
-PCOUNT=0
+for filename in bytecode/*.mitbc; do
+    echo $filename
+    timeout $TIMEOUT $INTERPRETER -b $filename > tmp.out
+    CODE=$?
+    if diff tmp.out bytecode/$(basename $filename).out; then
+        COUNT=$((COUNT+1))
+    else
+        echo "Fail: $(basename $filename) (exit code $CODE)"
+    fi
+    TOTAL=$((TOTAL+1))
+    rm -f tmp.out
+done
+
 
 for filename in private/*.mit; do
     echo $filename
@@ -45,7 +79,6 @@ for filename in private/*.mit; do
     CODE=$?
     if [[ $(cat private/$(basename $filename).out) =~ [A-Z][A-Za-z]+Exception ]]; then
         if [[ $(cat tmp1.err tmp1.out) = *"${BASH_REMATCH[0]}"* ]]; then
-            PCOUNT=$((PCOUNT+1))
             COUNT=$((COUNT+1))
         else
 						cat tmp1.out tmp1.err
@@ -61,9 +94,9 @@ for filename in private/*.mit; do
         fi
     fi
     TOTAL=$((TOTAL+1))
-    PTOTAL=$((PTOTAL+1))
     rm -f tmp1.out tmp1.err
 done
 
-echo "Passed $PCOUNT out of $PTOTAL private tests"
 echo "Passed $COUNT out of $TOTAL tests"
+
+# bash ./gc_test.sh $INTERPRETER
