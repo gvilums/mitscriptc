@@ -9,11 +9,10 @@
 #include <iostream>
 
 // #include "../gc/gc.h"
-#include "types.h"
 #include "allocator.h"
+#include "types.h"
 
 namespace VM {
-    
 
 class Value;
 class HeapObject;
@@ -24,9 +23,7 @@ using TrackedMap = std::map<
     TrackedString,
     Value,
     std::less<>,
-    Allocation::TrackingAlloc<std::pair<const TrackedString, Value>>
->;
-
+    Allocation::TrackingAlloc<std::pair<const TrackedString, Value>>>;
 
 enum class FnType { DEFAULT,
                     PRINT,
@@ -36,7 +33,6 @@ enum class FnType { DEFAULT,
 struct Record {
     TrackedMap fields;
 };
-
 
 struct Closure {
     using TrackedVec = std::vector<HeapObject*, Allocation::TrackingAlloc<HeapObject*>>;
@@ -49,19 +45,19 @@ struct Closure {
         : type{type}, fn{fn} {}
     Closure(FnType type, struct Function* fn, TrackedVec refs)
         : type{type}, fn{fn}, refs{std::move(refs)} {}
-
 };
-
 
 class Value {
    public:
-    enum ValueTag { NONE,
-           NUM,
-           BOOL,
-           STRING,
-           HEAP_REF,
-           FN_PTR,
-           USIZE };
+    enum ValueTag {
+        NONE,
+        NUM,
+        BOOL,
+        STRING,
+        HEAP_REF,
+        FN_PTR,
+        USIZE
+    };
 
    private:
     ValueTag tag{NONE};
@@ -100,7 +96,7 @@ class Value {
     Value(Value&& other) noexcept;
 
     ~Value();
-    
+
     void destroy_contents();
 
     auto operator=(const Value& other) -> Value&;
@@ -112,9 +108,9 @@ class Value {
     friend auto operator>(Value const& lhs, Value const& rhs) -> bool;
 
     [[nodiscard]] auto to_string() const -> TrackedString;
-    
+
     void trace();
-    
+
     auto get_tag() -> ValueTag;
     auto get_bool() -> bool;
     auto get_int() -> int;
@@ -125,14 +121,15 @@ class Value {
     auto get_closure() -> Closure&;
     auto get_fnptr() -> struct Function*;
     auto get_usize() -> size_t;
-
 };
 
 class VirtualMachine;
 
 class HeapObject {
    public:
-    enum HeapTag {VALUE, RECORD, CLOSURE};
+    enum HeapTag { VALUE,
+                   RECORD,
+                   CLOSURE };
 
    private:
     HeapTag tag;
@@ -141,24 +138,27 @@ class HeapObject {
         Record rec;
         Closure closure;
     };
-    
+
     bool marked{false};
     HeapObject* next{nullptr};
 
    public:
-    HeapObject(Value v) : tag{VALUE} {
+    HeapObject(Value v)
+        : tag{VALUE} {
         // std::cout << "allocated value " << v.to_string() <<std::endl;
         ::new (&this->val) auto(std::move(v));
     }
-    HeapObject(Record r) : tag{RECORD} {
+    HeapObject(Record r)
+        : tag{RECORD} {
         // std::cout << "allocated record" << std::endl;
         ::new (&this->rec) auto(std::move(r));
     }
-    HeapObject(Closure c) : tag{CLOSURE} {
+    HeapObject(Closure c)
+        : tag{CLOSURE} {
         // std::cout << "allocated closure of type " << (int)c.type << std::endl;
         ::new (&this->closure) auto(std::move(c));
     }
-    
+
     ~HeapObject() {
         if (this->tag == VALUE) {
             this->val.~Value();
@@ -168,13 +168,13 @@ class HeapObject {
             this->closure.~Closure();
         }
     }
-    
+
     void trace();
-    
+
     auto get_value() -> Value&;
     auto get_record() -> Record&;
     auto get_closure() -> Closure&;
-    
+
     friend VirtualMachine;
     friend Value;
     friend auto operator==(const Value& lhs, const Value& rhs) -> bool;

@@ -1,0 +1,19 @@
+CompileFlags:
+  Add:
+    - "-xc++"
+    - "-std=c++17"
+    - "-Ix64asm"
+    - "-Wno-attributes"
+
+Index:
+  Background: Build
+
+Diagnostics:
+  ClangTidy:
+    Add:
+      - bugprone*
+      - clang-analyze*
+      # - modernize*
+      - performance*
+      - portability*
+      - readability*
