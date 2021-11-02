@@ -120,9 +120,9 @@ auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
 
 VirtualMachine::VirtualMachine(struct Function* prog)
     : source(prog) {
-        this->print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
-        this->input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
-        this->intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
+        this->print_closure = new HeapObject(Closure{FnType::PRINT, nullptr});
+        this->input_closure = new HeapObject(Closure{FnType::INPUT, nullptr});
+        this->intcast_closure = new HeapObject(Closure{FnType::INTCAST, nullptr});
     }
     
 VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit) 
@@ -130,20 +130,17 @@ VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit)
         this->max_heap_size = heap_limit;
     }
 
+VirtualMachine::~VirtualMachine() {
+    delete this->print_closure;
+    delete this->input_closure;
+    delete this->intcast_closure;
+}
+
 void VirtualMachine::reset() {
     this->ctx = this->source;
     this->base_index = 0;
     this->iptr = 0;
     this->num_locals = 0;
-    
-    // auto* print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
-    // auto* input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
-    // auto* intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
-
-    // this->globals = {
-    //     {"print", {print_closure}},
-    //     {"input", {input_closure}},
-    //     {"intcast", {intcast_closure}}};
 }
 
 void VirtualMachine::exec() {
@@ -201,20 +198,6 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
-        // check if assigning builtins
-        if (val.get_tag() == Value::HEAP_REF) {
-            auto* ref_ptr = val.get_heap_ref();
-            if (ref_ptr->tag == HeapObject::CLOSURE) {
-                auto& closure = ref_ptr->get_closure();
-                if (closure.fn == this->source->functions_[0]) {
-                    val = Value{this->print_closure};
-                } else if (closure.fn == this->source->functions_[1]) {
-                    val = Value{this->input_closure};
-                } else if (closure.fn == this->source->functions_[2]) {
-                    val = Value{this->intcast_closure};
-                }
-            }
-        }
         TrackedString name{this->ctx->names_.at(instr.operand0.value())};
         this->globals[name] = val;
         this->iptr += 1;
@@ -296,7 +279,17 @@ auto VirtualMachine::step() -> bool {
         struct Function* fn = this->opstack.back().get_fnptr();
         this->opstack.pop_back();
 
-        auto* closure = this->alloc(Closure{FnType::DEFAULT, fn, std::move(refs)});
+        HeapObject* closure;
+        // check if assigning builtins
+        if (fn == this->source->functions_[0]) {
+            closure = this->print_closure;
+        } else if (fn == this->source->functions_[1]) {
+            closure = this->input_closure;
+        } else if (fn == this->source->functions_[2]) {
+            closure = this->intcast_closure;
+        } else {
+            closure = this->alloc(Closure{FnType::DEFAULT, fn, std::move(refs)});
+        }
         this->opstack.emplace_back(closure);
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {

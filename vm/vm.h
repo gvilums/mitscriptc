@@ -49,6 +49,7 @@ class VirtualMachine {
    public:
     VirtualMachine(struct Function* prog);
     VirtualMachine(struct Function* prog, size_t heap_limit);
+    ~VirtualMachine();
     VirtualMachine(const VirtualMachine&) = delete;
     auto operator=(const VirtualMachine&) -> VirtualMachine& = delete;
 
