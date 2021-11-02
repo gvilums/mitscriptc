@@ -1,0 +1,331 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [0, 0, 1, 1, 1, 1, None],
+			parameter_count = 2,
+			local_vars = [arr, n, i, pv, temp, lo, hi, ret],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [arr, idx],
+			instructions = 
+			[
+				load_const	0
+				store_local	2
+				load_local	0
+				load_local	2
+				index_load
+				store_local	3
+				alloc_record
+				store_local	4
+				load_const	1
+				store_local	5
+				load_local	1
+				load_const	2
+				sub
+				store_local	6
+				load_local	2
+				load_local	1
+				geq
+				not
+				if	2
+				goto	34
+				load_local	0
+				load_local	2
+				index_load
+				load_local	3
+				geq
+				if	2
+				goto	12
+				load_local	4
+				load_local	6
+				load_local	0
+				load_local	2
+				index_load
+				index_store
+				load_local	6
+				load_const	3
+				sub
+				store_local	6
+				goto	11
+				load_local	4
+				load_local	5
+				load_local	0
+				load_local	2
+				index_load
+				index_store
+				load_local	5
+				load_const	4
+				add
+				store_local	5
+				load_local	2
+				load_const	5
+				add
+				store_local	2
+				goto	-38
+				alloc_record
+				dup
+				load_local	4
+				field_store	0
+				dup
+				load_local	5
+				field_store	1
+				store_local	7
+				load_local	7
+				return
+				load_const	6
+				return
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [1, 0, 1, 0, 1, 0, 1, None],
+			parameter_count = 2,
+			local_vars = [arr, n, ret, arr1, i, arr2],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [split, quicksort, quicksort, idx, arr, idx, arr, idx, idx, idx, idx, idx],
+			instructions = 
+			[
+				load_local	1
+				load_const	0
+				gt
+				not
+				if	2
+				goto	3
+				load_local	0
+				return
+				load_global	0
+				load_local	0
+				load_local	1
+				call	2
+				store_local	2
+				alloc_record
+				store_local	3
+				load_const	1
+				store_local	4
+				load_local	4
+				load_local	2
+				field_load	3
+				geq
+				not
+				if	2
+				goto	13
+				load_local	3
+				load_local	4
+				load_local	2
+				field_load	4
+				load_local	4
+				index_load
+				index_store
+				load_local	4
+				load_const	2
+				add
+				store_local	4
+				goto	-18
+				alloc_record
+				store_local	5
+				load_const	3
+				store_local	4
+				load_local	4
+				load_local	1
+				load_local	2
+				field_load	5
+				sub
+				geq
+				not
+				if	2
+				goto	16
+				load_local	5
+				load_local	4
+				load_local	2
+				field_load	6
+				load_local	4
+				load_local	2
+				field_load	7
+				add
+				index_load
+				index_store
+				load_local	4
+				load_const	4
+				add
+				store_local	4
+				goto	-23
+				load_global	1
+				load_local	3
+				load_local	2
+				field_load	8
+				call	2
+				store_local	3
+				load_global	1
+				load_local	5
+				load_local	1
+				load_local	2
+				field_load	9
+				sub
+				call	2
+				store_local	5
+				load_const	5
+				store_local	4
+				load_local	4
+				load_local	1
+				geq
+				not
+				if	2
+				goto	29
+				load_local	4
+				load_local	2
+				field_load	10
+				geq
+				not
+				if	2
+				goto	8
+				load_local	0
+				load_local	4
+				load_local	3
+				load_local	4
+				index_load
+				index_store
+				goto	10
+				load_local	0
+				load_local	4
+				load_local	5
+				load_local	4
+				load_local	2
+				field_load	11
+				sub
+				index_load
+				index_store
+				load_local	4
+				load_const	6
+				add
+				store_local	4
+				goto	-33
+				load_local	0
+				return
+				load_const	7
+				return
+			]
+		}
+	],
+	constants = [0, 3, 1, 2, 2, 7, 3, 5, 4, 1, 5, 6, 6, 4, 7, 0, 7, 1],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [print, input, intcast, arr, split, quicksort, i],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	0
+		load_func	1
+		alloc_closure	0
+		store_global	1
+		load_func	2
+		alloc_closure	0
+		store_global	2
+		alloc_record
+		store_global	3
+		load_func	3
+		alloc_closure	0
+		store_global	4
+		load_func	4
+		alloc_closure	0
+		store_global	5
+		load_global	3
+		load_const	0
+		load_const	1
+		index_store
+		load_global	3
+		load_const	2
+		load_const	3
+		index_store
+		load_global	3
+		load_const	4
+		load_const	5
+		index_store
+		load_global	3
+		load_const	6
+		load_const	7
+		index_store
+		load_global	3
+		load_const	8
+		load_const	9
+		index_store
+		load_global	3
+		load_const	10
+		load_const	11
+		index_store
+		load_global	3
+		load_const	12
+		load_const	13
+		index_store
+		load_global	5
+		load_global	3
+		load_const	14
+		call	2
+		store_global	3
+		load_const	15
+		store_global	6
+		load_global	6
+		load_const	16
+		geq
+		not
+		if	2
+		goto	11
+		load_global	0
+		load_global	3
+		load_global	6
+		index_load
+		call	1
+		load_global	6
+		load_const	17
+		add
+		store_global	6
+		goto	-15
+	]
+}

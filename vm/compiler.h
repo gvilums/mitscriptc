@@ -23,22 +23,31 @@ class Compiler : public Visitor {
         
         struct Function* fprint = new struct Function;
         fprint->parameter_count_ = 1;
+        struct Function* finput = new struct Function;
         struct Function* fintcast = new struct Function;
         fintcast->parameter_count_ = 1;
-        struct Function* finput = new struct Function;
-        
-        rfun_->functions_.push_back(fprint);
-        rfun_->functions_.push_back(fintcast);
-        rfun_->functions_.push_back(finput);
-        
-    	// rfun_->instructions.push_back(Instruction(Operation::Geq, std::nullopt));
         
         rfun_->names_.push_back("print"); // add predefined functions
-        rfun_->names_.push_back("intcast");
         rfun_->names_.push_back("input");
+        rfun_->names_.push_back("intcast");
         globals_.insert("print");
-        globals_.insert("intcast");
         globals_.insert("input");
+        globals_.insert("intcast");
+        
+        rfun_->functions_.push_back(fprint);
+        rfun_->functions_.push_back(finput);
+        rfun_->functions_.push_back(fintcast);
+        
+    	rfun_->instructions.push_back(Instruction(Operation::LoadFunc, 0));
+		rfun_->instructions.push_back(Instruction(Operation::AllocClosure, 0));
+		rfun_->instructions.push_back(Instruction(Operation::StoreGlobal, 0));
+		rfun_->instructions.push_back(Instruction(Operation::LoadFunc, 1));
+		rfun_->instructions.push_back(Instruction(Operation::AllocClosure, 0));
+		rfun_->instructions.push_back(Instruction(Operation::StoreGlobal, 1));
+		rfun_->instructions.push_back(Instruction(Operation::LoadFunc, 2));
+		rfun_->instructions.push_back(Instruction(Operation::AllocClosure, 0));
+		rfun_->instructions.push_back(Instruction(Operation::StoreGlobal, 2));
+		     
         global_scope_ = true;
     }
 
