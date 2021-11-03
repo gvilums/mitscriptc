@@ -30,6 +30,10 @@ class VirtualMachine {
     size_t iptr = 0;
     size_t num_locals = 0;
     struct Function* ctx;
+    
+    HeapObject* print_closure;
+    HeapObject* input_closure;
+    HeapObject* intcast_closure;
 
     auto get_unary_op() -> Value;
     auto get_binary_ops() -> std::pair<Value, Value>;
@@ -45,6 +49,7 @@ class VirtualMachine {
    public:
     VirtualMachine(struct Function* prog);
     VirtualMachine(struct Function* prog, size_t heap_limit);
+    ~VirtualMachine();
     VirtualMachine(const VirtualMachine&) = delete;
     auto operator=(const VirtualMachine&) -> VirtualMachine& = delete;
 

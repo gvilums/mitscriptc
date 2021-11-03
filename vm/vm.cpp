@@ -119,50 +119,56 @@ auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
 }
 
 VirtualMachine::VirtualMachine(struct Function* prog)
-    : source(prog) {}
+    : source(prog) {
+        this->print_closure = new HeapObject(Closure{FnType::PRINT, nullptr});
+        this->input_closure = new HeapObject(Closure{FnType::INPUT, nullptr});
+        this->intcast_closure = new HeapObject(Closure{FnType::INTCAST, nullptr});
+    }
     
 VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit) 
-    : source{prog}, max_heap_size{heap_limit} {}
+    : VirtualMachine{prog} {
+        this->max_heap_size = heap_limit;
+    }
+
+VirtualMachine::~VirtualMachine() {
+    delete this->print_closure;
+    delete this->input_closure;
+    delete this->intcast_closure;
+}
 
 void VirtualMachine::reset() {
     this->ctx = this->source;
     this->base_index = 0;
     this->iptr = 0;
     this->num_locals = 0;
-    
-    auto* print_closure = this->alloc(Closure{FnType::PRINT, nullptr});
-    auto* input_closure = this->alloc(Closure{FnType::INPUT, nullptr});
-    auto* intcast_closure = this->alloc(Closure{FnType::INTCAST, nullptr});
-
-    this->globals = {
-        {"print", {print_closure}},
-        {"input", {input_closure}},
-        {"intcast", {intcast_closure}}};
 }
 
 void VirtualMachine::exec() {
     this->reset();
-    // size_t i = 0;
-    while ((this->ctx != nullptr) && this->iptr < this->ctx->instructions.size()) {
-        this->step();
+    while (this->step()) {
         this->gc_check();
-        // this->gc_collect();
     }
     this->opstack.clear();
     this->globals.clear();
     this->arg_stage.clear();
     this->gc_collect();
-
 }
 
 auto VirtualMachine::step() -> bool {
+    // return from global context
     if (this->ctx == nullptr) {
         return false;
     }
-
+    // iptr ran past instruction list
     if (this->iptr >= this->ctx->instructions.size()) {
+        // ok if in global frame, just end program
+        if (this->base_index == 0) {
+            return false;
+        }
+        // error in non-global frame
         throw std::string{"RuntimeException"};
     }
+
     Instruction instr = this->ctx->instructions[this->iptr];
 
     if (instr.operation == Operation::LoadConst) {
@@ -273,7 +279,17 @@ auto VirtualMachine::step() -> bool {
         struct Function* fn = this->opstack.back().get_fnptr();
         this->opstack.pop_back();
 
-        auto* closure = this->alloc(Closure{FnType::DEFAULT, fn, std::move(refs)});
+        HeapObject* closure;
+        // check if assigning builtins
+        if (fn == this->source->functions_[0]) {
+            closure = this->print_closure;
+        } else if (fn == this->source->functions_[1]) {
+            closure = this->input_closure;
+        } else if (fn == this->source->functions_[2]) {
+            closure = this->intcast_closure;
+        } else {
+            closure = this->alloc(Closure{FnType::DEFAULT, fn, std::move(refs)});
+        }
         this->opstack.emplace_back(closure);
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {

@@ -137,7 +137,7 @@ auto operator+(const Value& lhs, const Value& rhs) -> Value {
     if (rhs.tag == Value::STRING) {
         return {lhs.to_string() + rhs.str};
     }
-    throw std::string{"IllegalCastException"};
+    throw std::string{"RuntimeException"};
 }
 
 auto operator==(const Value& lhs, const Value& rhs) -> bool {
@@ -208,7 +208,7 @@ auto Value::to_string() const -> TrackedString {
             return "FUNCTION";
         }
     }
-    throw std::string{"IllegalCastException"};
+    throw std::string{"RuntimeException"};
 }
 
 auto Value::get_tag() -> ValueTag {
