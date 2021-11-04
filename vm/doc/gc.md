@@ -7,13 +7,16 @@ Due to custom requirements, the allocator implemented in gc/gc.h is completely s
 The general design of the garbage collector follows the principle of simple mark-and-sweep collectors. Allocations are handled by the VirtualMachine object executing the code.
 
 ### HeapObject
-The HeapObject class represents objects which can be allocated on the heap. Each HeapObject has a marked bit and a pointer to the next heap object. Additionally, it implements a `trace` function, which recursively traces objects that an object references. HeapObject is implemented as a tagged union, as all allocated types are known in advance and there were some very weird issues when trying to implement `Collectable` for the value structure.
+The HeapObject class represents objects which can be allocated on the heap. Each HeapObject has a marked bit and a pointer to the next heap object. Additionally, it implements a `trace` function, which recursively traces objects that an object references. HeapObject is implemented as a tagged union, as all allocated types are known in advance.
 
 ### TrackingAlloc
 To enable the use of STL containers such as vectors, strings, and maps, a custom allocator is implemented in allocator.h. Whenever it receives a request for allocation, it increments the global variable total_alloc by the size of the allocation. This information is then used by the virtual machine to decide when to run garbage collection.
 
 ### Memory Usage Monitoring
-After each executed instruction, the vm estimates the amount of memory that is currently used. The exact amount of allocated usable memory is always available, as both the vm and TrackingAllocator keep track of the exact amount of memory used. There is however an additional overhead associated with every heap allocation which cannot be tracked exactly. Therefore, the garbage collector is conservative and executes a collection cycle even when only half the available memory is thought to be used.
+After each executed instruction, the vm estimates the amount of memory that is currently used. The exact amount of allocated usable memory is always available, as both the vm and TrackingAllocator keep track of the exact amount of memory used. There is however an additional overhead associated with every heap allocation which cannot be tracked exactly. Therefore, the garbage collector is conservative and executes a collection cycle even when the estimate only reaches half the limit.
 
 ### Collection
-The collection algorithm is completely straightforward: First, all objects which are on the stack are traced. Then, starting at the head element of the allocation list, all allocations are traversed and unmarked objects are deallocated.
+The collection algorithm is completely straightforward: First, all objects which are on the stack are traced. As there is a single callstack for all functions, this step consist of a simple traversal. Then, starting at the head element of the allocation list, all allocations are traversed and unmarked objects are deallocated.
+
+# Collaboration
+The garbage collector was implemented by Georgijs. All tests were designed and written by Jakob.
