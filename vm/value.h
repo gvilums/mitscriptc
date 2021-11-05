@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <unordered_map>
+#include <parallel_hashmap/phmap.h>
 #include <utility>
 
 #include <iostream>
@@ -12,18 +13,42 @@
 #include "allocator.h"
 #include "types.h"
 
+struct String {
+    size_t size;
+    char data[];
+    
+    String(size_t len) : size{len} {}
+};
+
+template<>
+struct std::hash<Allocation::TrackedString> {
+    std::size_t operator()(const Allocation::TrackedString& str) const noexcept {
+        const size_t l = str.size();
+        const size_t p = 1000000007;
+        size_t current_p = p;
+        size_t output = 0;
+        for (size_t i = 0; i < l; ++i) {
+            output += str[i] * current_p;
+            current_p *= p;
+        }
+        return output;
+    }
+};
+
 namespace VM {
 
+class VirtualMachine;
 
 class Value;
 class HeapObject;
 
 using Allocation::TrackedString;
 
-using TrackedMap = std::map<
+using TrackedMap = phmap::flat_hash_map<
     TrackedString,
     Value,
-    std::less<>,
+    std::hash<TrackedString>,
+    std::equal_to<TrackedString>,
     Allocation::TrackingAlloc<std::pair<const TrackedString, Value>>>;
 
 enum class FnType { DEFAULT,
@@ -31,9 +56,8 @@ enum class FnType { DEFAULT,
                     INPUT,
                     INTCAST };
 
-struct Record {
-    TrackedMap fields;
-};
+
+struct Record;
 
 struct Closure {
     using TrackedVec = std::vector<HeapObject*, Allocation::TrackingAlloc<HeapObject*>>;
@@ -54,8 +78,10 @@ class Value {
         NONE,
         NUM,
         BOOL,
-        STRING,
-        HEAP_REF,
+        STRING_PTR,
+        RECORD_PTR,
+        CLOSURE_PTR,
+        VALUE_PTR,
         FN_PTR,
         USIZE
     };
@@ -66,8 +92,10 @@ class Value {
         None none;
         int num;
         bool boolean;
-        TrackedString str;
-        HeapObject* heap_ref;
+        String* string;
+        Record* record;
+        Closure* closure;
+        Value* value;
         struct Function* fnptr;
         size_t usize;
     };
@@ -81,27 +109,26 @@ class Value {
         : tag{NUM}, num{n} {}
     Value(bool b)
         : tag{BOOL}, boolean{b} {}
-    Value(HeapObject* ref)
-        : tag{HEAP_REF}, heap_ref{ref} {}
+    Value(String* ptr)
+        : tag{STRING_PTR}, string{ptr} {}
+    Value(Record* ptr)
+        : tag{RECORD_PTR}, record{ptr} {}
+    Value(Closure* ptr)
+        : tag{CLOSURE_PTR}, closure{ptr} {}
+    Value(Value* ptr)
+        : tag{VALUE_PTR}, value{ptr} {}
     Value(struct Function* ptr)
         : tag{FN_PTR}, fnptr{ptr} {}
     Value(size_t u)
         : tag{USIZE}, usize{u} {}
-    Value(TrackedString s)
-        : tag{STRING} {
-        ::new (&this->str) auto(std::move(s));
-    }
-    Value(Constant c);
+    
+    static auto from_constant(Constant c, VirtualMachine& vm) -> Value;
 
-    Value(const Value& other);
-    Value(Value&& other) noexcept;
+    // Value(const Value& other);
+    // Value(Value&& other) noexcept;
 
-    ~Value();
-
-    void destroy_contents();
-
-    auto operator=(const Value& other) -> Value&;
-    auto operator=(Value&& other) noexcept -> Value&;
+    // auto operator=(const Value& other) -> Value&;
+    // auto operator=(Value&& other) noexcept -> Value&;
 
     friend auto operator+(const Value& lhs, const Value& rhs) -> Value;
     friend auto operator==(const Value& lhs, const Value& rhs) -> bool;
@@ -115,16 +142,18 @@ class Value {
     auto get_tag() -> ValueTag;
     auto get_bool() -> bool;
     auto get_int() -> int;
-    auto get_string() -> TrackedString;
-    auto get_heap_ref() -> HeapObject*;
+    auto get_string() -> String&;
     auto get_record() -> Record&;
-    auto get_val_ref() -> Value&;
     auto get_closure() -> Closure&;
+    auto get_val_ref() -> Value&;
     auto get_fnptr() -> struct Function*;
     auto get_usize() -> size_t;
 };
 
-class VirtualMachine;
+struct Record {
+    TrackedMap fields;
+};
+
 
 class HeapObject {
    public:

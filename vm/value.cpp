@@ -2,127 +2,100 @@
 
 #include "types.h"
 
+#include <algorithm>
 #include <string>
 #include <variant>
 
 namespace VM {
 
-Value::Value(Constant c) {
-    if (std::holds_alternative<None>(c)) {
-        this->tag = NONE;
-        this->none = None{};
-    } else if (std::holds_alternative<bool>(c)) {
-        this->tag = BOOL;
-        this->boolean = std::get<bool>(c);
-    } else if (std::holds_alternative<int>(c)) {
-        this->tag = NUM;
-        this->num = std::get<int>(c);
-    } else if (std::holds_alternative<std::string>(c)) {
-        this->tag = STRING;
-        ::new (&this->str) auto(std::get<std::string>(c));
-    } else {
-        std::terminate();
-    }
 
-}
+// Value::Value(const Value& other)
+//     : tag{other.tag} {
+//     if (other.tag == NONE) {
+//         this->none = None{};
+//     } else if (other.tag == NUM) {
+//         this->num = other.num;
+//     } else if (other.tag == BOOL) {
+//         this->boolean = other.boolean;
+//     } else if (other.tag == STRING) {
+//         ::new (&this->str) auto(other.str);
+//     } else if (other.tag == HEAP_REF) {
+//         this->heap_ref = other.heap_ref;
+//     } else if (other.tag == FN_PTR) {
+//         this->fnptr = other.fnptr;
+//     } else if (other.tag == USIZE) {
+//         this->usize = other.usize;
+//     } else {
+//         std::terminate();
+//     }
+// }
 
-void Value::destroy_contents() {
-    if (this->tag == STRING) {
-        this->str.~basic_string();
-    }
-}
+// Value::Value(Value&& other) noexcept
+//     : tag{other.tag} {
+//     if (other.tag == NONE) {
+//         this->none = None{};
+//     } else if (other.tag == NUM) {
+//         this->num = other.num;
+//     } else if (other.tag == BOOL) {
+//         this->boolean = other.boolean;
+//     } else if (other.tag == STRING) {
+//         ::new (&this->str) auto(std::move(other.str));
+//     } else if (other.tag == HEAP_REF) {
+//         this->heap_ref = other.heap_ref;
+//     } else if (other.tag == FN_PTR) {
+//         this->fnptr = other.fnptr;
+//     } else if (other.tag == USIZE) {
+//         this->usize = other.usize;
+//     } else {
+//         std::terminate();
+//     }
+// }
 
-Value::~Value() {
-    this->destroy_contents();
-}
+// auto Value::operator=(const Value& other) -> Value& {
+//     this->destroy_contents();
+//     this->tag = other.tag;
+//     if (other.tag == NONE) {
+//         this->none = None{};
+//     } else if (other.tag == NUM) {
+//         this->num = other.num;
+//     } else if (other.tag == BOOL) {
+//         this->boolean = other.boolean;
+//     } else if (other.tag == STRING) {
+//         ::new (&this->str) auto(other.str);
+//     } else if (other.tag == HEAP_REF) {
+//         this->heap_ref = other.heap_ref;
+//     } else if (other.tag == FN_PTR) {
+//         this->fnptr = other.fnptr;
+//     } else if (other.tag == USIZE) {
+//         this->usize = other.usize;
+//     } else {
+//         std::terminate();
+//     }
+//     return *this;
+// }
 
-Value::Value(const Value& other)
-    : tag{other.tag} {
-    if (other.tag == NONE) {
-        this->none = None{};
-    } else if (other.tag == NUM) {
-        this->num = other.num;
-    } else if (other.tag == BOOL) {
-        this->boolean = other.boolean;
-    } else if (other.tag == STRING) {
-        ::new (&this->str) auto(other.str);
-    } else if (other.tag == HEAP_REF) {
-        this->heap_ref = other.heap_ref;
-    } else if (other.tag == FN_PTR) {
-        this->fnptr = other.fnptr;
-    } else if (other.tag == USIZE) {
-        this->usize = other.usize;
-    } else {
-        std::terminate();
-    }
-}
-
-Value::Value(Value&& other) noexcept
-    : tag{other.tag} {
-    if (other.tag == NONE) {
-        this->none = None{};
-    } else if (other.tag == NUM) {
-        this->num = other.num;
-    } else if (other.tag == BOOL) {
-        this->boolean = other.boolean;
-    } else if (other.tag == STRING) {
-        ::new (&this->str) auto(std::move(other.str));
-    } else if (other.tag == HEAP_REF) {
-        this->heap_ref = other.heap_ref;
-    } else if (other.tag == FN_PTR) {
-        this->fnptr = other.fnptr;
-    } else if (other.tag == USIZE) {
-        this->usize = other.usize;
-    } else {
-        std::terminate();
-    }
-}
-
-auto Value::operator=(const Value& other) -> Value& {
-    this->destroy_contents();
-    this->tag = other.tag;
-    if (other.tag == NONE) {
-        this->none = None{};
-    } else if (other.tag == NUM) {
-        this->num = other.num;
-    } else if (other.tag == BOOL) {
-        this->boolean = other.boolean;
-    } else if (other.tag == STRING) {
-        ::new (&this->str) auto(other.str);
-    } else if (other.tag == HEAP_REF) {
-        this->heap_ref = other.heap_ref;
-    } else if (other.tag == FN_PTR) {
-        this->fnptr = other.fnptr;
-    } else if (other.tag == USIZE) {
-        this->usize = other.usize;
-    } else {
-        std::terminate();
-    }
-    return *this;
-}
-
-auto Value::operator=(Value&& other) noexcept -> Value& {
-    this->destroy_contents();
-    this->tag = other.tag;
-    if (other.tag == NONE) {
-        this->none = None{};
-    } else if (other.tag == NUM) {
-        this->num = other.num;
-    } else if (other.tag == BOOL) {
-        this->boolean = other.boolean;
-    } else if (other.tag == STRING) {
-        ::new (&this->str) auto(std::move(other.str));
-    } else if (other.tag == HEAP_REF) {
-        this->heap_ref = other.heap_ref;
-    } else if (other.tag == FN_PTR) {
-        this->fnptr = other.fnptr;
-    } else if (other.tag == USIZE) {
-        this->usize = other.usize;
-    } else {
-        std::terminate();
-    }
-    return *this;
-}
+// auto Value::operator=(Value&& other) noexcept -> Value& {
+//     this->destroy_contents();
+//     this->tag = other.tag;
+//     if (other.tag == NONE) {
+//         this->none = None{};
+//     } else if (other.tag == NUM) {
+//         this->num = other.num;
+//     } else if (other.tag == BOOL) {
+//         this->boolean = other.boolean;
+//     } else if (other.tag == STRING) {
+//         ::new (&this->str) auto(std::move(other.str));
+//     } else if (other.tag == HEAP_REF) {
+//         this->heap_ref = other.heap_ref;
+//     } else if (other.tag == FN_PTR) {
+//         this->fnptr = other.fnptr;
+//     } else if (other.tag == USIZE) {
+//         this->usize = other.usize;
+//     } else {
+//         std::terminate();
+//     }
+//     return *this;
+// }
 
 auto operator+(const Value& lhs, const Value& rhs) -> Value {
     if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
@@ -195,7 +168,10 @@ auto Value::to_string() const -> TrackedString {
     if (this->tag == HEAP_REF) {
         if (this->heap_ref->tag == HeapObject::RECORD) {
             TrackedString out{"{"};
-            for (const auto& p : this->heap_ref->rec.fields) {
+            std::vector<std::pair<TrackedString, Value>> vals{this->heap_ref->rec.fields.begin(), this->heap_ref->rec.fields.end()};
+            std::sort(vals.begin(), vals.end(),
+                      [](const std::pair<TrackedString, Value>& l, const std::pair<TrackedString, Value>& r) { return l.first < r.first; });
+            for (const auto& p : vals) {
                 out.append(p.first);
                 out.push_back(':');
                 out.append(p.second.to_string());
@@ -229,37 +205,30 @@ auto Value::get_int() -> int {
     throw std::string{"IllegalCastException"};
 }
 
-auto Value::get_string() -> TrackedString {
-    if (this->tag == STRING) {
-        return this->str;
-    }
-    throw std::string{"IllegalCastException"};
-}
-
-auto Value::get_heap_ref() -> HeapObject* {
-    if (this->tag == HEAP_REF) {
-        return this->heap_ref;
+auto Value::get_string() -> String& {
+    if (this->tag == STRING_PTR) {
+        return *this->str;
     }
     throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_record() -> Record& {
-    if (this->tag == HEAP_REF) {
-        return this->heap_ref->get_record();
+    if (this->tag == RECORD_PTR) {
+        return *this->record;
     }
     throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_closure() -> Closure& {
-    if (this->tag == HEAP_REF) {
-        return this->heap_ref->get_closure();
+    if (this->tag == CLOSURE_PTR) {
+        return *this->closure;
     }
     throw std::string{"IllegalCastException"};
 }
 
 auto Value::get_val_ref() -> Value& {
-    if (this->tag == HEAP_REF) {
-        return this->heap_ref->get_value();
+    if (this->tag == VALUE_PTR) {
+        return *this->value;
     }
     throw std::string{"IllegalCastException"};
 }
@@ -280,7 +249,7 @@ auto Value::get_usize() -> size_t {
 
 void Value::trace() {
     if (this->tag == HEAP_REF) {
-        this->heap_ref->trace();
+
     }
 }
 
@@ -343,7 +312,6 @@ void HeapObject::trace() {
 //         heap.markSuccessors(&r);
 //     }
 // }
-
 
 // void Closure::follow(CollectedHeap &heap) {
 //     for (auto& val_ref : this->refs) {

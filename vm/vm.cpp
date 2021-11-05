@@ -1,27 +1,178 @@
 #include "vm.h"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <limits>
+#include <new>
+#include <cstring>
 
 #include "instructions.h"
 #include "types.h"
-#include "value.h"
 #include "allocator.h"
 
 
 namespace VM {
 
-template<typename T>
-auto VirtualMachine::alloc(T t) -> HeapObject* {
-    // std::cout << "previous head: " << this->heap_head << std::endl;
-    auto* obj = new HeapObject(std::move(t));
-    this->heap_size += (sizeof(HeapObject));// + Allocation::ALLOC_OVERHEAD);
-    // std::cout << "at address " << obj << std::endl;
-    obj->next = this->heap_head;
-    this->heap_head = obj;
-    // std::cout << "new head: " << this->heap_head << std::endl;
-    return obj;
+auto Value::from_constant(Constant c, VirtualMachine& vm) -> Value {
+    if (std::holds_alternative<None>(c)) {
+        return {};
+    } else if (std::holds_alternative<bool>(c)) {
+        return std::get<bool>(c);
+    } else if (std::holds_alternative<int>(c)) {
+        return std::get<int>(c);
+    } else if (std::holds_alternative<std::string>(c)) {
+        return vm.alloc_string(std::get<std::string>(c));
+    } else {
+        std::terminate();
+    }
+}
+    
+void Value::trace() const {
+    if (this->tag == VALUE_PTR) {
+        ((HeapObj*)((char*)this->value - sizeof(HeapObj)))->marked = true;
+        this->value->trace();
+    } else if (this->tag == RECORD_PTR) {
+        ((HeapObj*)((char*)this->record - sizeof(HeapObj)))->marked = true;
+        this->record->trace();
+    } else if (this->tag == CLOSURE_PTR) {
+        ((HeapObj*)((char*)this->closure - sizeof(HeapObj)))->marked = true;
+        this->closure->trace();
+    } else if (this->tag == STRING_PTR) {
+        ((HeapObj*)((char*)this->string - sizeof(HeapObj)))->marked = true;
+    }
+}
+
+void Record::trace() const {
+    for (const auto& [key, val] : this->fields) {
+        key.trace();
+        val.trace();
+    }
+}
+
+void Closure::trace() const {
+    for (auto* val_ptr : this->refs) {
+        ((HeapObj*)((char*)val_ptr - sizeof(HeapObj)))->marked = true;
+        val_ptr->trace();
+    }
+}
+
+auto operator==(const Value& lhs, const Value& rhs) -> bool {
+    if (lhs.tag != rhs.tag) {
+        return false;
+    }
+    Value::ValueTag tag = lhs.tag;
+    if (tag == Value::NONE) {
+        return true;
+    }
+    if (tag == Value::NUM) {
+        return lhs.num == rhs.num;
+    }
+    if (tag == Value::BOOL) {
+        return lhs.boolean == rhs.boolean;
+    }
+    if (tag == Value::STRING_PTR) {
+        size_t len = lhs.string->size;
+        if (rhs.string->size != len) {
+            return false;
+        }
+        for (size_t i = 0; i < len; ++i) {
+            if (lhs.string->data[i] != rhs.string->data[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (tag == Value::RECORD_PTR) {
+        return lhs.record == rhs.record;
+    }
+    // TODO think about throwing error on comparison of non-program-variables
+    return false;
+}
+
+auto operator>=(Value const& lhs, Value const& rhs) -> bool {
+    if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
+        return lhs.num >= rhs.num;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto operator>(Value const& lhs, Value const& rhs) -> bool {
+    if (lhs.tag == Value::NUM && rhs.tag == Value::NUM) {
+        return lhs.num > rhs.num;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::to_string(VirtualMachine& vm) const -> String* {
+    if (this->tag == NONE) {
+        return vm.none_string;
+    }
+    if (this->tag == BOOL) {
+        return this->boolean ? vm.true_string : vm.false_string;
+    }
+    if (this->tag == NUM) {
+        return vm.alloc_string(std::to_string(this->num));
+    }
+    if (this->tag == STRING_PTR) {
+        return this->string;
+    }
+    if (this->tag == CLOSURE_PTR) {
+        return vm.function_string;
+    }
+    if (this->tag == RECORD_PTR) {
+        // TODO make more efficient
+        std::string out{"{"};
+        std::vector<std::pair<Value, Value>> vals{this->record->fields.begin(), this->record->fields.end()};
+        std::sort(vals.begin(), vals.end(),
+                  [](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) { return !(l.first >= r.first); });
+        for (const auto& [key, val] : vals) {
+            out.append(key.to_string(vm)->to_std_string());
+            out.push_back(':');
+            out.append(val.to_string(vm)->to_std_string());
+            out.push_back(' ');
+        }
+        out.push_back('}');
+        return vm.alloc_string(out);
+    }
+    throw std::string{"RuntimeException"};
+}
+
+auto VirtualMachine::alloc_record() -> Record* {
+    size_t size = sizeof(HeapObj) + sizeof(Record);
+    HeapObj* ptr = (HeapObj*) ::operator new(size);
+    ::new (ptr) HeapObj(this->heap_head);
+    ::new (&ptr->data) Record;
+    return (Record*) &ptr->data;
+}
+
+template<typename ...Args>
+auto VirtualMachine::alloc_closure(Args&&... args) -> Closure* {
+    HeapObj* ptr = (HeapObj*) ::operator new(sizeof(HeapObj) + sizeof(Closure));
+    ::new (ptr) HeapObj(this->heap_head);
+    ::new (&ptr->data) Closure{std::forward<Args>(args)...};
+    return (Closure*) &ptr->data;
+}
+
+auto VirtualMachine::alloc_string(size_t len) -> String* {
+    HeapObj* ptr = (HeapObj*) ::operator new(sizeof(HeapObj) + sizeof(String) + len);
+    ::new (ptr) HeapObj(this->heap_head);
+    ::new (&ptr->data) String{len};
+    return (String*) &ptr->data;
+}
+
+auto VirtualMachine::alloc_string(const std::string& str) -> String* {
+    size_t len = str.size();
+    String* str_ptr = this->alloc_string(len);
+    std::memcpy(&str_ptr->data, str.c_str(), len);
+    return str_ptr;
+}
+
+auto VirtualMachine::alloc_value() -> Value* {
+    HeapObj* ptr = (HeapObj*) ::operator new(sizeof(HeapObj) + sizeof(Value));
+    ::new (ptr) HeapObj(this->heap_head);
+    ::new (&ptr->data) Value;
+    return (Value*) &ptr->data;
 }
 
 void VirtualMachine::gc_collect() {
@@ -45,10 +196,11 @@ void VirtualMachine::gc_collect() {
 
     // free unmarked heads
     while (this->heap_head != nullptr && !this->heap_head->marked) {
-        HeapObject* next = this->heap_head->next;
+        HeapObj* next = this->heap_head->next;
         // std::cout << "deleting head at " << this->heap_head << std::endl;
-        delete this->heap_head;
-        this->heap_size -= (sizeof(HeapObject) );//+ Allocation::ALLOC_OVERHEAD);
+        ::operator delete(this->heap_head);
+        // delete this->heap_head;
+        // this->heap_size -= (sizeof(HeapObject) );//+ Allocation::ALLOC_OVERHEAD);
         this->heap_head = next;
     }
     
@@ -62,15 +214,15 @@ void VirtualMachine::gc_collect() {
 
     // unmark head as we'll skip it in the following
     this->heap_head->marked = false;
-    HeapObject* prev = this->heap_head;
-    HeapObject* current = this->heap_head->next;
+    HeapObj* prev = this->heap_head;
+    HeapObj* current = this->heap_head->next;
 
     while (current != nullptr) {
         if (!current->marked) {
-            HeapObject* next = current->next;
+            HeapObj* next = current->next;
             // std::cout << "deletion in list at " << current << std::endl;
-            delete current;
-            this->heap_size -= sizeof(HeapObject);
+            ::operator delete(current);
+            // this->heap_size -= sizeof(HeapObject);
             current = next;
             prev->next = current;
         } else {
@@ -86,7 +238,7 @@ void VirtualMachine::gc_collect() {
 // check if gc is necessary, and, if so, execute it
 void VirtualMachine::gc_check() {
     size_t total_mem = Allocation::total_alloc + this->heap_size;
-    if (total_mem > this->max_heap_size * 2 / 3) {
+    if (total_mem * 3 > this->max_heap_size * 2) {
         this->gc_collect();
         size_t live_mem = Allocation::total_alloc + this->heap_size;
         if (live_mem > this->max_heap_size) {
@@ -123,9 +275,13 @@ auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
 
 VirtualMachine::VirtualMachine(struct Function* prog)
     : source(prog) {
-        this->print_closure = new HeapObject(Closure{FnType::PRINT, nullptr});
-        this->input_closure = new HeapObject(Closure{FnType::INPUT, nullptr});
-        this->intcast_closure = new HeapObject(Closure{FnType::INTCAST, nullptr});
+        this->print_closure = this->alloc_closure(Closure::PRINT, nullptr);
+        this->input_closure = this->alloc_closure(Closure::INPUT, nullptr);
+        this->intcast_closure = this->alloc_closure(Closure::INTCAST, nullptr);
+        this->none_string = this->alloc_string("None");
+        this->true_string = this->alloc_string("true");
+        this->false_string = this->alloc_string("false");
+        this->function_string = this->alloc_string("FUNCTION");
     }
     
 VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit) 
@@ -217,7 +373,7 @@ auto VirtualMachine::step() -> bool {
         if (this->opstack.size() == this->base_index) {
             throw std::string{"InsufficientStackException"};
         }
-        this->get_unary_op().get_val_ref() = std::move(val);
+        this->get_unary_op().get_val_ref() = val;
         this->iptr += 1;
     } else if (instr.operation == Operation::PushReference) {
         int32_t i = instr.operand0.value();
@@ -279,14 +435,15 @@ auto VirtualMachine::step() -> bool {
         Closure::TrackedVec refs;
         refs.reserve(m);
         for (size_t i = this->opstack.size() - m; i < this->opstack.size(); ++i) {
-            refs.push_back(this->opstack.at(i).get_heap_ref());
+            // TODO check addr operator
+            refs.push_back(&this->opstack.at(i).get_val_ref());
         }
         this->opstack.resize(this->opstack.size() - m);
 
         struct Function* fn = this->opstack.back().get_fnptr();
         this->opstack.pop_back();
 
-        HeapObject* closure;
+        Closure* closure;
         // check if assigning builtins
         if (fn == this->source->functions_[0]) {
             closure = this->print_closure;
@@ -295,12 +452,12 @@ auto VirtualMachine::step() -> bool {
         } else if (fn == this->source->functions_[2]) {
             closure = this->intcast_closure;
         } else {
-            closure = this->alloc(Closure{FnType::DEFAULT, fn, std::move(refs)});
+            closure = this->alloc_closure(Closure::DEFAULT, fn, std::move(refs));
         }
         this->opstack.emplace_back(closure);
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocRecord) {
-        auto* rec = this->alloc(Record{});
+        auto* rec = this->alloc_record();
         this->opstack.emplace_back(rec);
         this->iptr += 1;
     } else if (instr.operation == Operation::Call) {
@@ -318,7 +475,7 @@ auto VirtualMachine::step() -> bool {
 
         Closure& c = this->get_unary_op().get_closure();
         this->iptr += 1;
-        if (c.type == FnType::DEFAULT) {
+        if (c.type == Closure::DEFAULT) {
             if (c.fn->parameter_count_ != n_params) {
                 throw std::string{"RuntimeException"};
             }
@@ -354,30 +511,28 @@ auto VirtualMachine::step() -> bool {
                     }
                 }
                 // a local ref var is also a local var
-                HeapObject* ptr;
+                Value* ptr = this->alloc_value();
                 if (j != -1) {
-                    ptr = this->alloc(this->opstack.at(this->base_index + j));
-                } else {
-                    ptr = this->alloc(None{});
+                    *ptr = this->opstack.at(this->base_index + j);
                 }
                 this->opstack.emplace_back(ptr);
             }
             for (auto* ref : c.refs) {
                 this->opstack.emplace_back(ref);
             }
-        } else if (c.type == FnType::PRINT) {
+        } else if (c.type == Closure::PRINT) {
             if (arg_stage.size() != 1) {
                 throw std::string{"RuntimeException"};
             }
             std::cout << arg_stage.at(0).to_string() << '\n';
-        } else if (c.type == FnType::INPUT) {
+        } else if (c.type == Closure::INPUT) {
             if (!arg_stage.empty()) {
                 throw std::string{"RuntimeException"};
             }
             std::string input;
             std::getline(std::cin, input);
             this->opstack.emplace_back(input);
-        } else if (c.type == FnType::INTCAST) {
+        } else if (c.type == Closure::INTCAST) {
             if (arg_stage.size() != 1) {
                 throw std::string{"RuntimeException"};
             }
@@ -472,5 +627,65 @@ auto VirtualMachine::step() -> bool {
         throw std::string{"Internal Compiler Error: invalid opcode"};
     }
     return true;
+}
+
+auto Value::get_tag() -> ValueTag {
+    return this->tag;
+}
+
+auto Value::get_bool() -> bool {
+    if (this->tag == BOOL) {
+        return this->boolean;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_int() -> int {
+    if (this->tag == NUM) {
+        return this->num;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_string() -> String& {
+    if (this->tag == STRING_PTR) {
+        return *this->string;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_record() -> Record& {
+    if (this->tag == RECORD_PTR) {
+        return *this->record;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_closure() -> Closure& {
+    if (this->tag == CLOSURE_PTR) {
+        return *this->closure;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_val_ref() -> Value& {
+    if (this->tag == VALUE_PTR) {
+        return *this->value;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_fnptr() -> struct Function* {
+    if (this->tag == FN_PTR) {
+        return this->fnptr;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_usize() -> size_t {
+    if (this->tag == USIZE) {
+        return this->usize;
+    }
+    throw std::string{"IllegalCastException"};
 }
 };  // namespace VM
