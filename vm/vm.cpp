@@ -83,6 +83,7 @@ void VirtualMachine::gc_collect() {
     // sweep
 }
 
+// check if gc is necessary, and, if so, execute it
 void VirtualMachine::gc_check() {
     size_t total_mem = Allocation::total_alloc + this->heap_size;
     if (total_mem > this->max_heap_size * 2 / 3) {
@@ -95,8 +96,9 @@ void VirtualMachine::gc_check() {
     }
 }
 
+// get one operand from stack
 auto VirtualMachine::get_unary_op() -> Value {
-    if (this->opstack.empty()) {
+    if (this->opstack.size() == this->base_index) {
         throw std::string{"InsufficientStackException"};
     }
     Value operand = this->opstack.back();
@@ -104,9 +106,10 @@ auto VirtualMachine::get_unary_op() -> Value {
     return operand;
 }
 
+// get two operands from stack
 auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
     size_t stack_size = this->opstack.size();
-    if (stack_size < 2) {
+    if (stack_size - this->base_index < 2) {
         throw std::string{"InsufficientStackException"};
     }
     Value lop = this->opstack[stack_size - 2];
@@ -155,7 +158,7 @@ void VirtualMachine::exec() {
 }
 
 auto VirtualMachine::step() -> bool {
-    // return from global context
+    // returned from global context
     if (this->ctx == nullptr) {
         return false;
     }
@@ -183,13 +186,17 @@ auto VirtualMachine::step() -> bool {
         this->opstack.push_back(this->globals.at(name));
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadLocal) {
+        int offset = instr.operand0.value();
+        if (offset < 0 || offset >= this->ctx->local_vars_.size()) {
+            throw std::string{"RuntimeError"};
+        }
         this->opstack.push_back(this->opstack.at(this->base_index + instr.operand0.value()));
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadFunc) {
         this->opstack.emplace_back(this->ctx->functions_.at(instr.operand0.value()));
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadReference) {
-        if (this->opstack.empty()) {
+        if (this->opstack.size() == this->base_index) {
             throw std::string{"InsufficientStackException"};
         }
         Value& val = this->opstack.back().get_val_ref();
@@ -207,7 +214,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreReference) {
         Value val = this->get_unary_op();
-        if (this->opstack.empty()) {
+        if (this->opstack.size() == this->base_index) {
             throw std::string{"InsufficientStackException"};
         }
         this->get_unary_op().get_val_ref() = std::move(val);
@@ -266,7 +273,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::AllocClosure) {
         int32_t m = instr.operand0.value();
-        if (this->opstack.size() <= m) {
+        if (this->opstack.size() - this->base_index <= m) {
             throw std::string{"InsufficientStackException"};
         }
         Closure::TrackedVec refs;
@@ -298,7 +305,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::Call) {
         int32_t n_params = instr.operand0.value();
-        if (this->opstack.size() <= n_params) {
+        if (this->opstack.size() - this->base_index <= n_params) {
             throw std::string{"InsufficientStackException"};
         }
         this->arg_stage.clear();
@@ -410,7 +417,7 @@ auto VirtualMachine::step() -> bool {
         r.fields.insert_or_assign(index.to_string(), value);
         this->iptr += 1;
     } else if (instr.operation == Operation::Return) {
-        if (this->opstack.empty()) {
+        if (this->opstack.size() == this->base_index) {
             throw std::string{"InsufficientStackException"};
         }
         // returning from final frame
@@ -431,7 +438,7 @@ auto VirtualMachine::step() -> bool {
             this->ctx = old_ctx;
         }
     } else if (instr.operation == Operation::Pop) {
-        if (this->opstack.empty()) {
+        if (this->opstack.size() == this->base_index) {
             throw std::string{"InsufficientStackException"};
         }
         this->opstack.pop_back();
@@ -446,7 +453,7 @@ auto VirtualMachine::step() -> bool {
             this->iptr += 1;
         }
     } else if (instr.operation == Operation::Dup) {
-        if (this->opstack.empty()) {
+        if (this->opstack.size() == this->base_index) {
             throw std::string{"InsufficientStackException"};
         }
         Value v = this->opstack.back();
@@ -454,7 +461,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::Swap) {
         size_t stack_size = this->opstack.size();
-        if (stack_size < 2) {
+        if (stack_size - this->base_index < 2) {
             throw std::string{"InsufficientStackException"};
         }
         Value tmp = this->opstack.back();

@@ -14,6 +14,7 @@
 
 namespace VM {
 
+
 class Value;
 class HeapObject;
 
