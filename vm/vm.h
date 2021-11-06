@@ -79,7 +79,7 @@ class Value {
     Value(const Value& other) = default;
     Value(Value&& other) = default;
     
-    auto add(const Value& other, VirtualMachine& vm) -> Value;
+    auto add(Value& other, VirtualMachine& vm) -> Value;
     void trace() const;
     
     auto operator=(const Value& other) -> Value& = default;
@@ -95,6 +95,7 @@ class Value {
     auto get_bool() -> bool;
     auto get_int() -> int;
     auto get_string() -> String&;
+    auto get_string_const() const -> const String&;
     auto get_record() -> Record&;
     auto get_closure() -> Closure&;
     auto get_val_ref() -> Value&;

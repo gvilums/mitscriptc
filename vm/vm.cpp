@@ -5,29 +5,29 @@
 #include <iostream>
 #include <limits>
 #include <new>
-#include <cstring>
 
+#include "allocator.h"
 #include "instructions.h"
 #include "types.h"
-#include "allocator.h"
-
 
 namespace VM {
 
 auto Value::from_constant(Constant c, VirtualMachine& vm) -> Value {
     if (std::holds_alternative<None>(c)) {
         return {};
-    } else if (std::holds_alternative<bool>(c)) {
-        return std::get<bool>(c);
-    } else if (std::holds_alternative<int>(c)) {
-        return std::get<int>(c);
-    } else if (std::holds_alternative<std::string>(c)) {
-        return vm.alloc_string(std::get<std::string>(c));
-    } else {
-        std::terminate();
     }
+    if (std::holds_alternative<bool>(c)) {
+        return std::get<bool>(c);
+    }
+    if (std::holds_alternative<int>(c)) {
+        return std::get<int>(c);
+    }
+    if (std::holds_alternative<std::string>(c)) {
+        return vm.alloc_string(std::get<std::string>(c));
+    }
+    std::terminate();
 }
-    
+
 void Value::trace() const {
     if (this->tag == VALUE_PTR) {
         ((HeapObj*)((char*)this->value - sizeof(HeapObj)))->marked = true;
@@ -132,7 +132,19 @@ auto Value::to_string(VirtualMachine& vm) const -> String* {
         std::string out{"{"};
         std::vector<std::pair<Value, Value>> vals{this->record->fields.begin(), this->record->fields.end()};
         std::sort(vals.begin(), vals.end(),
-                  [](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) { return !(l.first >= r.first); });
+                  [](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) {
+                      const String& lhs = l.first.get_string_const();
+                      const String& rhs = r.first.get_string_const();
+                      for (size_t i = 0; i < lhs.size && i < rhs.size; ++i) {
+                          if (lhs.data[i] < rhs.data[i]) {
+                              return true;
+                          }
+                          if (lhs.data[i] > rhs.data[i]) {
+                              return false;
+                          }
+                      }
+                      return lhs.size < rhs.size;
+                  });
         for (const auto& [key, val] : vals) {
             out.append(key.to_string(vm)->to_std_string());
             out.push_back(':');
@@ -145,27 +157,49 @@ auto Value::to_string(VirtualMachine& vm) const -> String* {
     throw std::string{"RuntimeException"};
 }
 
-auto VirtualMachine::alloc_record() -> Record* {
-    size_t size = sizeof(HeapObj) + sizeof(Record);
-    HeapObj* ptr = (HeapObj*) ::operator new(size);
-    ::new (ptr) HeapObj(this->heap_head);
-    ::new (&ptr->data) Record;
-    return (Record*) &ptr->data;
+auto Value::add(Value& other, VirtualMachine& vm) -> Value {
+    if (this->tag == NUM && other.tag == NUM) {
+        return this->num + other.get_int();
+    }
+    if (this->tag == STRING_PTR) {
+        String* rhs = other.to_string(vm);
+        String* out = vm.alloc_string(this->string->size + rhs->size);
+        std::memcpy(&out->data, &this->string->data, this->string->size);
+        std::memcpy((char*)&out->data + this->string->size, &rhs->data, rhs->size);
+        return out;
+    }
+    if (other.tag == STRING_PTR) {
+        String* lhs = this->to_string(vm);
+        String& rhs = other.get_string();
+        String* out = vm.alloc_string(lhs->size + rhs.size);
+        std::memcpy(&out->data, &lhs->data, lhs->size);
+        std::memcpy((char*)&out->data + lhs->size, &rhs.data, rhs.size);
+        return out;
+    }
+    throw std::string{"IllegalCastException"};
 }
 
-template<typename ...Args>
+auto VirtualMachine::alloc_record() -> Record* {
+    size_t size = sizeof(HeapObj) + sizeof(Record);
+    HeapObj* ptr = (HeapObj*)::operator new(size);
+    ::new (ptr) HeapObj(this->heap_head);
+    ::new (&ptr->data) Record;
+    return (Record*)&ptr->data;
+}
+
+template <typename... Args>
 auto VirtualMachine::alloc_closure(Args&&... args) -> Closure* {
-    HeapObj* ptr = (HeapObj*) ::operator new(sizeof(HeapObj) + sizeof(Closure));
+    HeapObj* ptr = (HeapObj*)::operator new(sizeof(HeapObj) + sizeof(Closure));
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) Closure{std::forward<Args>(args)...};
-    return (Closure*) &ptr->data;
+    return (Closure*)&ptr->data;
 }
 
 auto VirtualMachine::alloc_string(size_t len) -> String* {
-    HeapObj* ptr = (HeapObj*) ::operator new(sizeof(HeapObj) + sizeof(String) + len);
+    HeapObj* ptr = (HeapObj*)::operator new(sizeof(HeapObj) + sizeof(String) + len);
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) String{len};
-    return (String*) &ptr->data;
+    return (String*)&ptr->data;
 }
 
 auto VirtualMachine::alloc_string(const std::string& str) -> String* {
@@ -176,10 +210,10 @@ auto VirtualMachine::alloc_string(const std::string& str) -> String* {
 }
 
 auto VirtualMachine::alloc_value() -> Value* {
-    HeapObj* ptr = (HeapObj*) ::operator new(sizeof(HeapObj) + sizeof(Value));
+    HeapObj* ptr = (HeapObj*)::operator new(sizeof(HeapObj) + sizeof(Value));
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) Value;
-    return (Value*) &ptr->data;
+    return (Value*)&ptr->data;
 }
 
 void VirtualMachine::gc_collect() {
@@ -210,7 +244,6 @@ void VirtualMachine::gc_collect() {
         // this->heap_size -= (sizeof(HeapObject) );//+ Allocation::ALLOC_OVERHEAD);
         this->heap_head = next;
     }
-    
 
     // if we just cleared the entire heap, return
     if (this->heap_head == nullptr) {
@@ -282,24 +315,22 @@ auto VirtualMachine::get_binary_ops() -> std::pair<Value, Value> {
 
 VirtualMachine::VirtualMachine(struct Function* prog)
     : source(prog) {
-        this->print_closure = this->alloc_closure(Closure::PRINT, nullptr);
-        this->input_closure = this->alloc_closure(Closure::INPUT, nullptr);
-        this->intcast_closure = this->alloc_closure(Closure::INTCAST, nullptr);
-        this->none_string = this->alloc_string("None");
-        this->true_string = this->alloc_string("true");
-        this->false_string = this->alloc_string("false");
-        this->function_string = this->alloc_string("FUNCTION");
-    }
-    
-VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit) 
+    this->print_closure = this->alloc_closure(Closure::PRINT, nullptr);
+    this->input_closure = this->alloc_closure(Closure::INPUT, nullptr);
+    this->intcast_closure = this->alloc_closure(Closure::INTCAST, nullptr);
+    this->none_string = this->alloc_string("None");
+    this->true_string = this->alloc_string("true");
+    this->false_string = this->alloc_string("false");
+    this->function_string = this->alloc_string("FUNCTION");
+}
+
+VirtualMachine::VirtualMachine(struct Function* prog, size_t heap_limit)
     : VirtualMachine{prog} {
-        this->max_heap_size = heap_limit;
-    }
+    this->max_heap_size = heap_limit;
+}
 
 VirtualMachine::~VirtualMachine() {
-    delete this->print_closure;
-    delete this->input_closure;
-    delete this->intcast_closure;
+    // TODO
 }
 
 void VirtualMachine::reset() {
@@ -530,7 +561,7 @@ auto VirtualMachine::step() -> bool {
             if (arg_stage.size() != 1) {
                 throw std::string{"RuntimeException"};
             }
-            std::cout << arg_stage.at(0).to_string(*this) << '\n';
+            std::cout << *arg_stage.at(0).to_string(*this) << '\n';
         } else if (c.type == Closure::INPUT) {
             if (!arg_stage.empty()) {
                 throw std::string{"RuntimeException"};
@@ -655,6 +686,13 @@ auto Value::get_int() -> int {
 }
 
 auto Value::get_string() -> String& {
+    if (this->tag == STRING_PTR) {
+        return *this->string;
+    }
+    throw std::string{"IllegalCastException"};
+}
+
+auto Value::get_string_const() const -> const String& {
     if (this->tag == STRING_PTR) {
         return *this->string;
     }

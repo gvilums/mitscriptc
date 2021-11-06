@@ -3,14 +3,14 @@ all: mitscript
 test: mitscript
 	(cd tests; ./test.sh ../mitscript)
 
-profile: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
-	g++ -pg -Wno-attributes -std=c++17 -Iinclude MITScript.cpp parsercode.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
+profile: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp bc-parser.cpp bc-lexer.cpp
+	g++ -p -march=native -O1 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp parsercode.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp lib/libantlr4-runtime.a -o mitscript 
 
-mitscript: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
-	g++ -march=native -O3 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp parsercode.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
+mitscript: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp bc-parser.cpp bc-lexer.cpp
+	g++ -march=native -O3 -Wno-attributes -std=c++17 -Iinclude MITScript.cpp utils.cpp parsercode.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp lib/libantlr4-runtime.a -o mitscript 
 
-debug: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp value.cpp bc-parser.cpp bc-lexer.cpp
-	g++ -g -Wno-attributes -std=c++17 -Iinclude MITScript.cpp parsercode.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp value.cpp lib/libantlr4-runtime.a -o mitscript 
+debug: MITScriptLexer.cpp MITScriptParser.cpp mitscript.cpp utils.cpp vm.cpp bc-parser.cpp bc-lexer.cpp
+	g++ -g -Wno-attributes -std=c++17 -Iinclude MITScript.cpp parsercode.cpp utils.cpp bc-parser.cpp bc-lexer.cpp mitscript.cpp vm.cpp lib/libantlr4-runtime.a -o mitscript 
 
 bc-parser.cpp: bc-parser.yy
 	bison -Dapi.prefix={bc} --output=bc-parser.cpp --defines=bc-parser.h bc-parser.yy
