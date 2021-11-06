@@ -9,6 +9,7 @@
 #include <limits>
 #include <parallel_hashmap/phmap.h>
 #include <unordered_map>
+#include <iostream>
 
 #include "types.h"
 #include "allocator.h"
@@ -116,6 +117,8 @@ struct String {
         }
         return output;
     }
+    
+    friend std::ostream& operator<<(std::ostream& os, const String& str);
 };
     
 struct ValueHash {

@@ -57,6 +57,13 @@ void Closure::trace() const {
     }
 }
 
+std::ostream& operator<<(std::ostream& os, const String& str) {
+    for (size_t i = 0; i < str.size; ++i) {
+        os << str.data[i];
+    }
+    return os;
+}
+
 auto operator==(const Value& lhs, const Value& rhs) -> bool {
     if (lhs.tag != rhs.tag) {
         return false;
@@ -331,11 +338,10 @@ auto VirtualMachine::step() -> bool {
     Instruction instr = this->ctx->instructions[this->iptr];
 
     if (instr.operation == Operation::LoadConst) {
-        Value v{this->ctx->constants_.at(instr.operand0.value())};
-        this->opstack.push_back(v);
+        this->opstack.push_back(Value::from_constant(this->ctx->constants_.at(instr.operand0.value()), *this));
         this->iptr += 1;
     } else if (instr.operation == Operation::LoadGlobal) {
-        TrackedString name{this->ctx->names_.at(instr.operand0.value())};
+        String* name = this->alloc_string(this->ctx->names_.at(instr.operand0.value()));
         if (this->globals.find(name) == this->globals.end()) {
             throw std::string{"UninitializedVariableException"};
         }
@@ -361,7 +367,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreGlobal) {
         Value val = this->get_unary_op();
-        TrackedString name{this->ctx->names_.at(instr.operand0.value())};
+        Value name{this->alloc_string(this->ctx->names_.at(instr.operand0.value()))};
         this->globals[name] = val;
         this->iptr += 1;
     } else if (instr.operation == Operation::StoreLocal) {
@@ -385,7 +391,7 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::Add) {
         auto [l, r] = this->get_binary_ops();
-        this->opstack.emplace_back(l + r);
+        this->opstack.emplace_back(l.add(r, *this));
         this->iptr += 1;
     } else if (instr.operation == Operation::Sub) {
         auto [x, y] = this->get_binary_ops();
@@ -524,25 +530,26 @@ auto VirtualMachine::step() -> bool {
             if (arg_stage.size() != 1) {
                 throw std::string{"RuntimeException"};
             }
-            std::cout << arg_stage.at(0).to_string() << '\n';
+            std::cout << arg_stage.at(0).to_string(*this) << '\n';
         } else if (c.type == Closure::INPUT) {
             if (!arg_stage.empty()) {
                 throw std::string{"RuntimeException"};
             }
             std::string input;
             std::getline(std::cin, input);
-            this->opstack.emplace_back(input);
+            this->opstack.emplace_back(this->alloc_string(input));
         } else if (c.type == Closure::INTCAST) {
             if (arg_stage.size() != 1) {
                 throw std::string{"RuntimeException"};
             }
-            this->opstack.emplace_back(std::stoi(std::string{arg_stage.at(0).to_string()}));
+            std::string str{arg_stage.at(0).to_string(*this)->to_std_string()};
+            this->opstack.emplace_back(std::stoi(str));
         } else {
             throw std::string{"Internal Compiler Error: undefined function type"};
         }
     } else if (instr.operation == Operation::FieldLoad) {
         Record& r = this->get_unary_op().get_record();
-        TrackedString field_name{this->ctx->names_.at(instr.operand0.value())};
+        Value field_name{this->alloc_string(this->ctx->names_.at(instr.operand0.value()))};
         if (r.fields.find(field_name) == r.fields.end()) {
             this->opstack.emplace_back(None{});
         } else {
@@ -551,13 +558,13 @@ auto VirtualMachine::step() -> bool {
         this->iptr += 1;
     } else if (instr.operation == Operation::FieldStore) {
         auto [record_val, val] = this->get_binary_ops();
-        TrackedString field_name{this->ctx->names_.at(instr.operand0.value())};
+        Value field_name{this->alloc_string(this->ctx->names_.at(instr.operand0.value()))};
         Record& r = record_val.get_record();
         r.fields.insert_or_assign(field_name, val);
         this->iptr += 1;
     } else if (instr.operation == Operation::IndexLoad) {
         auto [record_val, index] = this->get_binary_ops();
-        TrackedString index_string = index.to_string();
+        Value index_string{index.to_string(*this)};
         Record& r = record_val.get_record();
         if (r.fields.find(index_string) == r.fields.end()) {
             this->opstack.emplace_back(None{});
@@ -569,7 +576,7 @@ auto VirtualMachine::step() -> bool {
         auto value = this->get_unary_op();
         auto [record_val, index] = this->get_binary_ops();
         Record& r = record_val.get_record();
-        r.fields.insert_or_assign(index.to_string(), value);
+        r.fields.insert_or_assign(index.to_string(*this), value);
         this->iptr += 1;
     } else if (instr.operation == Operation::Return) {
         if (this->opstack.size() == this->base_index) {
