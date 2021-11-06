@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <new>
 
 #include "allocator.h"
@@ -30,16 +31,16 @@ auto Value::from_constant(Constant c, VirtualMachine& vm) -> Value {
 
 void Value::trace() const {
     if (this->tag == VALUE_PTR) {
-        ((HeapObj*)((char*)this->value - sizeof(HeapObj)))->marked = true;
+        reinterpret_cast<HeapObj*>(reinterpret_cast<char*>(this->value) - sizeof(HeapObj))->marked = true;
         this->value->trace();
     } else if (this->tag == RECORD_PTR) {
-        ((HeapObj*)((char*)this->record - sizeof(HeapObj)))->marked = true;
+        reinterpret_cast<HeapObj*>(reinterpret_cast<char*>(this->record) - sizeof(HeapObj))->marked = true;
         this->record->trace();
     } else if (this->tag == CLOSURE_PTR) {
-        ((HeapObj*)((char*)this->closure - sizeof(HeapObj)))->marked = true;
+        reinterpret_cast<HeapObj*>(reinterpret_cast<char*>(this->closure) - sizeof(HeapObj))->marked = true;
         this->closure->trace();
     } else if (this->tag == STRING_PTR) {
-        ((HeapObj*)((char*)this->string - sizeof(HeapObj)))->marked = true;
+        reinterpret_cast<HeapObj*>(reinterpret_cast<char*>(this->string) - sizeof(HeapObj))->marked = true;
     }
 }
 
@@ -165,7 +166,7 @@ auto Value::add(Value& other, VirtualMachine& vm) -> Value {
         String* rhs = other.to_string(vm);
         String* out = vm.alloc_string(this->string->size + rhs->size);
         std::memcpy(&out->data, &this->string->data, this->string->size);
-        std::memcpy((char*)&out->data + this->string->size, &rhs->data, rhs->size);
+        std::memcpy(reinterpret_cast<char*>(&out->data) + this->string->size, &rhs->data, rhs->size);
         return out;
     }
     if (other.tag == STRING_PTR) {
@@ -173,7 +174,7 @@ auto Value::add(Value& other, VirtualMachine& vm) -> Value {
         String& rhs = other.get_string();
         String* out = vm.alloc_string(lhs->size + rhs.size);
         std::memcpy(&out->data, &lhs->data, lhs->size);
-        std::memcpy((char*)&out->data + lhs->size, &rhs.data, rhs.size);
+        std::memcpy(reinterpret_cast<char*>(&out->data) + lhs->size, &rhs.data, rhs.size);
         return out;
     }
     throw std::string{"IllegalCastException"};
@@ -181,25 +182,28 @@ auto Value::add(Value& other, VirtualMachine& vm) -> Value {
 
 auto VirtualMachine::alloc_record() -> Record* {
     size_t size = sizeof(HeapObj) + sizeof(Record);
-    HeapObj* ptr = (HeapObj*)::operator new(size);
+    HeapObj* ptr = reinterpret_cast<HeapObj*>(::operator new(size));
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) Record;
-    return (Record*)&ptr->data;
+    this->heap_head = ptr;
+    return reinterpret_cast<Record*>(&ptr->data);
 }
 
 template <typename... Args>
 auto VirtualMachine::alloc_closure(Args&&... args) -> Closure* {
-    HeapObj* ptr = (HeapObj*)::operator new(sizeof(HeapObj) + sizeof(Closure));
+    HeapObj* ptr = reinterpret_cast<HeapObj*>(::operator new(sizeof(HeapObj) + sizeof(Closure)));
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) Closure{std::forward<Args>(args)...};
-    return (Closure*)&ptr->data;
+    this->heap_head = ptr;
+    return reinterpret_cast<Closure*>(&ptr->data);
 }
 
 auto VirtualMachine::alloc_string(size_t len) -> String* {
-    HeapObj* ptr = (HeapObj*)::operator new(sizeof(HeapObj) + sizeof(String) + len);
+    HeapObj* ptr = reinterpret_cast<HeapObj*>(::operator new(sizeof(HeapObj) + sizeof(String) + len));
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) String{len};
-    return (String*)&ptr->data;
+    this->heap_head = ptr;
+    return reinterpret_cast<String*>(&ptr->data);
 }
 
 auto VirtualMachine::alloc_string(const std::string& str) -> String* {
@@ -210,10 +214,11 @@ auto VirtualMachine::alloc_string(const std::string& str) -> String* {
 }
 
 auto VirtualMachine::alloc_value() -> Value* {
-    HeapObj* ptr = (HeapObj*)::operator new(sizeof(HeapObj) + sizeof(Value));
+    HeapObj* ptr = reinterpret_cast<HeapObj*>(::operator new(sizeof(HeapObj) + sizeof(Value)));
     ::new (ptr) HeapObj(this->heap_head);
     ::new (&ptr->data) Value;
-    return (Value*)&ptr->data;
+    this->heap_head = ptr;
+    return reinterpret_cast<Value*>(&ptr->data);
 }
 
 void VirtualMachine::gc_collect() {
@@ -227,7 +232,8 @@ void VirtualMachine::gc_collect() {
     for (auto& val : this->opstack) {
         val.trace();
     }
-    for (auto& [_, val] : this->globals) {
+    for (auto& [key, val] : this->globals) {
+        key.trace();
         val.trace();
     }
     // maybe unnecessary
