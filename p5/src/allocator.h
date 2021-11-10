@@ -16,8 +16,8 @@ namespace alloc {
         std::uint64_t data[];
     };
 
-    Value alloc_ref();
-    Value alloc_string();
-    Value alloc_record();
-    Value alloc_closure();
+    Value* alloc_ref();
+    String* alloc_string();
+    Record* alloc_record();
+    Closure* alloc_closure();
 };
