@@ -51,9 +51,10 @@ void Record::trace() const {
     }
 }
 
+
 void Closure::trace() const {
     for (auto* val_ptr : this->refs) {
-        ((HeapObj*)((char*)val_ptr - sizeof(HeapObj)))->marked = true;
+        reinterpret_cast<HeapObj*>(reinterpret_cast<char*>(val_ptr) - sizeof(HeapObj))->marked = true;
         val_ptr->trace();
     }
 }
