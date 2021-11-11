@@ -145,7 +145,6 @@ void Function::allocate_registers() {
     
     auto all_intervals = this->compute_live_intervals();
     
-    std::unordered_set<LiveInterval> active;
 }
 
 };

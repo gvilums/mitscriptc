@@ -12,7 +12,18 @@
 
 namespace IR {
     
-using LiveInterval = std::vector<std::pair<size_t, size_t>>;
+struct LiveInterval {
+    std::vector<std::pair<size_t, size_t>> ranges;
+    std::vector<size_t> use_locations;
+    
+    void push_range(std::pair<size_t, size_t>);
+    void push_loop_range(std::pair<size_t, size_t>);
+    
+    friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend ::std::hash<LiveInterval>;
+};
+
     
 enum class MachineRegs {
     RAX,
