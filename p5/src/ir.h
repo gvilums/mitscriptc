@@ -13,31 +13,20 @@
 
 namespace IR {
     
-enum class MachineReg {
-    RAX,
-    RBX,
-    RCX,
-    RDX,
-    RSI,
-    RDI,
-    RBP,
-    RSP,
-    R8,
-    R9,
-    R10,
-    R11,
-    R12,
-    R13,
-    R14,
-    R15,
-    NUM_MACHINE_REGS,
+const size_t MACHINE_REG_COUNT = 16;
+    
+enum class RegAssignment {
+    MACHINE_REG,
+    STACK_SLOT,
     UNINIT,
 };
 
 struct LiveInterval {
     std::vector<std::pair<size_t, size_t>> ranges;
     std::vector<size_t> use_locations;
-    MachineReg reg{MachineReg::UNINIT};
+
+    RegAssignment reg{RegAssignment::UNINIT};
+    size_t assign_index{0};
     
     void push_range(std::pair<size_t, size_t>);
     void push_loop_range(std::pair<size_t, size_t>);

@@ -241,7 +241,9 @@ void Function::allocate_registers() {
         std::make_move_iterator(all_intervals.begin()), std::make_move_iterator(all_intervals.end()));
     std::vector<LiveInterval> active;
     std::vector<LiveInterval> inactive;
-    // std::vector<LiveInterval> handled;
+
+    std::vector<LiveInterval> handled;
+
     while (!unhandled.empty()) {
         LiveInterval current = unhandled.top();
         unhandled.pop();
@@ -277,17 +279,17 @@ void Function::allocate_registers() {
 
         // try allocate register
         // std::vector<size_t> free_until_pos;
-        std::array<size_t, static_cast<size_t>(MachineReg::NUM_MACHINE_REGS)> free_until_pos = {std::numeric_limits<size_t>::max()};
+        std::array<size_t, MACHINE_REG_COUNT> free_until_pos = {std::numeric_limits<size_t>::max()};
 
         for (const auto& interval : active) {
-            assert(interval.reg != MachineReg::UNINIT);
-            free_until_pos[static_cast<int>(interval.reg)] = 0;
+            assert(interval.reg != RegAssignment::UNINIT);
+            free_until_pos[interval.assign_index] = 0;
         }
         
         for (const auto& interval : inactive) {
             if (auto intersection = current.next_intersection(interval)) {
-                assert(interval.reg != MachineReg::UNINIT);
-                size_t& free_until = free_until_pos[static_cast<int>(interval.reg)];
+                assert(interval.reg != RegAssignment::UNINIT);
+                size_t& free_until = free_until_pos[interval.assign_index];
                 free_until = std::min(free_until, *intersection);
             }
         }
@@ -300,22 +302,23 @@ void Function::allocate_registers() {
             if (current.ranges[0].second >= *max_free) {
                 unhandled.push(current.split_at(*max_free));
             }
-            current.reg = static_cast<MachineReg>(max_free_index);
+            current.reg = RegAssignment::MACHINE_REG;
+            current.assign_index = max_free_index;
         } else {
             // register allocation failed
-            std::array<size_t, static_cast<size_t>(MachineReg::NUM_MACHINE_REGS)> next_use_pos = {std::numeric_limits<size_t>::max()};
+            std::array<size_t, MACHINE_REG_COUNT> next_use_pos = {std::numeric_limits<size_t>::max()};
             
             for (const auto& interval : active) {
                 assert(!interval.ranges.empty());
-                assert(interval.reg != MachineReg::UNINIT);
-                next_use_pos[static_cast<size_t>(interval.reg)] = interval.next_use_after(current.ranges.back().first);
+                assert(interval.reg != RegAssignment::UNINIT);
+                next_use_pos[interval.assign_index] = interval.next_use_after(current.ranges.back().first);
             }
             
             for (const auto& interval : inactive) {
                 assert(!interval.ranges.empty());
                 if (auto intersection = current.next_intersection(interval)) {
-                    assert(interval.reg != MachineReg::UNINIT);
-                    size_t& next_use = next_use_pos[static_cast<size_t>(interval.reg)];
+                    assert(interval.reg != RegAssignment::UNINIT);
+                    size_t& next_use = next_use_pos[interval.assign_index];
                     next_use = std::min(next_use, *intersection);
                 }
             }
@@ -324,14 +327,34 @@ void Function::allocate_registers() {
             size_t max_use_index = std::distance(free_until_pos.begin(), max_use);
             
             if (current.use_locations.front() > *max_use) {
+                
                 // spill current
                 // split current before first use pos requiring register
             } else {
-                current.reg = static_cast<MachineReg>(max_use_index);
+                current.reg = RegAssignment::MACHINE_REG;
+                current.assign_index = max_use_index;
+                for (auto& interval : active) {
+                    if (interval.reg == current.reg) {
+                        unhandled.push(interval.split_at(position));
+                        break;
+                    }
+                }
+                for (auto& interval : inactive) {
+                    if (interval.reg == current.reg) {
+                        unhandled.push(interval.split_at(interval.next_alive_after(position)));
+                    }
+                }
                 
+                // TODO intersection check with fixed interval
             }
         }
-    }
+        
+        if (current.reg == RegAssignment::MACHINE_REG) {
+            active.push_back(current);
+        }
+    } // while (!unhandled.empty())
+    
+    // process handled
 }
 
 };  // namespace IR
