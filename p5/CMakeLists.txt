@@ -40,6 +40,6 @@ add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
             
-
+add_executable(regalloc_test src/test_regalloc.cpp src/regalloc.cpp)
 
 target_link_libraries(mitscriptc antlr4_static)
