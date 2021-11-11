@@ -4,11 +4,34 @@
 #include <utility>
 #include <vector>
 #include <deque>
+#include <unordered_set>
+#include <array>
 
 #include "value.h"
 #include "allocator.h"
 
 namespace IR {
+    
+using LiveInterval = std::vector<std::pair<size_t, size_t>>;
+    
+enum class MachineRegs {
+    RAX,
+    RBX,
+    RCX,
+    RDX,
+    RSI,
+    RDI,
+    RBP,
+    RSP,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,
+    R13,
+    R14,
+    R15,
+};
 
 enum class Operation {
     ADD,
@@ -73,7 +96,8 @@ struct Operand {
 
 struct Instruction {
     Operation op;
-    Operand out, arg1, arg2, arg3;
+    Operand out;
+    std::array<Operand, 3> args;
 };
 
 struct PhiNode {
@@ -85,20 +109,30 @@ struct BasicBlock {
     std::vector<PhiNode> phi_nodes;
     std::deque<Instruction> instructions;
     std::vector<size_t> predecessors;
-    size_t true_successor;
-    size_t false_successor;
+    std::vector<size_t> successors;
+
+    bool is_loop_header;
+    size_t final_loop_block;
 };
 
 struct Function {
     std::vector<BasicBlock> blocks;
+    size_t virt_reg_count;
     
     std::vector<Operand> clobbered_regs;
+    
+    auto compute_live_intervals() -> std::vector<LiveInterval>;
+    void set_fixed_machine_regs();
     void allocate_registers();
 };
 
 struct Program {
     std::vector<Function> functions;
     std::vector<Value> immediates;
+    int num_globals;
 };
 
+void debug_live_intervals(const std::vector<LiveInterval>& intervals);
+
 }; // namespace IR
+
