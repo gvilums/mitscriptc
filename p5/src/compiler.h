@@ -37,7 +37,7 @@ class Compiler : public Visitor {
 		program_->functions.push_back(intcast_);
 		fun_ = new IR::Function(); // this is the global scope
 	
-		reg_cnt = 0;
+		reg_cnt_ = 0;
         
         global_scope_ = true;
         is_opr_ = false;
@@ -46,7 +46,7 @@ class Compiler : public Visitor {
     IR::Program* get_program() {
     	program_->functions.push_back(*fun_);
     	delete fun_;
-    	program_->num_globals(globals_.size());
+    	// program_->num_globals(globals_.size());
         return program_;
     }
 
@@ -272,7 +272,7 @@ class Compiler : public Visitor {
     }
 
     void visit(AST::BinaryExpression& expr) {
-    	IR::Operand opr1, opr2;
+    	/*IR::Operand opr1, opr2;
         expr.children[0]->accept(*((Visitor*)this));
         if (is_opr_)
         	opr1 = is_opr;
@@ -282,7 +282,7 @@ class Compiler : public Visitor {
         if (is_opr_)
         	opr2 = is_opr;
         else 
-        	opr2 = {IR::Operand::OpType::VIRT_REG, ret_reg_};
+        	opr2 = {IR::Operand::OpType::VIRT_REG, ret_reg_};*/
         
         /*if (expr.op == "<") {
             rfun_->instructions.push_back(Instruction(Operation::Geq, std::nullopt));
@@ -296,11 +296,11 @@ class Compiler : public Visitor {
             return;
         }*/
 
-        IR::Operation op;
+        /*IR::Operation op;
         if (expr.op == "+")
-            op = IR::Operation::Add;
+            op = IR::Operation::ADD;
         else if (expr.op == "-")
-            op = IR::Operation::Sub;
+            op = IR::Operation::S;
         else if (expr.op == "/")
             op = IR::Operation::Div;
         else if (expr.op == "*")
@@ -318,7 +318,7 @@ class Compiler : public Visitor {
 
         block_->instructions.push_back({op, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
         ret_reg_ = reg_cnt_;
-        reg_cnt_++;
+        reg_cnt_++;*/
     }
 
     void visit(AST::UnaryExpression& expr) {

@@ -24,7 +24,7 @@ auto main(int argc, const char* argv[]) -> int {
     }
 
     antlr4::ANTLRInputStream input(file);
-    MITScript lexer(&input);
+    lexer::MITScript lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
 
     tokens.fill();
@@ -37,9 +37,9 @@ auto main(int argc, const char* argv[]) -> int {
 
     Compiler compiler;
     program->accept(compiler);
-   	struct IR::Program* prog = compiler.get_program();
+   	IR::Program* prog = compiler.get_program();
     
-    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
     
     delete program;
     return 0;

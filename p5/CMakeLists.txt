@@ -25,7 +25,7 @@ find_package(ANTLR REQUIRED)
 
 # Call macro to add lexer and grammar to your build dependencies.
 antlr_target(SampleGrammarLexer MITScript.g LEXER
-             PACKAGE antlrcpptest)
+             PACKAGE lexer)
 # antlr_target(SampleGrammarParser TParser.g4 PARSER
 #              PACKAGE antlrcpptest
 #              DEPENDS_ANTLR SampleGrammarLexer
@@ -36,7 +36,10 @@ include_directories(${ANTLR_SampleGrammarLexer_OUTPUT_DIR})
 # include_directories(${ANTLR_SampleGrammarParser_OUTPUT_DIR})
 
 # add generated grammar to demo binary target
-add_executable(demo src/antlrtest.cpp
+add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
-target_link_libraries(demo antlr4_static)
+            
+
+
+target_link_libraries(mitscriptc antlr4_static)

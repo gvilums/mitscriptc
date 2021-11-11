@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "antlr4-runtime.h"
-#include "grammar/MITScript.h"
+#include "MITScript.h"
 
 int main() {
     return 0;

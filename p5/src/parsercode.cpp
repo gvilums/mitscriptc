@@ -6,7 +6,7 @@
 #define check(x)                              \
     {                                         \
         token = tokens.get(tokens.index());   \
-        if (token->getType() != MITScript::x) \
+        if (token->getType() != lexer::MITScript::x) \
             return NULL;                      \
         tokens.consume();                     \
     }
@@ -14,7 +14,7 @@
 
 AST::Program* parse(std::ifstream& file) {
     antlr4::ANTLRInputStream input(file);
-    MITScript lexer(&input);
+    lexer::MITScript lexer(&input);
     antlr4::CommonTokenStream tokens(&lexer);
 
     tokens.fill();
@@ -25,7 +25,7 @@ AST::Program* parse(std::ifstream& file) {
 AST::Program* Program(antlr4::CommonTokenStream& tokens) {
     AST::Program* Prog = new AST::Program;
     antlr4::Token* token = tokens.get(tokens.index());
-    while (token->getType() != MITScript::EOF) {
+    while (token->getType() != lexer::MITScript::EOF) {
         AST::Statement* Stat = Statement(tokens);
         if (!Stat)
             return NULL;
@@ -39,16 +39,16 @@ AST::Statement* Statement(antlr4::CommonTokenStream& tokens) {
     antlr4::Token* token = tokens.get(tokens.index());
     AST::Statement* stat;
     switch (token->getType()) {
-        case MITScript::GLOBAL:
+        case lexer::MITScript::GLOBAL:
             stat = (AST::Statement*)Global(tokens);
             break;
-        case MITScript::IF:
+        case lexer::MITScript::IF:
             stat = (AST::Statement*)IfStatement(tokens);
             break;
-        case MITScript::WHILE:
+        case lexer::MITScript::WHILE:
             stat = (AST::Statement*)WhileLoop(tokens);
             break;
-        case MITScript::RETURN:
+        case lexer::MITScript::RETURN:
             stat = (AST::Statement*)Return(tokens);
             break;
         default:
@@ -58,7 +58,7 @@ AST::Statement* Statement(antlr4::CommonTokenStream& tokens) {
 
             token = tokens.get(tokens.index());
 
-            if (token->getType() == MITScript::BROPEN)
+            if (token->getType() == lexer::MITScript::BROPEN)
                 stat = (AST::Statement*)CallStatement(tokens, Lhs);
             else
                 stat = (AST::Statement*)Assignment(tokens, Lhs);
@@ -74,7 +74,7 @@ AST::Block* Block(antlr4::CommonTokenStream& tokens) {
     antlr4::Token* token = tokens.get(tokens.index());
     check(CBROPEN);
     token = tokens.get(tokens.index());
-    while (token->getType() != MITScript::CBRCLOSE) {
+    while (token->getType() != lexer::MITScript::CBRCLOSE) {
         AST::Statement* Stat = Statement(tokens);
         if (!Stat)
             return NULL;
@@ -118,7 +118,7 @@ AST::Global* Global(antlr4::CommonTokenStream& tokens) {
     check(GLOBAL);
 
     token = tokens.get(tokens.index());
-    if (token->getType() != MITScript::NAME)
+    if (token->getType() != lexer::MITScript::NAME)
         return NULL;
     Glob->addName(token->getText());
     tokens.consume();
@@ -143,7 +143,7 @@ AST::IfStatement* IfStatement(antlr4::CommonTokenStream& tokens) {
         return NULL;
     IfStat->addChild(Block1);
     token = tokens.get(tokens.index());
-    if (token->getType() != MITScript::ELSE)
+    if (token->getType() != lexer::MITScript::ELSE)
         return IfStat;
 
     check(ELSE);
@@ -190,10 +190,10 @@ AST::Expression* Expression(antlr4::CommonTokenStream& tokens) {
     antlr4::Token* token = tokens.get(tokens.index());
     AST::Expression* expr;
     switch (token->getType()) {
-        case MITScript::FUNCTION:
+        case lexer::MITScript::FUNCTION:
             expr = (AST::Expression*)Function(tokens);
             break;
-        case MITScript::CBROPEN:
+        case lexer::MITScript::CBROPEN:
             expr = (AST::Expression*)Record(tokens);
             break;
         default:
@@ -211,15 +211,15 @@ AST::FunctionDeclaration* Function(antlr4::CommonTokenStream& tokens) {
     check(BROPEN);
     AST::FunctionDeclaration* FunDec = new AST::FunctionDeclaration();
     token = tokens.get(tokens.index());
-    if (token->getType() == MITScript::NAME) {
+    if (token->getType() == lexer::MITScript::NAME) {
         FunDec->addArg(token->getText());
         tokens.consume();
         token = tokens.get(tokens.index());
-        while (token->getType() == MITScript::COMMA) {
+        while (token->getType() == lexer::MITScript::COMMA) {
             check(COMMA);
 
             token = tokens.get(tokens.index());
-            if (token->getType() != MITScript::NAME)
+            if (token->getType() != lexer::MITScript::NAME)
                 return NULL;
             FunDec->addArg(token->getText());
             tokens.consume();
@@ -243,7 +243,7 @@ AST::Expression* Boolean(antlr4::CommonTokenStream& tokens) {
 
     antlr4::Token* token = tokens.get(tokens.index());
     token = tokens.get(tokens.index());
-    while (token->getType() == MITScript::OR) {
+    while (token->getType() == lexer::MITScript::OR) {
         check(OR);
         Temp = Conj;
         Conj = Conjunction(tokens);
@@ -270,7 +270,7 @@ AST::Expression* Conjunction(antlr4::CommonTokenStream& tokens) {
 
     antlr4::Token* token = tokens.get(tokens.index());
     token = tokens.get(tokens.index());
-    while (token->getType() == MITScript::AND) {
+    while (token->getType() == lexer::MITScript::AND) {
         check(AND);
         Temp = BUnit;
         BUnit = BoolUnit(tokens);
@@ -293,7 +293,7 @@ AST::Expression* BoolUnit(antlr4::CommonTokenStream& tokens) {
     antlr4::Token* token = tokens.get(tokens.index());
 
     bool nt = false;
-    if (token->getType() == MITScript::NOT) {
+    if (token->getType() == lexer::MITScript::NOT) {
         check(NOT);
         nt = true;
     }
@@ -320,7 +320,7 @@ AST::Expression* Predicate(antlr4::CommonTokenStream& tokens) {
 
     token = tokens.get(tokens.index());
 
-    if (token->getType() != MITScript::REL)
+    if (token->getType() != lexer::MITScript::REL)
         return Arith;
     string op = token->getText();
     tokens.consume();
@@ -344,7 +344,7 @@ AST::Expression* Arithmetic(antlr4::CommonTokenStream& tokens) {
 
     antlr4::Token* token = tokens.get(tokens.index());
     token = tokens.get(tokens.index());
-    while (token->getType() == MITScript::PLUS || token->getType() == MITScript::MINUS) {
+    while (token->getType() == lexer::MITScript::PLUS || token->getType() == lexer::MITScript::MINUS) {
         string op = token->getText();
         tokens.consume();
 
@@ -373,7 +373,7 @@ AST::Expression* Product(antlr4::CommonTokenStream& tokens) {
 
     antlr4::Token* token = tokens.get(tokens.index());
     token = tokens.get(tokens.index());
-    while (token->getType() == MITScript::DIV || token->getType() == MITScript::MUL) {
+    while (token->getType() == lexer::MITScript::DIV || token->getType() == lexer::MITScript::MUL) {
         string op = token->getText();
         tokens.consume();
 
@@ -399,7 +399,7 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
     token = tokens.get(tokens.index());
 
     bool minus = false;
-    if (token->getType() == MITScript::MINUS) {
+    if (token->getType() == lexer::MITScript::MINUS) {
         check(MINUS);
         minus = true;
     }
@@ -413,30 +413,30 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
     AST::StringConstant* Con3;
 
     switch (token->getType()) {
-        case MITScript::BOOLCONST:
+        case lexer::MITScript::BOOLCONST:
             Con = new AST::BoolConstant();
             Con->addVal(token->getText());
             tokens.consume();
             Expr = (AST::Expression*)Con;
             break;
-        case MITScript::NONECONST:
+        case lexer::MITScript::NONECONST:
             Con1 = new AST::NoneConstant();
             tokens.consume();
             Expr = (AST::Expression*)Con1;
             break;
-        case MITScript::INT:
+        case lexer::MITScript::INT:
             Con2 = new AST::IntegerConstant();
             Con2->addVal(token->getText());
             tokens.consume();
             Expr = (AST::Expression*)Con2;
             break;
-        case MITScript::STRCONST:
+        case lexer::MITScript::STRCONST:
             Con3 = new AST::StringConstant();
             Con3->addVal(token->getText());
             tokens.consume();
             Expr = (AST::Expression*)Con3;
             break;
-        case MITScript::BROPEN:
+        case lexer::MITScript::BROPEN:
             check(BROPEN);
             Expr = Boolean(tokens);
             if (!Expr)
@@ -449,7 +449,7 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
                 return NULL;
 
             token = tokens.get(tokens.index());
-            if (token->getType() != MITScript::BROPEN) {
+            if (token->getType() != lexer::MITScript::BROPEN) {
                 Expr = Lhs;
                 break;
             }
@@ -474,7 +474,7 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
 AST::Expression* LHS(antlr4::CommonTokenStream& tokens) {
     antlr4::Token* token = tokens.get(tokens.index());
     token = tokens.get(tokens.index());
-    if (token->getType() != MITScript::NAME)
+    if (token->getType() != lexer::MITScript::NAME)
         return NULL;
     AST::StringConstant* Con = new AST::StringConstant();
     Con->addVal(token->getText());
@@ -482,8 +482,8 @@ AST::Expression* LHS(antlr4::CommonTokenStream& tokens) {
     tokens.consume();
 
     token = tokens.get(tokens.index());
-    while (token->getType() == MITScript::SQBROPEN || token->getType() == MITScript::POINT) {
-        if (token->getType() == MITScript::SQBROPEN) {
+    while (token->getType() == lexer::MITScript::SQBROPEN || token->getType() == lexer::MITScript::POINT) {
+        if (token->getType() == lexer::MITScript::SQBROPEN) {
             check(SQBROPEN);
             AST::Expression* Index = Expression(tokens);
             if (!Index)
@@ -494,10 +494,10 @@ AST::Expression* LHS(antlr4::CommonTokenStream& tokens) {
             BaseExpression = (AST::Expression*)IExpr;
             check(SQBRCLOSE);
         }
-        if (token->getType() == MITScript::POINT) {
+        if (token->getType() == lexer::MITScript::POINT) {
             check(POINT);
             token = tokens.get(tokens.index());
-            if (token->getType() != MITScript::NAME)
+            if (token->getType() != lexer::MITScript::NAME)
                 return NULL;
             AST::FieldDereference* Fdef = new AST::FieldDereference();
             Fdef->addBaseexpr(BaseExpression);
@@ -516,7 +516,7 @@ AST::Record* Record(antlr4::CommonTokenStream& tokens) {
 
     AST::Record* Rec = new AST::Record();
     token = tokens.get(tokens.index());
-    while (token->getType() == MITScript::NAME) {
+    while (token->getType() == lexer::MITScript::NAME) {
         string name = token->getText();
         tokens.consume();
         check(COLON);
@@ -540,14 +540,14 @@ AST::Call* Call(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
     check(BROPEN);
 
     token = tokens.get(tokens.index());
-    if (token->getType() != MITScript::BRCLOSE) {
+    if (token->getType() != lexer::MITScript::BRCLOSE) {
         AST::Expression* Arg = Expression(tokens);
 
         if (!Arg)
             return NULL;
         Cl->addArg(Arg);
         token = tokens.get(tokens.index());
-        while (token->getType() == MITScript::COMMA) {
+        while (token->getType() == lexer::MITScript::COMMA) {
             check(COMMA);
             Arg = Expression(tokens);
             if (!Arg)
