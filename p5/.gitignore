@@ -1,1 +1,3 @@
 test_regalloc
+build/*
+.cache/*
