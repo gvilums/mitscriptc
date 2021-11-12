@@ -81,7 +81,12 @@ int main() {
     };
 
     auto res = test_fn.compute_live_intervals();
-    debug_live_intervals(res);
+    // debug_live_intervals(res);
+    for (auto& interval : res) {
+        std::cout << interval << std::endl;
+    }
+    
+    auto assignments = test_fn.allocate_registers();
 
     return 0;
 }

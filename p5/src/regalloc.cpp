@@ -4,10 +4,9 @@
 #include <limits>
 #include <ostream>
 #include <queue>
+#include <system_error>
 #include <unordered_set>
 #include <algorithm>
-
-#include "doctest.h"
 
 #include "AST.h"
 #include "ir.h"
@@ -34,7 +33,30 @@ struct hash<::IR::LiveInterval> {
 };
 };  // namespace std
 
+
 namespace IR {
+
+std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
+    os << "interval vreg " << interval.vreg_id << " {" << std::endl;
+    os << "ranges: ";
+    for (auto range = interval.ranges.rbegin(); range != interval.ranges.rend(); range++) {
+        os << range->first << " " << range->second << ", ";
+    }
+    os << std::endl;
+    switch (interval.reg) {
+    case IR::RegAssignment::MACHINE_REG:
+        os << "MACHINE_REG ";
+        break;
+    case IR::RegAssignment::STACK_SLOT:
+        os << "STACK_SLOT ";
+        break;
+    case IR::RegAssignment::UNINIT:
+        os << "UNINIT ";
+        break;
+    }
+    os << interval.assign_index << std::endl;
+    return os;
+}
     
 auto LiveInterval::split_at(size_t pos) -> LiveInterval {
     LiveInterval result;
@@ -42,11 +64,29 @@ auto LiveInterval::split_at(size_t pos) -> LiveInterval {
     std::vector<std::pair<size_t, size_t>> remaining;
 
     for (size_t rev_i = 0; rev_i < this->ranges.size(); ++rev_i) {
-        size_t i = this->ranges.size() - rev_i;
-        if (this->ranges[i].first < pos && this->ranges[i].second >= pos) {
-
+        size_t i = this->ranges.size() - rev_i - 1;
+        // split lands between ranges
+        if (this->ranges[i].first >= pos) {
+            // remaining ranges should move to result interval;
+            for (size_t j = 0; j <= i; ++j) {
+                result.ranges.push_back(this->ranges[j]);
+            }
+            break;
         }
+        // inside range
+        if (this->ranges[i].first < pos && this->ranges[i].second >= pos) {
+            remaining.push_back({this->ranges[i].first, pos - 1});
+            for (size_t j = 0; j < i; ++j) {
+                result.ranges.push_back(this->ranges[j]);
+            }
+            result.ranges.push_back({pos, this->ranges[i].second});
+            break;
+        }
+        remaining.push_back(this->ranges[i]);
     }
+    std::reverse(remaining.begin(), remaining.end());
+    this->ranges = std::move(remaining);
+    return result;
 }
 
 void LiveInterval::push_range(std::pair<size_t, size_t> range) {
@@ -172,6 +212,9 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
 
     std::vector<LiveInterval> intervals;
     intervals.resize(this->virt_reg_count);
+    for (size_t i = 0; i < intervals.size(); ++i) {
+        intervals[i].vreg_id = i;
+    }
 
     std::vector<std::unordered_set<size_t>> block_live_regs;
     block_live_regs.resize(this->blocks.size());
@@ -246,7 +289,7 @@ void debug_live_intervals(const std::vector<LiveInterval>& intervals) {
     }
 }
 
-void Function::allocate_registers() {
+auto Function::allocate_registers() -> std::vector<LiveInterval> {
     // step 1: set fixed registers, generate moves around mul/div
     // step 2: compute live intervals
     // step 3: execute linear scan algorithm
@@ -270,25 +313,25 @@ void Function::allocate_registers() {
         std::vector<LiveInterval> new_inactive;
 
         for (auto& interval : active) {
-            if (interval.ranges[0].second >= position) {
-                assert(!interval.ranges.empty());
-                if (interval.covers(position)) {
-                    new_active.push_back(std::move(interval));
-                } else {
-                    new_inactive.push_back(std::move(interval));
-                }
-            }  // else handled
+            assert(!interval.ranges.empty());
+            if (interval.ranges[0].second < position) {
+                handled.push_back(std::move(interval));
+            } else if (interval.covers(position)) {
+                new_active.push_back(std::move(interval));
+            } else {
+                new_inactive.push_back(std::move(interval));
+            }
         }
 
         for (auto& interval : inactive) {
             assert(!interval.ranges.empty());
-            if (interval.ranges[0].second >= position) {
-                if (interval.covers(position)) {
-                    new_active.push_back(std::move(interval));
-                } else {
-                    new_inactive.push_back(std::move(interval));
-                }
-            }  // else handled
+            if (interval.ranges[0].second < position) {
+                handled.push_back(std::move(interval));
+            } else if (interval.covers(position)) {
+                new_active.push_back(std::move(interval));
+            } else {
+                new_inactive.push_back(std::move(interval));
+            }
         }
 
         active = std::move(new_active);
@@ -374,10 +417,9 @@ void Function::allocate_registers() {
     } // while (!unhandled.empty())
     
     // process handled
+    
+
+    return handled;
 }
 
 };  // namespace IR
-
-TEST_CASE("LiveInterval operator==") {
-    CHECK(IR::LiveInterval{} == IR::LiveInterval{});    
-}

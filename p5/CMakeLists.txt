@@ -1,6 +1,6 @@
 # minimum required CMAKE version
 CMAKE_MINIMUM_REQUIRED(VERSION 3.7 FATAL_ERROR)
-project(mitscript)
+project(mitscript LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -17,7 +17,8 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 include(ExternalAntlr4Cpp)
 # add antrl4cpp artifacts to project environment
 include_directories(${ANTLR4_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+# find_package(doctest REQUIRED)
 
 # set variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
@@ -42,8 +43,10 @@ add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
             
-add_executable(regalloc_test src/test_regalloc.cpp src/regalloc.cpp)
+add_executable(test_regalloc src/test_regalloc.cpp src/regalloc.cpp)
 
-add_executable(test src/test_driver.cpp src/regalloc.cpp)
+add_executable(test test/doctest.cpp test/regalloc_test.cpp src/regalloc.cpp)
+# target_compile_features(test PRIVATE cxx_std_17)
+# target_link_libraries(test PRIVATE doctest::doctest)
 
 target_link_libraries(mitscriptc antlr4_static)

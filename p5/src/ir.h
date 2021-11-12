@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <array>
 #include <optional>
+#include <iostream>
 
 #include "value.h"
 #include "allocator.h"
@@ -41,6 +42,7 @@ struct LiveInterval {
     
     friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
     friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
     friend ::std::hash<LiveInterval>;
 };
 
@@ -135,7 +137,7 @@ struct Function {
     
     auto compute_live_intervals() -> std::vector<LiveInterval>;
     void set_fixed_machine_regs();
-    void allocate_registers();
+    auto allocate_registers() -> std::vector<LiveInterval>;
 };
 
 struct Program {
