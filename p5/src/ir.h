@@ -14,7 +14,7 @@
 
 namespace IR {
     
-const size_t MACHINE_REG_COUNT = 16;
+const size_t MACHINE_REG_COUNT = 2;
     
 enum class RegAssignment {
     MACHINE_REG,
@@ -30,6 +30,7 @@ struct LiveInterval {
 
     RegAssignment reg{RegAssignment::UNINIT};
     size_t assign_index{0};
+    bool split_off{false};
     
     void push_range(std::pair<size_t, size_t>);
     void push_loop_range(std::pair<size_t, size_t>);
@@ -125,6 +126,7 @@ struct BasicBlock {
     std::deque<Instruction> instructions;
     std::vector<size_t> predecessors;
     std::vector<size_t> successors;
+    std::vector<std::pair<Operand, Operand>> resolution;
 
     bool is_loop_header;
     size_t final_loop_block;
@@ -137,17 +139,16 @@ struct Function {
     
     std::vector<Operand> clobbered_regs;
     
-    auto compute_live_intervals() -> std::vector<LiveInterval>;
     void set_fixed_machine_regs();
+    auto compute_live_intervals() -> std::vector<LiveInterval>;
     auto allocate_registers() -> std::vector<LiveInterval>;
 };
+
 
 struct Program {
     std::vector<Function> functions;
     std::vector<Value> immediates;
     int num_globals;
 };
-
-void debug_live_intervals(const std::vector<LiveInterval>& intervals);
 
 }; // namespace IR

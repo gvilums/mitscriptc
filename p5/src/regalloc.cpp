@@ -216,7 +216,7 @@ bool operator==(const LiveInterval& lhs, const LiveInterval& rhs) {
 }
 
 // should MUL and DIV be handled here?
-void Function::set_fixed_machine_regs() {
+void Function::compute_blocked_machine_regs() {
     for (BasicBlock& block : this->blocks) {
         for (Instruction& instr : block.instructions) {
             if (instr.op == Operation::LOAD_ARG) {
@@ -231,7 +231,6 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
     std::vector<std::pair<size_t, size_t>> block_range;
     size_t current_from = 0;
     for (const BasicBlock& block : this->blocks) {
-        // TODO check the -1
         block_range.push_back({current_from, current_from + 2 * block.instructions.size() + 1});
         current_from += 2 * block.instructions.size() + 2;
     }
@@ -298,7 +297,6 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
         }
 
         if (block.is_loop_header) {
-            // TODO
             for (size_t opd : live) {
                 intervals[opd].push_loop_range({block_range[block_index].first, block_range[block.final_loop_block].second});
             }
@@ -312,14 +310,6 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
     return intervals;
 }
 
-void debug_live_intervals(const std::vector<LiveInterval>& intervals) {
-    for (size_t i = 0; i < intervals.size(); ++i) {
-        std::cout << "Virtual Register " << i << '\n';
-        for (auto [from, to] : intervals[i].ranges) {
-            std::cout << from << " " << to << '\n';
-        }
-    }
-}
 
 auto Function::allocate_registers() -> std::vector<LiveInterval> {
     // step 1: set fixed registers, generate moves around mul/div
@@ -378,6 +368,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
             free_until_pos[interval.assign_index] = 0;
         }
         
+        // TODO omit intersection test when possible
         for (const auto& interval : inactive) {
             if (auto intersection = current.next_intersection(interval)) {
                 assert(interval.reg != RegAssignment::UNINIT);
@@ -407,6 +398,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
                 next_use_pos[interval.assign_index] = interval.next_use_after(current.ranges.back().first);
             }
             
+            // TODO omit intersection test when possible
             for (const auto& interval : inactive) {
                 assert(!interval.ranges.empty());
                 if (auto intersection = current.next_intersection(interval)) {
@@ -417,7 +409,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
             }
             
             auto max_use = std::max_element(next_use_pos.begin(), next_use_pos.end());
-            size_t max_use_index = std::distance(free_until_pos.begin(), max_use);
+            size_t max_use_index = std::distance(next_use_pos.begin(), max_use);
             
             if (current.use_locations.front() > *max_use) {
                 current.reg = RegAssignment::STACK_SLOT;
@@ -446,11 +438,29 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         
         if (current.reg == RegAssignment::MACHINE_REG) {
             active.push_back(current);
+        } else if (current.reg == RegAssignment::STACK_SLOT) {
+            handled.push_back(current);
+        } else {
+            assert(false && "interval with no register assignment");
         }
     } // while (!unhandled.empty())
     
-    // process handled
+    // TODO think about this
+    handled.insert(handled.end(), 
+        std::make_move_iterator(active.begin()), std::make_move_iterator(active.end()));
+    handled.insert(handled.end(), 
+        std::make_move_iterator(inactive.begin()), std::make_move_iterator(inactive.end()));
     
+    std::sort(handled.begin(), handled.end());
+    
+    
+    // resolution phase
+    for (const BasicBlock& block : this->blocks) {
+        std::vector<std::pair<Operand, Operand>> mapping;
+        for (const LiveInterval& interval : TODO) {
+
+        }
+    }
 
     return handled;
 }
