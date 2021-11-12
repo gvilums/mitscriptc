@@ -6,32 +6,44 @@
 #include <deque>
 #include <unordered_set>
 #include <array>
+#include <optional>
 
 #include "value.h"
 #include "allocator.h"
 
 namespace IR {
     
-using LiveInterval = std::vector<std::pair<size_t, size_t>>;
+const size_t MACHINE_REG_COUNT = 16;
     
-enum class MachineRegs {
-    RAX,
-    RBX,
-    RCX,
-    RDX,
-    RSI,
-    RDI,
-    RBP,
-    RSP,
-    R8,
-    R9,
-    R10,
-    R11,
-    R12,
-    R13,
-    R14,
-    R15,
+enum class RegAssignment {
+    MACHINE_REG,
+    STACK_SLOT,
+    UNINIT,
 };
+
+struct LiveInterval {
+    std::vector<std::pair<size_t, size_t>> ranges;
+    std::vector<size_t> use_locations;
+
+    size_t vreg_id{0};
+
+    RegAssignment reg{RegAssignment::UNINIT};
+    size_t assign_index{0};
+    
+    void push_range(std::pair<size_t, size_t>);
+    void push_loop_range(std::pair<size_t, size_t>);
+
+    bool covers(size_t position) const;
+    auto next_intersection(const LiveInterval& other) const -> std::optional<size_t>;
+    LiveInterval split_at(size_t pos);
+    size_t next_alive_after(size_t pos) const;
+    size_t next_use_after(size_t pos) const;
+    
+    friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend ::std::hash<LiveInterval>;
+};
+
 
 enum class Operation {
     ADD,
@@ -136,4 +148,3 @@ struct Program {
 void debug_live_intervals(const std::vector<LiveInterval>& intervals);
 
 }; // namespace IR
-
