@@ -18,12 +18,20 @@ class Compiler : public Visitor {
     IR::BasicBlock* block_;
     IR::Operand opr_;
     bool is_opr_;
-    int reg_cnt_;
-    int ret_reg_;
+    size_t reg_cnt_;
+    size_t ret_reg_;
     
-    std::map<std::string, int> globals_; 
+    std::map<std::string, int> local_vars_;
+    std::map<std::string, int> local_reference_vars_;
+    std::map<std::string, int> free_vars_;
+    
+    std::set<std::string> globals_; 
     std::set<std::string> ref_;
-
+    
+    int imm_cnt_;
+    std::map<string, int> str_const_;
+    std::map<int, int> int_const_;
+    
    public:
     Compiler() {
         program_ = new IR::Program; 
@@ -36,24 +44,34 @@ class Compiler : public Visitor {
 		program_->functions.push_back(input_);
 		program_->functions.push_back(intcast_);
 		fun_ = new IR::Function(); // this is the global scope
+		block_ = new IR::BasicBlock();
+		
+		// program_->immediates.push_back(); // NONE
+		// program_->immediates.push_back(); // TRUE
+		// program_->immediates.push_back(); // FALSE
+		// program_->immediates.push_back(); // 0
 	
 		reg_cnt_ = 0;
+		imm_cnt_ = 4;
+		int_const_[0] = 3;
         
         global_scope_ = true;
         is_opr_ = false;
     }
 
     IR::Program* get_program() {
-    	program_->functions.push_back(*fun_);
-    	delete fun_;
-    	// program_->num_globals(globals_.size());
         return program_;
     }
 
     void visit(AST::Program& expr) {
-        for (auto c : expr.children) {
+        for (auto c : expr.children)
             c->accept(*((Visitor*)this));
-        }
+  		
+        fun_->blocks.push_back(*block_);
+    	program_->functions.push_back(*fun_);
+    	delete block_;
+    	delete fun_;
+    	program_->num_globals = globals_.size();
     }
 
     void visit(AST::Block& expr) {
@@ -113,59 +131,61 @@ class Compiler : public Visitor {
     }
 
     void visit(AST::IfStatement& expr) {
-        /*expr.Expr->accept(*((Visitor*)this));  // do we have to clear the stack ?
-
-        rfun_->instructions.push_back(Instruction(Operation::If, 2));
-        int lo_idx = rfun_->instructions.size();
-        rfun_->instructions.push_back(Instruction(Operation::Goto, std::nullopt));  // dummy value
-
+        /*expr.Expr->accept(*((Visitor*)this)); 
         expr.children[0]->accept(*((Visitor*)this));
-
-        if (expr.children.size() > 1)
-            rfun_->instructions.push_back(Instruction(Operation::Goto, std::nullopt));  // dummy value
-
-        int hi_idx0 = rfun_->instructions.size();
-        rfun_->instructions[lo_idx] = Instruction(Operation::Goto, hi_idx0 - lo_idx);
-
         if (expr.children.size() > 1) {
-            expr.children[1]->accept(*((Visitor*)this));
-
-            int hi_idx1 = rfun_->instructions.size();
-            rfun_->instructions[hi_idx0 - 1] = Instruction(Operation::Goto, hi_idx1 - (hi_idx0 - 1));
         }*/
     }
 
-    void visit(AST::WhileLoop& expr) {
-        /*int lo_idx0 = rfun_->instructions.size();
-
-        expr.Expr->accept(*((Visitor*)this));  // do we have to clear the stack ?
-
-        rfun_->instructions.push_back(Instruction(Operation::If, 2));
-        int lo_idx1 = rfun_->instructions.size();
-        rfun_->instructions.push_back(Instruction(Operation::Goto, std::nullopt));  // dummy value
-
+    void visit(AST::WhileLoop& expr) { // could contain empty blocks
+    	/*fun_->blocks.push_back(*block_);
+    	size_t header_idx = fun_->blocks.size();
+    	fun_->blocks.back().successors.push_back(header_idx);
+    	delete block_;
+    	
+    	block_ = new IR::BasicBlock();
+    	block_->predecessors.push_back(header_idx - 1);
+    	block_->is_loop_header = true;
+    	expr.Expr->accept(*((Visitor*)this));
+    	fun_->blocks.push_back(*block_);
+    	delete block_;
+    	
         expr.children[0]->accept(*((Visitor*)this));
-
-        int hi_idx = rfun_->instructions.size();
-        rfun_->instructions.push_back(Instruction(Operation::Goto, lo_idx0 - hi_idx));
-        rfun_->instructions[lo_idx1] = Instruction(Operation::Goto, hi_idx - lo_idx1 + 1);*/
+        
+    	fun_->blocks[header_idx].final_loop_block = fun_->blocks.size();
+    	fun_->
+        fun_->blocks.push_back(*block_);  
+    	delete block_;
+    	
+    	block_ = new IR::BasicBlock();*/
     }
 
     void visit(AST::FunctionDeclaration& expr) {
-        /*struct Function* tfun = rfun_; // save current function into temporal variable
-        bool tscope = global_scope_; // save global_scope_ flag
-        std::set<string> tglobals = globals_; // save current global variables
+    	IR::Function* tfun = fun_;
+    	IR:: BasicBlock* tblock = block_;
+    	bool tscope = global_scope_;
+    	std::set<string> tglobals = globals_;
 		std::set<string> tref = ref_;
+		int treg_cnt = reg_cnt_;
 		
-        rfun_ = new struct Function; // create new function
-        global_scope_ = false; // if we declare new function we are not anymore in the global scope
-        rfun_->parameter_count_ = expr.arguments.size(); // initialize fields of new function
-        tfun->functions_.push_back(rfun_);
+		std::map<std::string, int> tlocal_vars = local_vars_;
+    	std::map<std::string, int> tlocal_reference_vars = local_reference_vars_;
+    	std::map<std::string, int> tfree_vars = free_vars_;
+    	
+    	local_vars_ = std::map<std::string, int>();
+     	local_reference_vars_ = std::map<std::string, int>();
+     	free_vars_ = std::map<std::string, int>();
+     	
+		fun_ = new IR::Function;
+		block_ = new IR::BasicBlock;
+		reg_cnt_ = 0;
+		global_scope_ = false;
+		fun_->parameter_count = expr.arguments.size();
+		
+		for (auto s : tlocal_reference_vars)
+        	ref_.insert(s.first);
         
-        for (auto s : tfun->local_reference_vars_)
-        	ref_.insert(s);
-  
-        FreeVariables freeVar; // use visitor class to resolve all variable types, see FreeVariables.h for further explanations
+        FreeVariables freeVar; 
         expr.block->accept(freeVar);
         vector<string> free_var = freeVar.getFreeVariables();
         vector<string> cur_var = freeVar.getCurVariables();
@@ -178,70 +198,76 @@ class Compiler : public Visitor {
         Globals globals;
         expr.block->accept(globals);
         vector<string> glob_var = globals.getGlobals();
-
-        for (auto s : cur_var) {
-            if (count(glob_var.begin(), glob_var.end(), s))
-                continue;
-            if (count(expr.arguments.begin(), expr.arguments.end(), s))
-                continue;
-            if (count(ass_var.begin(), ass_var.end(), s))
-                continue;
-
-            if (globals_.count(s))
-                rfun_->names_.push_back(s);
-        }
-
-        for (auto s : free_var) {
-            if (count(glob_var.begin(), glob_var.end(), s))
-                continue;
-            if (count(expr.arguments.begin(), expr.arguments.end(), s))
-                continue;
-            if (count(ass_var.begin(), ass_var.end(), s))
-                continue;
-            if (count(rfun_->free_vars_.begin(), rfun_->free_vars_.end(), s))
-                continue;
-
-            if (!globals_.count(s) && ref_.count(s))
-                rfun_->free_vars_.push_back(s);
-        }
-
+        
+        // QUI INIZIA IL CASINO
+        
         for (auto s : expr.arguments) {
-            // if (count(glob_var.begin(), glob_var.end(), s)) continue;
-            rfun_->local_vars_.push_back(s);
-            if (count(nb_var.begin(), nb_var.end(), s)) {
-                rfun_->local_reference_vars_.push_back(s);
-            }
-            if (globals_.count(s))
-                globals_.erase(s);
-            if (ref_.count(s))
-            	ref_.erase(s);
-           
-        }
-
-        for (auto s : ass_var) {
-            if (count(glob_var.begin(), glob_var.end(), s))
-                continue;
-            if (count(rfun_->local_vars_.begin(), rfun_->local_vars_.end(), s))
-                continue;
-            rfun_->local_vars_.push_back(s);
+            local_vars_[s] = 1;
             if (count(nb_var.begin(), nb_var.end(), s))
-                rfun_->local_reference_vars_.push_back(s);
+                local_reference_vars_[s] = - 1; 
             if (globals_.count(s))
                 globals_.erase(s);
             if (ref_.count(s))
-            	ref_.erase(s);
+            	ref_.erase(s); 
         }
 
         for (auto s : glob_var) {
             globals_.insert(s);
-            if (!count(rfun_->names_.begin(), rfun_->names_.end(), s))
-                rfun_->names_.push_back(s);
             if (ref_.count(s))
             	ref_.erase(s);
         }
-
-        // finding local decl
-
+        
+        for (auto s : ass_var) {
+            if (count(glob_var.begin(), glob_var.end(), s))
+                continue;
+            local_vars_[s] = - 1;
+            if (count(nb_var.begin(), nb_var.end(), s))
+                local_reference_vars_[s] = - 1; 
+            if (globals_.count(s))
+                globals_.erase(s);
+            if (ref_.count(s))
+            	ref_.erase(s);
+        }
+        
+        for (auto s : free_var) 
+            if (ref_.count(s))
+                free_vars_[s] = - 1;
+        
+        tblock->instructions.push_back({IR::Operation::ALLOC_CLOSURE, {IR::Operand::OpType::VIRT_REG, ret_reg_}, {IR::Operand::OpType::LOGICAL, free_vars_.size()}});
+        
+        ret_reg_ = reg_cnt_;
+        reg_cnt_++;
+        
+        int idx = 0;
+        for (auto s : free_vars_){
+        	free_vars_[s.first] = s.second;
+        	
+        	if (tlocal_reference_vars.count(s.first)){
+        		tblock->instructions.push_back({IR::Operation::ALLOC_CLOSURE, {IR::Operand::OpType::VIRT_REG, ret_reg_}, {IR::Operand::OpType::LOGICAL, free_vars_.size()}});
+        	}
+        	else if (tfree_vars.count(s.first)) {
+        		
+        	}
+        }
+           	
+		program_->functions.push_back(*fun_);
+		delete fun_;
+	
+		local_vars_ = tlocal_vars;
+     	local_reference_vars_ = tlocal_reference_vars;
+     	free_vars_ = tfree_vars;
+		fun_ = tfun;
+		block_ = tblock;
+        global_scope_ = tscope;
+        globals_ = tglobals;
+        ref_ = tref;
+        reg_cnt_ = treg_cnt;
+	
+        /*
+        
+        tfun->instructionsALLOC_CLOSURE
+        
+        ALLOC_CLOSURE
         tfun->instructions.push_back(Instruction(Operation::LoadFunc, tfun->functions_.size() - 1));
         // std::reverse(rfun_->free_vars_.begin(), rfun_->free_vars_.end());
         for (auto s : rfun_->free_vars_) {
@@ -263,74 +289,73 @@ class Compiler : public Visitor {
 
         rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
         rfun_->constants_.push_back(Constant{none_});
-        rfun_->instructions.push_back(Instruction(Operation::Return, std::nullopt));
-
-        rfun_ = tfun;
-        global_scope_ = tscope;
-        globals_ = tglobals;
-        ref_ = tref;*/
+        rfun_->instructions.push_back(Instruction(Operation::Return, std::nullopt));*/
     }
 
     void visit(AST::BinaryExpression& expr) {
-    	/*IR::Operand opr1, opr2;
+    	IR::Operand opr1, opr2;
         expr.children[0]->accept(*((Visitor*)this));
         if (is_opr_)
-        	opr1 = is_opr;
+        	opr1 = opr_;
         else 
         	opr1 = {IR::Operand::OpType::VIRT_REG, ret_reg_};
         expr.children[1]->accept(*((Visitor*)this));
         if (is_opr_)
-        	opr2 = is_opr;
+        	opr2 = opr_;
         else 
-        	opr2 = {IR::Operand::OpType::VIRT_REG, ret_reg_};*/
+        	opr2 = {IR::Operand::OpType::VIRT_REG, ret_reg_};
         
-        /*if (expr.op == "<") {
-            rfun_->instructions.push_back(Instruction(Operation::Geq, std::nullopt));
-            rfun_->instructions.push_back(Instruction(Operation::Not, std::nullopt));
+        if (expr.op == "<=" || expr.op == "<") {
+        	IR::Operation opr_t = (expr.op == "<") ? IR::Operation::GEQ : IR::Operation::GT;
+            block_->instructions.push_back({opr_t, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
+        	block_->instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_ + 1}, {IR::Operand::OpType::VIRT_REG, reg_cnt_}});
+        	ret_reg_ = reg_cnt_ + 1;
+        	reg_cnt_ += 2;
             return;
         }
 
-        if (expr.op == "<=") {
-            rfun_->instructions.push_back(Instruction(Operation::Gt, std::nullopt));
-            rfun_->instructions.push_back(Instruction(Operation::Not, std::nullopt));
-            return;
-        }*/
-
-        /*IR::Operation op;
+        IR::Operation op;
         if (expr.op == "+")
             op = IR::Operation::ADD;
         else if (expr.op == "-")
-            op = IR::Operation::S;
+            op = IR::Operation::SUB;
         else if (expr.op == "/")
-            op = IR::Operation::Div;
+            op = IR::Operation::DIV;
         else if (expr.op == "*")
-            op = IR::Operation::Mul;
+            op = IR::Operation::MUL;
         else if (expr.op == ">")
-            op = IR::Operation::Gt;
+            op = IR::Operation::GT;
         else if (expr.op == ">=")
-            op = IR::Operation::Geq;
+            op = IR::Operation::GEQ;
         else if (expr.op == "==")
-            op = IR::Operation::Eq;
+            op = IR::Operation::EQ;
         else if (expr.op == "&")
-            op = IR::Operation::And;
+            op = IR::Operation::AND;
         else if (expr.op == "|")
-            op = IR::Operation::Or;
+            op = IR::Operation::OR;
 
         block_->instructions.push_back({op, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
         ret_reg_ = reg_cnt_;
-        reg_cnt_++;*/
+        reg_cnt_++;
     }
 
     void visit(AST::UnaryExpression& expr) {
-        /*expr.children[0]->accept(*((Visitor*)this));
+        IR::Operand opr;
+        expr.children[0]->accept(*((Visitor*)this));
+        if (is_opr_)
+        	opr = opr_;
+        else 
+        	opr = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 
-        Operation op;
-        if (expr.op == "!")
-            op = Operation::Not;
-        else if (expr.op == "-")
-            op = Operation::Neg;
-
-        rfun_->instructions.push_back(Instruction(op, std::nullopt));*/
+        if (expr.op == "!") {
+        	block_->instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr});
+        }
+        else {
+        	IR::Operand zero = {IR::Operand::OpType::IMMEDIATE, 3};
+        	 block_->instructions.push_back({IR::Operation::SUB, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, zero, opr});
+        }
+        ret_reg_ = reg_cnt_;
+        reg_cnt_++;
     }
 
     void visit(AST::Call& expr) {
@@ -365,16 +390,33 @@ class Compiler : public Visitor {
     }
 
     void visit(AST::IntegerConstant& expr) {
-        /*rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
-        rfun_->constants_.push_back(expr.getVal());*/
+    	is_opr_ = true;
+    	int val = expr.getVal();
+    	size_t idx;
+    	if (!int_const_.count(val)) {
+    		// program_->immediates.push_back(); // val
+    		int_const_[val] = imm_cnt_++;
+    	}
+    	idx = int_const_[val];
+    	
+    	opr_ = {IR::Operand::OpType::IMMEDIATE, idx};
     }
 
     void visit(AST::StringConstant& expr) {
-        /*string val = expr.getVal();
-        if (val[0] == '"') {  // in this case we are dealing with string constants
-            rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
-            rfun_->constants_.push_back(val.substr(1, val.size() - 2));
-        } else {
+        string val = expr.getVal();
+        if (val[0] == '"') {
+        	is_opr_ = true;
+        	string str = val.substr(1, val.size() - 2);
+        	
+        	size_t idx;
+			if (!str_const_.count(val)) {
+				// program_->immediates.push_back(); // str
+				str_const_[val] = imm_cnt_++;
+			}
+			idx = str_const_[val];
+    	
+    		opr_ = {IR::Operand::OpType::IMMEDIATE, idx};   
+        } /*else {
         	
         
             if (global_scope_ && !count(rfun_->names_.begin(), rfun_->names_.end(), val)) {
@@ -418,12 +460,13 @@ class Compiler : public Visitor {
     }
 
     void visit(AST::BoolConstant& expr) {
-        /*rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
-        rfun_->constants_.push_back(expr.getVal());*/
+    	is_opr_ = true;
+    	size_t idx = expr.getVal() ? 1 : 2;
+    	opr_ = {IR::Operand::OpType::IMMEDIATE, idx};
     }
 
     void visit(AST::NoneConstant& expr) {
-        /*rfun_->instructions.push_back(Instruction(Operation::LoadConst, rfun_->constants_.size()));
-        rfun_->constants_.push_back(Constant{none_});*/
+        is_opr_ = true;
+    	opr_ = {IR::Operand::OpType::IMMEDIATE, 0};
     }
 };

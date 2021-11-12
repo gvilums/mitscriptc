@@ -118,6 +118,7 @@ struct BasicBlock {
 struct Function {
     std::vector<BasicBlock> blocks;
     size_t virt_reg_count;
+    size_t parameter_count;
     
     std::vector<Operand> clobbered_regs;
     
