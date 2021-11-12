@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <algorithm>
 
+#include "doctest.h"
+
 #include "AST.h"
 #include "ir.h"
 
@@ -33,6 +35,19 @@ struct hash<::IR::LiveInterval> {
 };  // namespace std
 
 namespace IR {
+    
+auto LiveInterval::split_at(size_t pos) -> LiveInterval {
+    LiveInterval result;
+    result.vreg_id = this->vreg_id;
+    std::vector<std::pair<size_t, size_t>> remaining;
+
+    for (size_t rev_i = 0; rev_i < this->ranges.size(); ++rev_i) {
+        size_t i = this->ranges.size() - rev_i;
+        if (this->ranges[i].first < pos && this->ranges[i].second >= pos) {
+
+        }
+    }
+}
 
 void LiveInterval::push_range(std::pair<size_t, size_t> range) {
     auto [begin, end] = range;
@@ -239,8 +254,10 @@ void Function::allocate_registers() {
     auto all_intervals = this->compute_live_intervals();
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::less<LiveInterval>> unhandled(
         std::make_move_iterator(all_intervals.begin()), std::make_move_iterator(all_intervals.end()));
+
     std::vector<LiveInterval> active;
     std::vector<LiveInterval> inactive;
+    size_t stack_slot{0};
 
     std::vector<LiveInterval> handled;
 
@@ -327,9 +344,11 @@ void Function::allocate_registers() {
             size_t max_use_index = std::distance(free_until_pos.begin(), max_use);
             
             if (current.use_locations.front() > *max_use) {
+                current.reg = RegAssignment::STACK_SLOT;
+                current.assign_index = stack_slot;
+                stack_slot++;
                 
-                // spill current
-                // split current before first use pos requiring register
+                // TODO split current before first use pos requiring register
             } else {
                 current.reg = RegAssignment::MACHINE_REG;
                 current.assign_index = max_use_index;
@@ -358,3 +377,7 @@ void Function::allocate_registers() {
 }
 
 };  // namespace IR
+
+TEST_CASE("LiveInterval operator==") {
+    CHECK(IR::LiveInterval{} == IR::LiveInterval{});    
+}

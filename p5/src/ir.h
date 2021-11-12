@@ -25,6 +25,8 @@ struct LiveInterval {
     std::vector<std::pair<size_t, size_t>> ranges;
     std::vector<size_t> use_locations;
 
+    size_t vreg_id{0};
+
     RegAssignment reg{RegAssignment::UNINIT};
     size_t assign_index{0};
     

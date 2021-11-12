@@ -17,6 +17,7 @@ set(ANTLR4_WITH_STATIC_CRT OFF)
 include(ExternalAntlr4Cpp)
 # add antrl4cpp artifacts to project environment
 include_directories(${ANTLR4_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # set variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
@@ -42,5 +43,7 @@ add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
             
 add_executable(regalloc_test src/test_regalloc.cpp src/regalloc.cpp)
+
+add_executable(test src/test_driver.cpp src/regalloc.cpp)
 
 target_link_libraries(mitscriptc antlr4_static)
