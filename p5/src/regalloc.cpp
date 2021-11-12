@@ -43,6 +43,11 @@ std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
         os << range->first << " " << range->second << ", ";
     }
     os << std::endl;
+    os << "use locations: ";
+    for (size_t loc : interval.use_locations) {
+        os << loc << ", ";
+    }
+    os << std::endl;
     switch (interval.reg) {
     case IR::RegAssignment::MACHINE_REG:
         os << "MACHINE_REG ";
@@ -61,7 +66,8 @@ std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
 auto LiveInterval::split_at(size_t pos) -> LiveInterval {
     LiveInterval result;
     result.vreg_id = this->vreg_id;
-    std::vector<std::pair<size_t, size_t>> remaining;
+    std::vector<std::pair<size_t, size_t>> remaining_ranges;
+    std::vector<size_t> remaining_use_loc;
 
     for (size_t rev_i = 0; rev_i < this->ranges.size(); ++rev_i) {
         size_t i = this->ranges.size() - rev_i - 1;
@@ -75,17 +81,27 @@ auto LiveInterval::split_at(size_t pos) -> LiveInterval {
         }
         // inside range
         if (this->ranges[i].first < pos && this->ranges[i].second >= pos) {
-            remaining.push_back({this->ranges[i].first, pos - 1});
+            remaining_ranges.push_back({this->ranges[i].first, pos - 1});
             for (size_t j = 0; j < i; ++j) {
                 result.ranges.push_back(this->ranges[j]);
             }
             result.ranges.push_back({pos, this->ranges[i].second});
             break;
         }
-        remaining.push_back(this->ranges[i]);
+        remaining_ranges.push_back(this->ranges[i]);
     }
-    std::reverse(remaining.begin(), remaining.end());
-    this->ranges = std::move(remaining);
+    
+    for (size_t use_loc : this->use_locations) {
+        if (use_loc < pos) {
+            remaining_use_loc.push_back(use_loc);
+        } else {
+            result.use_locations.push_back(use_loc);
+        }
+    }
+
+    std::reverse(remaining_ranges.begin(), remaining_ranges.end());
+    this->ranges = std::move(remaining_ranges);
+    this->use_locations = std::move(remaining_use_loc);
     return result;
 }
 
@@ -172,6 +188,16 @@ bool operator<(const LiveInterval& lhs, const LiveInterval& rhs) {
     return lhs.ranges.back().first < rhs.ranges.back().first;
 }
 
+bool operator>(const LiveInterval& lhs, const LiveInterval& rhs) {
+    if (lhs.ranges.empty()) {
+        return false;
+    }
+    if (rhs.ranges.empty()) {
+        return true;
+    }
+    return lhs.ranges.back().first > rhs.ranges.back().first;
+}
+
 bool operator==(const LiveInterval& lhs, const LiveInterval& rhs) {
     if (lhs.ranges.size() != rhs.ranges.size() || lhs.use_locations.size() != lhs.use_locations.size()) {
         return false;
@@ -232,6 +258,8 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
                 for (const auto& [id, reg] : phi.args) {
                     if (id == block_index && reg.type == Operand::VIRT_REG) {
                         live.insert(reg.index);
+                        // successor is loop header
+                        intervals[reg.index].use_locations.push_back(block_range[block_index].second);
                         break;
                     }
                 }
@@ -258,6 +286,7 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
             for (size_t arg_id = 0; arg_id < 3; ++arg_id) {
                 if (instr.args[arg_id].type == Operand::VIRT_REG) {
                     intervals[instr.args[arg_id].index].push_range({block_range[block_index].first, instr_id - 1});
+                    intervals[instr.args[arg_id].index].use_locations.push_back(instr_id - 1);
                     live.insert(instr.args[arg_id].index);
                 }
             }
@@ -277,6 +306,9 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
 
         block_live_regs[block_index] = std::move(live);
     }
+    for (auto& interval : intervals) {
+        std::sort(interval.use_locations.begin(), interval.use_locations.end());
+    }
     return intervals;
 }
 
@@ -295,7 +327,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     // step 3: execute linear scan algorithm
 
     auto all_intervals = this->compute_live_intervals();
-    std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::less<LiveInterval>> unhandled(
+    std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>> unhandled(
         std::make_move_iterator(all_intervals.begin()), std::make_move_iterator(all_intervals.end()));
 
     std::vector<LiveInterval> active;
@@ -338,8 +370,8 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         inactive = std::move(new_inactive);
 
         // try allocate register
-        // std::vector<size_t> free_until_pos;
-        std::array<size_t, MACHINE_REG_COUNT> free_until_pos = {std::numeric_limits<size_t>::max()};
+        std::array<size_t, MACHINE_REG_COUNT> free_until_pos;
+        free_until_pos.fill(std::numeric_limits<size_t>::max());
 
         for (const auto& interval : active) {
             assert(interval.reg != RegAssignment::UNINIT);
@@ -366,7 +398,8 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
             current.assign_index = max_free_index;
         } else {
             // register allocation failed
-            std::array<size_t, MACHINE_REG_COUNT> next_use_pos = {std::numeric_limits<size_t>::max()};
+            std::array<size_t, MACHINE_REG_COUNT> next_use_pos;
+            next_use_pos.fill(std::numeric_limits<size_t>::max());
             
             for (const auto& interval : active) {
                 assert(!interval.ranges.empty());

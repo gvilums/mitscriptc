@@ -5,7 +5,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-# compiler must be 11 or 14
 set(CMAKE_CXX_STANDARD 17)
 
 # required if linking to static library
@@ -18,7 +17,6 @@ include(ExternalAntlr4Cpp)
 # add antrl4cpp artifacts to project environment
 include_directories(${ANTLR4_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-# find_package(doctest REQUIRED)
 
 # set variable pointing to the antlr tool that supports C++
 # this is not required if the jar file can be found under PATH environment
@@ -38,6 +36,8 @@ antlr_target(SampleGrammarLexer MITScript.g LEXER
 include_directories(${ANTLR_SampleGrammarLexer_OUTPUT_DIR})
 # include_directories(${ANTLR_SampleGrammarParser_OUTPUT_DIR})
 
+set(CMAKE_BUILD_TYPE "Debug")
+
 # add generated grammar to demo binary target
 add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
@@ -46,7 +46,5 @@ add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
 add_executable(test_regalloc src/test_regalloc.cpp src/regalloc.cpp)
 
 add_executable(test test/doctest.cpp test/regalloc_test.cpp src/regalloc.cpp)
-# target_compile_features(test PRIVATE cxx_std_17)
-# target_link_libraries(test PRIVATE doctest::doctest)
 
 target_link_libraries(mitscriptc antlr4_static)

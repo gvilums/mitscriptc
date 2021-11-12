@@ -41,6 +41,7 @@ struct LiveInterval {
     size_t next_use_after(size_t pos) const;
     
     friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend bool operator>(const LiveInterval& lhs, const LiveInterval& rhs);
     friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
     friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
     friend ::std::hash<LiveInterval>;
