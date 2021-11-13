@@ -16,37 +16,23 @@ namespace IR {
     
 const size_t MACHINE_REG_COUNT = 2;
     
-enum class RegAssignment {
-    MACHINE_REG,
-    STACK_SLOT,
-    UNINIT,
-};
+// enum class RegAssignment {
+//     MACHINE_REG,
+//     STACK_SLOT,
+//     UNINIT,
+// };
 
-struct LiveInterval {
-    std::vector<std::pair<size_t, size_t>> ranges;
-    std::vector<size_t> use_locations;
 
-    size_t vreg_id{0};
-
-    RegAssignment reg{RegAssignment::UNINIT};
-    size_t assign_index{0};
-    bool split_off{false};
+// struct VregAssignment {
+//     size_t vreg_id{0};
+//     std::vector<std::pair<std::pair<RegAssignment, size_t>, std::pair<size_t, size_t>>> assignments;
     
-    void push_range(std::pair<size_t, size_t>);
-    void push_loop_range(std::pair<size_t, size_t>);
-
-    bool covers(size_t position) const;
-    auto next_intersection(const LiveInterval& other) const -> std::optional<size_t>;
-    LiveInterval split_at(size_t pos);
-    size_t next_alive_after(size_t pos) const;
-    size_t next_use_after(size_t pos) const;
+//     VregAssignment() = default;
+//     VregAssignment(std::vector<LiveInterval>);
     
-    friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
-    friend bool operator>(const LiveInterval& lhs, const LiveInterval& rhs);
-    friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
-    friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
-    friend ::std::hash<LiveInterval>;
-};
+//     auto assignment_at(size_t pos) const -> std::optional<std::pair<RegAssignment, size_t>>;
+//     auto begins_at(size_t pos) const -> bool;
+// };
 
 
 enum class Operation {
@@ -110,6 +96,32 @@ struct Operand {
     size_t index{0};
 };
 
+struct LiveInterval {
+    std::vector<std::pair<size_t, size_t>> ranges;
+    std::vector<size_t> use_locations;
+
+    size_t vreg_id{0};
+
+    RegAssignment reg{RegAssignment::UNINIT};
+    size_t assign_index{0};
+    bool split_off{false};
+    
+    void push_range(std::pair<size_t, size_t>);
+    void push_loop_range(std::pair<size_t, size_t>);
+
+    bool covers(size_t position) const;
+    auto next_intersection(const LiveInterval& other) const -> std::optional<size_t>;
+    LiveInterval split_at(size_t pos);
+    size_t next_alive_after(size_t pos) const;
+    size_t next_use_after(size_t pos) const;
+    
+    friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend bool operator>(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
+    friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
+    friend ::std::hash<LiveInterval>;
+};
+
 struct Instruction {
     Operation op;
     Operand out;
@@ -126,10 +138,11 @@ struct BasicBlock {
     std::deque<Instruction> instructions;
     std::vector<size_t> predecessors;
     std::vector<size_t> successors;
-    std::vector<std::pair<Operand, Operand>> resolution;
 
     bool is_loop_header;
     size_t final_loop_block;
+
+    std::vector<std::pair<Operand, Operand>> resolution;
 };
 
 struct Function {
@@ -139,8 +152,7 @@ struct Function {
     
     std::vector<Operand> clobbered_regs;
     
-    void set_fixed_machine_regs();
-    auto compute_live_intervals() -> std::vector<LiveInterval>;
+    auto compute_live_intervals(const std::vector<std::pair<size_t, size_t>>& block_ranges) -> std::vector<LiveInterval>;
     auto allocate_registers() -> std::vector<LiveInterval>;
 };
 

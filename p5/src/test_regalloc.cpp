@@ -80,16 +80,10 @@ int main() {
         6,
     };
 
-    auto res = test_fn.compute_live_intervals();
-    // debug_live_intervals(res);
-    for (auto& interval : res) {
-        std::cout << interval << std::endl;
-    }
-    
-    std::cout << "-----------" << std::endl;
-    std::cout << "after assignment" << std::endl << std::endl;
     
     auto assignments = test_fn.allocate_registers();
+    std::cout << "-----------" << std::endl;
+    std::cout << "after assignment" << std::endl << std::endl;
     for (auto& interval : assignments) {
         std::cout << interval << std::endl;
     }

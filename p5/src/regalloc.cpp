@@ -7,6 +7,8 @@
 #include <system_error>
 #include <unordered_set>
 #include <algorithm>
+#include <vector>
+// #include <compare>
 
 #include "AST.h"
 #include "ir.h"
@@ -215,26 +217,39 @@ bool operator==(const LiveInterval& lhs, const LiveInterval& rhs) {
     return true;
 }
 
-// should MUL and DIV be handled here?
-void Function::compute_blocked_machine_regs() {
-    for (BasicBlock& block : this->blocks) {
-        for (Instruction& instr : block.instructions) {
-            if (instr.op == Operation::LOAD_ARG) {
-                // convert LOAD_ARG to MOV
-            } else if (instr.op == Operation::SET_ARG) {
-            }
+VregAssignment::VregAssignment(std::vector<LiveInterval> intervals) {
+    assert(intervals.size() > 0);
+    for (auto& interval : intervals) {
+        std::pair<RegAssignment, size_t> current_assignment{interval.reg, interval.assign_index};
+        for (auto range : interval.ranges) {
+            this->assignments.push_back({current_assignment, range});
         }
     }
+    std::sort(this->assignments.begin(), this->assignments.end(), [](const auto& lhs, const auto& rhs) {
+        return lhs.second < rhs.second;
+    });
 }
 
-auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
-    std::vector<std::pair<size_t, size_t>> block_range;
-    size_t current_from = 0;
-    for (const BasicBlock& block : this->blocks) {
-        block_range.push_back({current_from, current_from + 2 * block.instructions.size() + 1});
-        current_from += 2 * block.instructions.size() + 2;
+auto VregAssignment::assignment_at(size_t pos) const -> std::optional<std::pair<RegAssignment, size_t>> {
+    // TODO binary search instead
+    for (const auto& [assign, range] : this->assignments) {
+        if (pos < range.first) {
+            return std::nullopt;
+        }
+        if (pos >= range.first && pos <= range.second) {
+            return assign;
+        }
     }
+    return std::nullopt;
+}
 
+auto VregAssignment::begins_at(size_t pos) const -> bool {
+    return this->assignments.front().second.first == pos;
+}
+
+auto Function::compute_live_intervals(
+    const std::vector<std::pair<size_t, size_t>>& block_range
+) -> std::vector<LiveInterval> {
     std::vector<LiveInterval> intervals;
     intervals.resize(this->virt_reg_count);
     for (size_t i = 0; i < intervals.size(); ++i) {
@@ -306,19 +321,125 @@ auto Function::compute_live_intervals() -> std::vector<LiveInterval> {
     }
     for (auto& interval : intervals) {
         std::sort(interval.use_locations.begin(), interval.use_locations.end());
+        std::cout << interval << std::endl;
     }
     return intervals;
 }
 
+auto try_alloc_reg(
+    LiveInterval& current,
+    std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>& unhandled,
+    std::vector<LiveInterval>& active,
+    std::vector<LiveInterval>& inactive
+) -> bool {
+    std::array<size_t, MACHINE_REG_COUNT> free_until_pos;
+    free_until_pos.fill(std::numeric_limits<size_t>::max());
+
+    for (const auto& interval : active) {
+        assert(interval.reg != RegAssignment::UNINIT);
+        free_until_pos[interval.assign_index] = 0;
+    }
+    
+    // TODO omit intersection test when possible
+    for (const auto& interval : inactive) {
+        if (auto intersection = current.next_intersection(interval)) {
+            assert(interval.reg != RegAssignment::UNINIT);
+            size_t& free_until = free_until_pos[interval.assign_index];
+            free_until = std::min(free_until, *intersection);
+        }
+    }
+    
+    size_t max_free = free_until_pos[0];
+    size_t max_free_index = 0;
+    for (size_t i = 0; i < free_until_pos.size(); ++i) {
+        if (free_until_pos[i] > max_free) {
+            max_free = free_until_pos[i];
+            max_free_index = i;
+        }
+    }
+    
+    // auto max_free = std::max_element(free_until_pos.begin(), free_until_pos.end());
+    // size_t max_free_index = std::distance(free_until_pos.begin(), max_free);
+    if (max_free > 0) {
+        // register allocation succeeded
+        if (current.ranges[0].second >= max_free) {
+            unhandled.push(current.split_at(max_free));
+        }
+        current.reg = RegAssignment::MACHINE_REG;
+        current.assign_index = max_free_index;
+        return true;
+    }
+    return false;
+}
+
+void alloc_blocked_reg(
+    LiveInterval& current,
+    const size_t& position,
+    std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>& unhandled,
+    std::vector<LiveInterval>& active,
+    std::vector<LiveInterval>& inactive,
+    size_t& stack_slot
+) {
+    std::array<size_t, MACHINE_REG_COUNT> next_use_pos;
+    next_use_pos.fill(std::numeric_limits<size_t>::max());
+    
+    for (const auto& interval : active) {
+        assert(!interval.ranges.empty());
+        assert(interval.reg != RegAssignment::UNINIT);
+        next_use_pos[interval.assign_index] = interval.next_use_after(current.ranges.back().first);
+    }
+    
+    // TODO omit intersection test when possible
+    for (const auto& interval : inactive) {
+        assert(!interval.ranges.empty());
+        if (auto intersection = current.next_intersection(interval)) {
+            assert(interval.reg != RegAssignment::UNINIT);
+            size_t& next_use = next_use_pos[interval.assign_index];
+            next_use = std::min(next_use, *intersection);
+        }
+    }
+    
+    auto max_use = std::max_element(next_use_pos.begin(), next_use_pos.end());
+    size_t max_use_index = std::distance(next_use_pos.begin(), max_use);
+    
+    if (current.use_locations.front() > *max_use) {
+        current.reg = RegAssignment::STACK_SLOT;
+        current.assign_index = stack_slot;
+        stack_slot++;
+        
+        // TODO split current before first use pos requiring register
+    } else {
+        current.reg = RegAssignment::MACHINE_REG;
+        current.assign_index = max_use_index;
+        for (auto& interval : active) {
+            if (interval.reg == current.reg) {
+                unhandled.push(interval.split_at(position));
+                break;
+            }
+        }
+        for (auto& interval : inactive) {
+            if (interval.reg == current.reg) {
+                unhandled.push(interval.split_at(interval.next_alive_after(position)));
+            }
+        }
+    }
+    // TODO intersection check with fixed interval
+}
 
 auto Function::allocate_registers() -> std::vector<LiveInterval> {
-    // step 1: set fixed registers, generate moves around mul/div
-    // step 2: compute live intervals
-    // step 3: execute linear scan algorithm
+    // compute live intervals
+    std::vector<std::pair<size_t, size_t>> block_range;
+    size_t current_from = 0;
+    for (const BasicBlock& block : this->blocks) {
+        block_range.push_back({current_from, current_from + 2 * block.instructions.size() + 1});
+        current_from += 2 * block.instructions.size() + 2;
+    }
 
-    auto all_intervals = this->compute_live_intervals();
+    auto intervals = this->compute_live_intervals(block_range);
+
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>> unhandled(
-        std::make_move_iterator(all_intervals.begin()), std::make_move_iterator(all_intervals.end()));
+        std::make_move_iterator(intervals.begin()), std::make_move_iterator(intervals.end()));
+
 
     std::vector<LiveInterval> active;
     std::vector<LiveInterval> inactive;
@@ -360,80 +481,9 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         inactive = std::move(new_inactive);
 
         // try allocate register
-        std::array<size_t, MACHINE_REG_COUNT> free_until_pos;
-        free_until_pos.fill(std::numeric_limits<size_t>::max());
-
-        for (const auto& interval : active) {
-            assert(interval.reg != RegAssignment::UNINIT);
-            free_until_pos[interval.assign_index] = 0;
-        }
-        
-        // TODO omit intersection test when possible
-        for (const auto& interval : inactive) {
-            if (auto intersection = current.next_intersection(interval)) {
-                assert(interval.reg != RegAssignment::UNINIT);
-                size_t& free_until = free_until_pos[interval.assign_index];
-                free_until = std::min(free_until, *intersection);
-            }
-        }
-        
-        auto max_free = std::max_element(free_until_pos.begin(), free_until_pos.end());
-        size_t max_free_index = std::distance(free_until_pos.begin(), max_free);
-        
-        if (*max_free > 0) {
-            // register allocation succeeded
-            if (current.ranges[0].second >= *max_free) {
-                unhandled.push(current.split_at(*max_free));
-            }
-            current.reg = RegAssignment::MACHINE_REG;
-            current.assign_index = max_free_index;
-        } else {
-            // register allocation failed
-            std::array<size_t, MACHINE_REG_COUNT> next_use_pos;
-            next_use_pos.fill(std::numeric_limits<size_t>::max());
-            
-            for (const auto& interval : active) {
-                assert(!interval.ranges.empty());
-                assert(interval.reg != RegAssignment::UNINIT);
-                next_use_pos[interval.assign_index] = interval.next_use_after(current.ranges.back().first);
-            }
-            
-            // TODO omit intersection test when possible
-            for (const auto& interval : inactive) {
-                assert(!interval.ranges.empty());
-                if (auto intersection = current.next_intersection(interval)) {
-                    assert(interval.reg != RegAssignment::UNINIT);
-                    size_t& next_use = next_use_pos[interval.assign_index];
-                    next_use = std::min(next_use, *intersection);
-                }
-            }
-            
-            auto max_use = std::max_element(next_use_pos.begin(), next_use_pos.end());
-            size_t max_use_index = std::distance(next_use_pos.begin(), max_use);
-            
-            if (current.use_locations.front() > *max_use) {
-                current.reg = RegAssignment::STACK_SLOT;
-                current.assign_index = stack_slot;
-                stack_slot++;
-                
-                // TODO split current before first use pos requiring register
-            } else {
-                current.reg = RegAssignment::MACHINE_REG;
-                current.assign_index = max_use_index;
-                for (auto& interval : active) {
-                    if (interval.reg == current.reg) {
-                        unhandled.push(interval.split_at(position));
-                        break;
-                    }
-                }
-                for (auto& interval : inactive) {
-                    if (interval.reg == current.reg) {
-                        unhandled.push(interval.split_at(interval.next_alive_after(position)));
-                    }
-                }
-                
-                // TODO intersection check with fixed interval
-            }
+        if (!try_alloc_reg(current, unhandled, active, inactive)) {
+            alloc_blocked_reg(current, position, unhandled, active, inactive, stack_slot);
+            // TODO check intersection with fixed registers
         }
         
         if (current.reg == RegAssignment::MACHINE_REG) {
@@ -451,16 +501,58 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     handled.insert(handled.end(), 
         std::make_move_iterator(inactive.begin()), std::make_move_iterator(inactive.end()));
     
-    std::sort(handled.begin(), handled.end());
+
+    // group intervals by vreg_id
+    // std::vector<std::vector<LiveInterval>> vreg_interval_groups;
+    // vreg_interval_groups.resize(this->virt_reg_count);
+    // for (LiveInterval& interval : handled) {
+    //     vreg_interval_groups[interval.vreg_id].push_back(std::move(interval));
+    // }
     
+    // std::vector<VregAssignment> vreg_assignments;
+    // for (auto& group : vreg_interval_groups) {
+    //     vreg_assignments.emplace_back(std::move(group));
+    // }
+
     
     // resolution phase
-    for (const BasicBlock& block : this->blocks) {
-        std::vector<std::pair<Operand, Operand>> mapping;
-        for (const LiveInterval& interval : TODO) {
-
-        }
-    }
+    // for (size_t j = 0; j < this->blocks.size(); ++j) {
+    //     for (size_t i : this->blocks[j].successors) {
+    //         std::vector<std::pair<Operand, Operand>> mapping;
+    //         for (const VregAssignment& vregas : vreg_assignments) {
+    //             if (auto location = vregas.assignment_at(block_range[i].first)) {
+    //                 Operand move_from;
+    //                 if (vregas.begins_at(block_range[i].first)) {
+    //                     Operand defining_op;
+    //                     for (const auto& phi : this->blocks[i].phi_nodes) {
+    //                         for (const auto& [block_index, operand] : phi.args) {
+    //                             if (block_index == i) {
+    //                                 defining_op = operand;
+    //                                 break;
+    //                             }
+    //                         }
+    //                     }
+    //                     assert(defining_op.type != Operand::NONE);
+    //                     if (defining_op.type == Operand::VIRT_REG) {
+    //                         if (auto assignment = vreg_assignments[defining_op.index].assignment_at(block_range[j].second)) {
+    //                              move_from = *assignment;
+    //                         } else {
+    //                             assert(false);
+    //                         }
+    //                     } else if (defining_op.type == Operand::IMMEDIATE) {
+    //                         move_from = defining_op;
+    //                     }
+    //                 } else {
+    //                     move_from = vregas.assignment_at(block_range[j].second).value();
+    //                 }
+    //                 Operand move_to = vregas.assignment_at(block_range[i].first).value();
+    //                 if (move_from != move_to) {
+    //                     mapping.push_back({move_from, move_to});
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     return handled;
 }
