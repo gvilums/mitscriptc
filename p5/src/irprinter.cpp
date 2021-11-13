@@ -69,8 +69,24 @@ std::ostream& operator<<(std::ostream& os, const IR::Instruction& ins){
 }
 
 std::ostream& operator<<(std::ostream& os, const IR::BasicBlock& bb){
+	os << "\t\t\t\tPhi Nodes: " << std::endl;
+	for (auto pn : bb.phi_nodes) {
+		os << "\t\t\t\t\t" << pn.out << " ";
+		for (auto opr : pn.args)
+			os << "(" << opr.first << ", " << opr.second << ")";
+		os << std::endl;
+	}
+	
 	for (auto ins : bb.instructions)
 		os << "\t\t\t\t" << ins << std::endl;
+	os << "\t\t\t\tsuccessors: ";
+	for (auto idx : bb.successors)
+		os << idx << " ";
+	os << std::endl;
+	os << "\t\t\t\tpredecessors: ";
+	for (auto idx : bb.predecessors)
+		os << idx << " ";
+	os << std::endl;
 	return os;
 }
 

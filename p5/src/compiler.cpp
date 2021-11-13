@@ -7,6 +7,7 @@
 #include "antlr4-runtime.h"
 #include "compiler.h"
 #include "parsercode.h"
+#include "irprinter.h"
 
 
 auto main(int argc, const char* argv[]) -> int {
@@ -39,7 +40,7 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
     
-    // std::cout << *prog << std::endl;
+    std::cout << *prog << std::endl;
     
     delete program;
     return 0;
