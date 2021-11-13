@@ -167,10 +167,20 @@ struct Function {
     void resolve_moves();
 };
 
+class BasePass;
+
 struct Program {
     std::vector<Function> functions;
     std::vector<Value> immediates;
     int num_globals;
+    
+    void apply_pass(BasePass& pass);
+};
+
+class BasePass {
+   public:
+    virtual void apply_to(Program& program) = 0;
+    virtual ~BasePass() {};
 };
 
 };  // namespace IR

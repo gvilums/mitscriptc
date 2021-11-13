@@ -11,6 +11,7 @@
 // #include <compare>
 
 #include "ir.h"
+#include "regalloc.h"
 
 namespace std {
 template <>
@@ -273,8 +274,8 @@ std::array<MachineRegs, 9> caller_save_regs{
 
 auto Function::compute_machine_assignments(
     const vector<pair<size_t, size_t>>& block_range
-) -> vector<vector<pair<size_t, size_t>>> {
-    vector<vector<pair<size_t, size_t>>> machine_intervals;
+) -> vector<LiveInterval> {
+    vector<LiveInterval> machine_intervals;
     machine_intervals.resize(MACHINE_REG_COUNT);
 
     for (size_t i = 0; i < this->blocks.size(); ++i) {
@@ -630,6 +631,11 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     // instruction rewriting
 
     return handled;
+}
+
+
+void RegallocPass::apply_to(Program& prog) {
+
 }
 
 };  // namespace IR

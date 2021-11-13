@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "ir.h"
+#include "regalloc.h"
 
 int main() {
     using namespace IR;
@@ -81,6 +82,10 @@ int main() {
     };
 
     test_fn.allocate_registers();
+    
+    // Program prog{{test_fn}, {}, 0};
+    // RegallocPass regalloc;
+    // prog.apply_pass(regalloc);
 
     return 0;
 }
