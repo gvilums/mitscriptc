@@ -80,13 +80,7 @@ int main() {
         6,
     };
 
-    
-    auto assignments = test_fn.allocate_registers();
-    std::cout << "-----------" << std::endl;
-    std::cout << "after assignment" << std::endl << std::endl;
-    for (auto& interval : assignments) {
-        std::cout << interval << std::endl;
-    }
+    test_fn.allocate_registers();
 
     return 0;
 }
