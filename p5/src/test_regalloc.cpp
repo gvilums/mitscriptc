@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "ir.h"
+#include "regalloc.h"
 
 int main() {
     using namespace IR;
@@ -80,19 +81,11 @@ int main() {
         6,
     };
 
-    auto res = test_fn.compute_live_intervals();
-    // debug_live_intervals(res);
-    for (auto& interval : res) {
-        std::cout << interval << std::endl;
-    }
+    test_fn.allocate_registers();
     
-    std::cout << "-----------" << std::endl;
-    std::cout << "after assignment" << std::endl << std::endl;
-    
-    auto assignments = test_fn.allocate_registers();
-    for (auto& interval : assignments) {
-        std::cout << interval << std::endl;
-    }
+    // Program prog{{test_fn}, {}, 0};
+    // RegallocPass regalloc;
+    // prog.apply_pass(regalloc);
 
     return 0;
 }

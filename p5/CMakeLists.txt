@@ -1,11 +1,11 @@
 # minimum required CMAKE version
-CMAKE_MINIMUM_REQUIRED(VERSION 3.7 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.7 FATAL_ERROR)
 project(mitscript LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 # required if linking to static library
 add_definitions(-DANTLR4CPP_STATIC)
@@ -43,7 +43,7 @@ add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
             
-add_executable(test_regalloc src/test_regalloc.cpp src/regalloc.cpp)
+add_executable(test_regalloc src/test_regalloc.cpp src/regalloc.cpp src/ir.cpp)
 
 add_executable(test test/doctest.cpp test/regalloc_test.cpp src/regalloc.cpp)
 

@@ -1,6 +1,8 @@
-#include "ir.h"
+#pragma once
 
 #include <iostream>
+
+#include "ir.h"
 
 std::ostream& operator<<(std::ostream& os, const IR::Operand& opr);
 std::ostream& operator<<(std::ostream& os, const IR::Operation& op);
