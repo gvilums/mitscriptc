@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <deque>
 
 #include "allocator.h"
 #include "value.h"
@@ -101,25 +102,39 @@ struct LiveInterval {
     std::vector<std::pair<size_t, size_t>> ranges;
     std::vector<size_t> use_locations;
 
-    size_t vreg_id{0};
+    size_t reg_id{0};
 
     Operand op{};
     bool split_off{false};
-
-    void push_range(std::pair<size_t, size_t>);
-    void push_loop_range(std::pair<size_t, size_t>);
+    
+    size_t end_pos() const;
+    size_t start_pos() const;
 
     bool covers(size_t position) const;
     auto next_intersection(const LiveInterval& other) const -> std::optional<size_t>;
     LiveInterval split_at(size_t pos);
     size_t next_alive_after(size_t pos) const;
     size_t next_use_after(size_t pos) const;
+    size_t first_use() const;
+    bool empty() const;
 
     friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
     friend bool operator>(const LiveInterval& lhs, const LiveInterval& rhs);
     friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
     friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
     friend ::std::hash<LiveInterval>;
+};
+
+struct IntervalBuilder {
+    std::vector<std::pair<size_t, size_t>> ranges;
+    std::vector<size_t> use_locations;
+    size_t reg_id{0};
+    
+    void push_range(std::pair<size_t, size_t> range);
+    void push_use(size_t pos);
+    void shorten_last(size_t new_begin);
+    
+    auto finish() -> LiveInterval;
 };
 
 struct IntervalGroup {
@@ -161,7 +176,7 @@ struct Function {
 
     auto compute_machine_assignments(
         const std::vector<std::pair<size_t, size_t>>& block_range
-    ) -> std::vector<std::vector<std::pair<size_t, size_t>>>;
+    ) -> std::vector<LiveInterval>;
     auto compute_live_intervals(const std::vector<std::pair<size_t, size_t>>& block_ranges) -> std::vector<LiveInterval>;
     auto allocate_registers() -> std::vector<LiveInterval>;
     void resolve_moves();
