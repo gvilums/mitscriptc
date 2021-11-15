@@ -1,0 +1,34 @@
+print_a = fun () {
+  // these types of comments work too.
+  print("a");
+};
+
+print_or_a = fun (something) {
+  if (!(something == None)) {
+    print(something);
+  } else {
+    // ok, fine
+    print_a();
+  }
+};
+
+print_astonished = fun () {
+  print("!@#$%%^&&*()~`");
+  //print("\n\n\n\n\t\t\t\t\"\"\"\\\\\\");
+};
+
+lut = {
+    hello: "world";
+    how_many: "licks does it take?";
+    to_get_to: "the center of a tootsie pop?";
+};
+
+print_lut = fun (param) {
+    print(lut[param]);
+};
+
+print_a();
+print_astonished();
+print_or_a("Hi!");
+print_or_a(None);
+print_lut("to_get_to");

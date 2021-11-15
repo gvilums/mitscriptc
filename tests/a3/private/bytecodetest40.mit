@@ -1,0 +1,71 @@
+Array = fun() {
+    this = {
+        get: fun(index) {
+            return this.array["_" + index];
+        };
+        
+        set: fun(index, value) {
+            this.array["_" + index] = value;
+            if(index > this.arraySize - 1) {
+                this.arraySize = index + 1; 
+            }
+        };
+        
+        append: fun(value) {
+            this.array["_" + this.arraySize] = value;
+            this.arraySize = this.arraySize + 1;
+        };
+        
+        size: fun() {
+            return this.arraySize;
+        };
+        
+        array: {};
+        arraySize: 0;
+    };
+    
+    return this;
+};
+
+Map = fun() {
+    this = {
+        get: fun(key) {
+            i = 0;
+            while(i < this.mapSize) {
+                if(this.map["_" + i].key == key) {
+                    return this.map["_" + i].value;
+                }
+                i = i + 1;
+            }
+        };
+        
+        put: fun(key, value) {
+            i = 0;
+            while(i < this.mapSize) {
+                if(this.map["_" + i].key == key) {
+                    this.map["_" + i].value = value;
+                    return None;
+                }
+                i = i + 1;
+            }
+            
+            keyVal = {
+                key: key;
+                value: value;
+            };
+            
+            this.map["_" + this.mapSize] = keyVal;
+            this.mapSize = this.mapSize + 1;
+            return None;
+        };
+        
+        size: fun() {
+            return this.mapSize;
+        };
+        
+        map: {};
+        mapSize: 0;
+    };
+    
+    return this;
+};

@@ -1,0 +1,98 @@
+x = 5;
+foo = fun(a, s, df) {
+    print(a);
+    print(s);
+    print(df);
+    print(x);
+    x = 3;
+    print(x);
+    foo2 = fun() {
+        print(x);
+        foo3 = fun(x) {
+            print(x);
+            foo4 = fun() {
+                print(x);
+                x = 9;
+                while (false) {
+                    global x;
+                }
+                foo5 = fun() {
+                    print(x + 1);
+                    if (false) {
+                        foo6 = fun() {};
+                    }
+                    return foo6;
+                };
+                return foo5;
+            };
+            return foo4;
+        };
+        return foo3;
+    };
+    x = 4;
+    return foo2;
+};
+a = foo;
+a = a(1, 2, 3);
+a = a();
+a = a(a);
+a();
+a = a();
+print(a());
+print(a == foo);
+x = -1;
+a();
+
+bar = fun() {
+    print(x);
+    return None;
+    x = 3;
+};
+bar();
+bar = fun() {
+    print(x);
+    if (false) {
+        x = 3;
+    }
+};
+bar();
+bar();
+
+print("frame");
+oldfun = None;
+fgen = fun(x) {
+    global oldfun;
+    newfun = fun() {
+        print(x);
+    };
+    newfun();
+    print(newfun == oldfun);
+    oldfun = newfun;
+    return newfun;
+};
+a = fgen(0);
+b = fgen(0);
+fgen(0);
+c = fgen(1);
+a();
+b();
+c();
+
+print("while");
+
+oldfun = None;
+i = 0;
+rec = {};
+while (i < 3) {
+    newfun = fun() {
+        print(i);
+    };
+    newfun();
+    //print(newfun == oldfun);
+    oldfun = newfun;
+    rec[i] = newfun;
+    i = i + 1;
+}
+rec[0]();
+rec[1]();
+rec[2]();

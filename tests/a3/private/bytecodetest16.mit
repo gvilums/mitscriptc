@@ -1,0 +1,10 @@
+x = 1;
+f = fun() {
+    global x;
+    x = 2;
+};
+g = fun(x) {
+    x();
+};
+g(f);
+print(x);

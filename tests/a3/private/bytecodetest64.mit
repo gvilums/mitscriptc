@@ -1,0 +1,88 @@
+x = (5 == "5");
+if (x) {
+    print("x is true");
+} else {
+    print("x is false");
+}
+print(5 == intcast("5"));
+
+if (!x) {
+    print("x is still false");
+}
+
+while (x) {
+    print("Loop!");
+}
+
+i = 0;
+while (!x) {
+    print("Loop " + i);
+    x = i >= 5;
+    i = i + 1;
+}
+
+arr = {};
+i = 0;
+while (i < 4) {
+    arr[i] = "value " + i;
+    i = i + 1;
+}
+print(arr);
+arr["1"] = "foo";
+print(arr);
+print(arr.cat);
+print(arr[2]);
+print(arr[5]);
+
+rec = { foo: "bar"; cat: "dog"; };
+print(rec);
+print(rec.cat);
+rec.cat = rec.cat + " cat";
+print(rec.cat);
+print(1 + 2 * 3);
+print("cat" + 1 + 2 * 3 + None + print + true + false);
+print(input);
+x = (1 + (1 + (2 * 3)) + 5 / 6 + 4 / 2 - (((9 * 10))));
+print(x);
+print(5 > 5);
+print(5 > 4);
+print("foo" == "bar");
+print(print == input);
+print("hi" + print == "hi" + input);
+rec = { foo: "bar"; cat: "dog"; };
+rec0 = { foo: "bar"; cat: "dog"; };
+print(rec == rec0);
+rec2 = rec;
+print(rec == rec2);
+rec.foo = "foobar";
+print(rec);
+print(rec2);
+print(rec==rec2);
+x = 1;
+y = x;
+x = 2;
+print(y);
+print(1+2==3);
+print("foo" + "bar" == "foobar");
+print("5" == 5);
+print("5" + 5 == "5" + "5");
+print(None);
+print(true & false);
+print(true & true);
+print(false & false);
+print(false | true);
+print(true | true);
+print(false | false);
+print(5 - 8 == -3);
+
+global k;
+
+print(1 + "2");
+print("1" + 2);
+print(1 + "2" == "1" + 2);
+
+return 0;
+
+print("Done!");
+
+

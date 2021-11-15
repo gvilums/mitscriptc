@@ -1,0 +1,13 @@
+x = 1 + 1;
+y = "foo" + "bar";
+
+f = fun() {
+  return 1;
+};
+
+z = f();
+
+a = z - x;
+
+print(x);
+print(y);

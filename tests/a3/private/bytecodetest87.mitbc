@@ -1,0 +1,137 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions =
+			[
+				function
+				{
+					functions = [],
+					constants = [2],
+					parameter_count = 1,
+					local_vars = [z],
+					local_ref_vars = [],
+					free_vars = [x],
+					names = [j],
+					instructions = 
+					[
+						push_ref	0
+						load_ref
+						load_local	0
+						add
+						store_global	0
+						load_const	0
+						load_global	0
+						mul
+						return
+					]
+				}
+			],
+			constants = [None, 4],
+			parameter_count = 2,
+			local_vars = [x, y, g],
+			local_ref_vars = [x],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+				load_const	0
+				store_local	2
+				load_func	0
+				push_ref	0
+				alloc_closure	1
+				store_local	2
+				load_local	2
+				load_const	1
+				call	1
+				load_local	1
+				add
+				return
+			]
+		}
+	],
+	constants = [0, 1000, 1],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [i, j, f, print, input, intcast],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	3
+		load_func	1
+		alloc_closure	0
+		store_global	4
+		load_func	2
+		alloc_closure	0
+		store_global	5
+		load_const	0
+		store_global	0
+		load_const	0
+		store_global	1
+		load_func	3
+		alloc_closure	0
+		store_global	2
+		load_global	0
+		load_const	1
+		swap
+		gt
+		not
+		if	13
+		load_global	3
+		load_global	2
+		load_global	0
+		load_global	0
+		call	2
+		call	1
+		pop
+		load_global	0
+		load_const	2
+		add
+		store_global	0
+		goto	-17
+	]
+}

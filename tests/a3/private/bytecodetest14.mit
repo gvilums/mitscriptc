@@ -1,0 +1,73 @@
+oldprint = print;
+print = fun(testName, result) {
+    resultstr = None;
+    if(result) {
+        resultstr = "passed";
+    } else {
+        resultstr = "failed";
+    }
+    oldprint(testName + " " + resultstr);
+};
+
+intcastTest = fun() {
+    y = "7";
+    z = "7";
+    z = intcast(y) + intcast(z);
+    if(!(z == 14)) {
+        return false;
+    } else {
+        return true;
+    }
+};
+
+inputTest = fun() {
+    oldprint("Please type hello:");
+    inp = "hello";
+    return inp == "hello";
+};
+
+y = 20;
+
+nestedFuncTest = fun() {
+    x = 5;
+    z = 9;
+    func1 = fun(x, y) {
+        return x + y + z; 
+        global y;
+    };
+    
+    return func1(6, 7) == y + z + 6 & func1(6, 7) == 20 + 9 + 6;        
+};
+
+deleteFuns = fun() {
+    global intcastTest;
+    global inputTest;
+    global nestedFuncTest;
+    funcs = {intcastTest: intcastTest; inputTest: inputTest; nestedFuncTest: nestedFuncTest;};
+    intcastTest = None;
+    inputTest = None;
+    nestedFuncTest = None;
+    return funcs;
+};
+
+recordPreservationTest = fun() {
+    funs = deleteFuns();
+    if(!(intcastTest == None & inputTest == None & nestedFuncTest == None)) {
+        return false;
+    } else {
+        return funs.intcastTest() & funs.inputTest() & funs.nestedFuncTest();
+    }
+};
+
+tests = {
+    intcast: intcastTest();
+    input: inputTest();
+    nestedFuncTest: nestedFuncTest();
+    recordPreservationTest: recordPreservationTest();
+};
+print("intcastTest", tests["intcast"]); 
+print("inputTest", tests["input"]);
+print("nestedFuncTest", tests["nestedFuncTest"]);
+print("recordPreservationTest", tests["recordPreservationTest"]);
+print("all tests", tests["recordPreservationTest"] & tests["nestedFuncTest"] & tests["input"] & tests["intcast"]);
+

@@ -1,0 +1,41 @@
+calls = 0;
+hi = fun(x, y) {
+    global calls;
+    out = x + calls;
+    print(out);
+    calls = calls + 1;
+    return(out);
+    print("lol");
+    return(1/0);
+};
+
+hi(hi(hi("5", 1), hi("6", 1)), "3");
+
+//rec = {dog: hi("a", 1); cat: hi("b", 2); dog: hi("c", 3);};
+//print(rec);
+
+oldprint = print;
+print = fun(x) {
+    oldprint("darn");
+    oldprint(x);
+};
+print("test");
+print("test");
+print("test");
+hi("foo", 0);
+
+i = 0;
+while(i < 999) {
+    i = i + 1;
+}
+z = 0;
+foo = fun() {
+    while(z < 10) {
+        return 0;
+        print("oops");
+    }
+};
+foo();
+foorec = {x: 0; a: 3;};
+print(foorec["x"]);
+print("ok");

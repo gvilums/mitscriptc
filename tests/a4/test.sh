@@ -2,8 +2,6 @@
 INTERPRETER=$1
 TIMEOUT=300
 
-# Usage: ./cpptest.sh <path to interpreter>
-
 run_gc_tests(){
     TOTAL=0
     COUNT=0
@@ -36,5 +34,41 @@ run_gc_tests(){
     echo "Passed $COUNT out of $TOTAL gc tests"
 }
 
+run_mem_tests(){
+    TOTAL=0
+    COUNT=0
+
+    run_and_parse_mem() {
+        echo "RUNNING $1"
+        TOTAL=$((TOTAL+1))
+
+        LIMIT="$((($2 + 5) * 1000))"
+        PREFIX="private/$1"
+				rm -f tmp.out
+        USAGE=$(timeout $TIMEOUT /usr/bin/time -v $INTERPRETER -mem $2 -s $PREFIX.mit < $PREFIX.input 2>&1 > tmp.out | grep Max | awk '{print $6}')
+        if diff tmp.out $PREFIX.mit.out; then
+            if [[ $USAGE -gt $LIMIT ]]; then
+                echo "Fail: $1 ($USAGE > $LIMIT)"
+            else
+                echo "Pass: $1 ($USAGE < $LIMIT)"
+                COUNT=$((COUNT+1))
+            fi
+        else
+            echo "Fail: $1 ($USAGE < $LIMIT)"
+        fi
+				rm -f tmp.out
+    }
+
+    run_and_parse_mem refcollect 4
+    run_and_parse_mem textproc 4
+    run_and_parse_mem treeproc 4
+    run_and_parse_mem bignum 40
+    run_and_parse_mem carsim 4
+
+    echo "Passed $COUNT out of $TOTAL mem tests"
+}
+
 run_gc_tests public
+run_gc_tests private
+run_mem_tests
 echo "Done"

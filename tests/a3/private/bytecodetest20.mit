@@ -1,0 +1,42 @@
+tail = {};
+Cons = fun(tail, start, end) {
+    head = tail;
+    i = start;
+    while (i < end) {
+        head = {
+            item: i;
+            tail: head;
+        };
+        head.self = head;
+        i = i + 1;
+    }
+    return head;
+};
+print("defined");
+head = Cons(tail, 0, 2000);
+i = 0;
+while (i < 100) {
+    j = 0;
+    while (j < 1000) {
+        if (head.item < head.tail.item) {
+            print("oops");
+        }
+        head = head.tail;
+        j = j + 1;
+    }
+    head = Cons(head, 1000, 2000);
+    i = i + 1;
+}
+print("made");
+i = 1999;
+while (!(head.tail == tail)) {
+    if (!(head.item == i)) {
+        print("oops");
+    }
+    if (i < 0) {
+        print("oops");
+    }
+    head = head.tail;
+    i = i - 1;
+}
+print("done");

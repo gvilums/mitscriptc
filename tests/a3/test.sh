@@ -58,15 +58,15 @@ echo "Done" >> $RESULTS
 run_both_tests $COMPILER $INTERPRETER a2 public
 echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a2 public" >> $RESULTS
 echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a2 public"
-# run_both_tests $COMPILER $INTERPRETER a2 private
-# echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a2 private" >> $RESULTS
-# echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a2 private"
+run_both_tests $COMPILER $INTERPRETER a2 private
+echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a2 private" >> $RESULTS
+echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a2 private"
 run_both_tests $COMPILER $INTERPRETER a3 public/mit
 echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a3 public" >> $RESULTS
 echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a3 public"
-# run_both_tests $COMPILER $INTERPRETER a3 private
-# echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a3 private" >> $RESULTS
-# echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a3 private"
+run_both_tests $COMPILER $INTERPRETER a3 private
+echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a3 private" >> $RESULTS
+echo "Passed $COUNT out of $TOTAL tests when testing compiler and interpreter separately on a3 private"
 
 
 run_interp_tests(){
@@ -105,12 +105,12 @@ echo "Done" >> $RESULTS
 
 run_interp_tests a2 public
 echo "Passed $COUNT out of $TOTAL tests when testing just interpreter on public a2"
-# run_interp_tests a2 private
-# echo "Passed $COUNT out of $TOTAL tests when testing just interpreter on private a2"
+run_interp_tests a2 private
+echo "Passed $COUNT out of $TOTAL tests when testing just interpreter on private a2"
 run_interp_tests a3 public/mit
 echo "Passed $COUNT out of $TOTAL tests when testing just interpreter on public a3"
-# run_interp_tests a3 private
-# echo "Passed $COUNT out of $TOTAL tests when testing just interpreter on private a3"
+run_interp_tests a3 private
+echo "Passed $COUNT out of $TOTAL tests when testing just interpreter on private a3"
 
 
 run_bad_tests(){
@@ -138,6 +138,6 @@ echo "Done" >> $RESULTS
 
 run_bad_tests public/mitbc
 echo "Passed $COUNT out of $TOTAL public bad bytecode tests"
-# run_bad_tests private/badbytecode
-# echo "Passed $COUNT out of $TOTAL private bad bytecode tests"
+run_bad_tests private/badbytecode
+echo "Passed $COUNT out of $TOTAL private bad bytecode tests"
 

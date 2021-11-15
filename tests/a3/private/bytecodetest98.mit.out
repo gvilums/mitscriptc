@@ -1,0 +1,3 @@
+Hello
+OUTPUT: Hello
+IllegalArithmeticException: Division by zero

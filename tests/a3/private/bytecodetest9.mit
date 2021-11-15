@@ -1,0 +1,53 @@
+mathLib = {
+    plus: fun(left, right) {
+        return left + right;
+    };
+
+    subtract: fun(left, right) {
+        return left - right;
+    };
+
+    multiply: fun(left, right) {
+        return left * right;
+    };
+
+    divide: fun(left, right) {
+        return left / right;
+    };
+
+    subRec: {
+        testGlobals: fun(x) {
+	        global x;
+            return x;
+	    };
+    };
+};
+
+print(mathLib);
+
+doLoop = fun(end) {
+    x = 5;
+    c = 17;
+    y = x + c;
+    while(y > end) {
+        print(y);
+        y = y - 1;
+    }
+
+    return y;
+};
+
+myEnd = 4;
+result = doLoop(myEnd);
+if(!(result == myEnd) & mathLib.divide(10, 5) == 10 / 5 & mathLib.multiply(100, 50) == 50 * 100) {
+    print("Function failed, " + result + " != " + myEnd);
+} else {
+    print("All is well :D");
+}
+
+print(mathLib.plus(7, 8) == 15);
+print(mathLib.subtract(2, 7) == -5);
+
+x = 27;
+print(mathLib.subRec["testGlobals"](doLoop(-x - 20)));
+

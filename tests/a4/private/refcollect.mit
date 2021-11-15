@@ -1,0 +1,29 @@
+parent = fun() {
+    x = 10;
+    child = fun() {
+        print(x);
+    };
+    return child;
+};
+
+q = parent();
+q();
+
+f = fun() {};
+n = 0;
+k = 100000;
+
+// force a collection, eventually
+print("forcing collection");
+while (n < k) {
+    f();
+    z = {};
+    z.f = z;
+    z.n = n;
+    q();
+    n = z.n + 1;
+}
+print("done");
+print(k == n);
+
+q();

@@ -1,0 +1,97 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		}
+	],
+	constants = [100000, 0, 1, "Garbage collector bench2.mit"],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [i, x, y, v, t, print, input, intcast],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	5
+		load_func	1
+		alloc_closure	0
+		store_global	6
+		load_func	2
+		alloc_closure	0
+		store_global	7
+		load_const	0
+		store_global	0
+		load_global	0
+		load_const	1
+		gt
+		not
+		if	19
+		alloc_record
+		dup
+		load_global	0
+		field_store	3
+		store_global	1
+		alloc_record
+		dup
+		load_global	1
+		field_store	4
+		store_global	2
+		load_global	1
+		load_global	2
+		field_store	4
+		load_global	0
+		load_const	2
+		sub
+		store_global	0
+		goto	-22
+		load_global	5
+		load_const	3
+		call	1
+		pop
+		load_global	5
+		load_global	1
+		field_load	3
+		call	1
+		pop
+	]
+}

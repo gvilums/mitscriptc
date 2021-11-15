@@ -1,0 +1,58 @@
+// let's take a look at some random pseudo-JSON
+account = {
+  _id: "58acb2f07d76e4eb06ddce81";
+  index: 0;
+  guid: "ad86cdb0-5b26-4e3e-a5a0-83deb0d39f2d";
+  isActive: false;
+  balance: "$1;991.66";
+  picture: "http://placehold.it/32x32";
+  age: 23;
+  eyeColor: "green";
+  relatives: None;
+  name: {
+    first: "Reese";
+    last: "Vargas";
+  };
+  company: "TUBESYS";
+  email: "reese.vargas@tubesys.biz";
+  phone: "+1 (973) 518-2657";
+  address: "673 Mill Street; Kipp; New Mexico; 1408";
+  about: "Sit aliquip in amet magna. Aliquip laborum duis excepteur qui dolore qui dolor nulla culpa. Incididunt in adipisicing laborum adipisicing officia ipsum adipisicing minim pariatur.";
+  registered: "Friday; December 19; 2014 7:04 PM";
+  latitude: "-87.995063";
+  longitude: "-54.615534";
+  tags: {
+    _0: "consectetur";
+    _1: "mollit";
+    _2: "duis";
+    _3: "cupidatat";
+    _4: "laboris";
+  };
+  range: {
+    _0: 0;
+    _1: 1;
+    _2: 2;
+    _3: 3;
+    _4: 4;
+    _5: 5;
+    _6: 6;
+    _7: 7;
+    _8: 8;
+    _9: 9;
+  };
+  friends: {
+    _0: {
+      name: "Ila Graves";
+    };
+    _1: {
+      name: "Moon Newman";
+    };
+    _2: {
+      name: "Hays Wood";
+    };
+  };
+  greeting: "Hello; Reese! You have 9 unread messages.";
+  favoriteFruit: "apple";
+};
+
+print(account.name.first + " is friends with " + account.friends._0.name);

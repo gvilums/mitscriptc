@@ -1,0 +1,10 @@
+x = 0;
+inc = fun() {
+    global x;
+    x = x + 1;
+    return x;
+};
+y = fun(a, b) {
+  print(a + " " + b);
+};
+y(inc(), inc());

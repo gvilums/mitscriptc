@@ -1,0 +1,317 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions =
+			[
+				function
+				{
+					functions = [],
+					constants = [],
+					parameter_count = 1,
+					local_vars = [f],
+					local_ref_vars = [],
+					free_vars = [],
+					names = [],
+					instructions = 
+					[
+						load_local	0
+						load_local	0
+						call	1
+						return
+					]
+				},
+				function
+				{
+					functions =
+					[
+						function
+						{
+							functions = [],
+							constants = [None],
+							parameter_count = 1,
+							local_vars = [x, _d],
+							local_ref_vars = [],
+							free_vars = [f],
+							names = [],
+							instructions = 
+							[
+								load_const	0
+								store_local	1
+								push_ref	0
+								load_ref
+								push_ref	0
+								load_ref
+								call	1
+								store_local	1
+								load_local	1
+								load_local	0
+								call	1
+								return
+							]
+						}
+					],
+					constants = [None],
+					parameter_count = 1,
+					local_vars = [f, _c],
+					local_ref_vars = [f],
+					free_vars = [le],
+					names = [],
+					instructions = 
+					[
+						load_const	0
+						store_local	1
+						load_func	0
+						push_ref	0
+						alloc_closure	1
+						store_local	1
+						push_ref	1
+						load_ref
+						load_local	1
+						call	1
+						return
+					]
+				}
+			],
+			constants = [None],
+			parameter_count = 1,
+			local_vars = [le, _a, _b],
+			local_ref_vars = [le],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+				load_const	0
+				store_local	1
+				load_const	0
+				store_local	2
+				load_func	0
+				alloc_closure	0
+				store_local	1
+				load_func	1
+				push_ref	0
+				alloc_closure	1
+				store_local	2
+				load_local	1
+				load_local	2
+				call	1
+				return
+			]
+		},
+		function
+		{
+			functions =
+			[
+				function
+				{
+					functions = [],
+					constants = [2, 1, None],
+					parameter_count = 1,
+					local_vars = [n],
+					local_ref_vars = [],
+					free_vars = [factorial],
+					names = [],
+					instructions = 
+					[
+						load_local	0
+						load_const	0
+						swap
+						geq
+						not
+						if	4
+						load_local	0
+						return
+						goto	10
+						load_local	0
+						push_ref	0
+						load_ref
+						load_local	0
+						load_const	1
+						sub
+						call	1
+						mul
+						return
+						load_const	2
+						return
+					]
+				}
+			],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [factorial],
+			local_ref_vars = [factorial],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+				load_func	0
+				push_ref	0
+				alloc_closure	1
+				return
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [2, 1, None],
+			parameter_count = 1,
+			local_vars = [x],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [fibbonacci],
+			instructions = 
+			[
+				load_local	0
+				load_const	0
+				swap
+				geq
+				not
+				if	4
+				load_const	1
+				return
+				goto	13
+				load_global	0
+				load_local	0
+				load_const	1
+				sub
+				call	1
+				load_global	0
+				load_local	0
+				load_const	0
+				sub
+				call	1
+				add
+				return
+				load_const	2
+				return
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [0, ".", 1, None],
+			parameter_count = 1,
+			local_vars = [n],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [print, dots],
+			instructions = 
+			[
+				load_local	0
+				load_const	0
+				gt
+				not
+				if	11
+				load_global	0
+				load_const	1
+				call	1
+				pop
+				load_global	1
+				load_local	0
+				load_const	2
+				sub
+				call	1
+				pop
+				load_const	3
+				return
+			]
+		}
+	],
+	constants = ["10! = ", 10, "fibbonacci(10) = ", "75 dots:", 75],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [y, factorial, fibbonacci, dots, print, input, intcast],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	4
+		load_func	1
+		alloc_closure	0
+		store_global	5
+		load_func	2
+		alloc_closure	0
+		store_global	6
+		load_func	3
+		alloc_closure	0
+		store_global	0
+		load_global	0
+		load_func	4
+		alloc_closure	0
+		call	1
+		store_global	1
+		load_global	4
+		load_const	0
+		load_global	1
+		load_const	1
+		call	1
+		add
+		call	1
+		pop
+		load_func	5
+		alloc_closure	0
+		store_global	2
+		load_global	4
+		load_const	2
+		load_global	2
+		load_const	1
+		call	1
+		add
+		call	1
+		pop
+		load_func	6
+		alloc_closure	0
+		store_global	3
+		load_global	4
+		load_const	3
+		call	1
+		pop
+		load_global	3
+		load_const	4
+		call	1
+		pop
+	]
+}

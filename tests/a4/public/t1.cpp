@@ -1,5 +1,5 @@
 #include "gc.h"
-#include "object.h"
+#include "objects.h"
 
 #include <vector>
 #include <iostream>
