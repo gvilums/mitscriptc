@@ -1,9 +1,0 @@
-f = fun() {
-    x = 10;
-    y = 0;
-    print(x);
-    print(x + y);
-    z = x / y;
-    print(z);
-    print(z * y);
-};
