@@ -553,6 +553,9 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     while (!unhandled.empty()) {
         LiveInterval current = unhandled.top();
         unhandled.pop();
+        if (current.empty()) {
+        	continue;
+        }
         size_t position = current.start_pos();
 
         std::vector<LiveInterval> new_active;
