@@ -1,20 +1,17 @@
 #include <vector>
+#include <array>
 
 #include "ir.h"
 
 namespace IR {
 
-class RegallocPass : public BasePass {
+class RegisterAllocator {
+    std::vector<std::pair<size_t, size_t>> block_ranges;
+    std::array<LiveInterval, MACHINE_REG_COUNT> machine_reg_intervals{};
 
-    std::vector<std::pair<size_t, size_t>> block_range;
-    std::vector<std::vector<std::pair<size_t, size_t>>> machine_reg_ranges;
-    
-    
-    
-
-   public:
-    virtual void apply_to(Program& prog) override;
-    virtual ~RegallocPass() {};
+public:
+    RegisterAllocator(const Program& program);
+    void transform(Program& program);
 };
 
 };

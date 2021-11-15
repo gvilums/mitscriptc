@@ -2,6 +2,7 @@
 
 #include "ir.h"
 #include "regalloc.h"
+#include "irprinter.h"
 
 int main() {
     using namespace IR;
@@ -81,6 +82,7 @@ int main() {
         6,
     };
 
+    std::cout << test_fn << std::endl;
     test_fn.allocate_registers();
     
     // Program prog{{test_fn}, {}, 0};

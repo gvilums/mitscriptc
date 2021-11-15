@@ -121,7 +121,7 @@ struct LiveInterval {
     friend bool operator<(const LiveInterval& lhs, const LiveInterval& rhs);
     friend bool operator>(const LiveInterval& lhs, const LiveInterval& rhs);
     friend bool operator==(const LiveInterval& lhs, const LiveInterval& rhs);
-    friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
+    // friend std::ostream& operator<<(std::ostream& os, const LiveInterval& interval);
     friend ::std::hash<LiveInterval>;
 };
 
@@ -174,9 +174,7 @@ struct Function {
 
     std::vector<Operand> clobbered_regs;
 
-    auto compute_machine_assignments(
-        const std::vector<std::pair<size_t, size_t>>& block_range
-    ) -> std::vector<LiveInterval>;
+    auto compute_machine_assignments() -> std::vector<LiveInterval>;
     auto compute_live_intervals(const std::vector<std::pair<size_t, size_t>>& block_ranges) -> std::vector<LiveInterval>;
     auto allocate_registers() -> std::vector<LiveInterval>;
     void resolve_moves();

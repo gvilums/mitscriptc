@@ -38,49 +38,6 @@ struct hash<::IR::LiveInterval> {
 
 namespace IR {
 
-using std::vector;
-using std::pair;
-
-std::string opr_str[] = {
-    "NONE",
-    "VIRT_REG",
-    "IMMEDIATE",
-    "LOGICAL",
-    "MACHINE_REG",
-    "STACK_SLOT"};
-
-std::ostream& operator<<(std::ostream& os, const IR::Operand& opr);
-// std::ostream& operator<<(std::ostream& os, const IR::Operand& opr) {
-//     os << "[" << opr_str[(int)opr.type] << " " << opr.index << "]";
-//     return os;
-// }
-
-std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
-    os << "interval vreg " << interval.reg_id << " {" << std::endl;
-    os << "ranges: ";
-    for (auto range = interval.ranges.rbegin(); range != interval.ranges.rend(); range++) {
-        os << range->first << " " << range->second << ", ";
-    }
-    os << std::endl;
-    os << "use locations: ";
-    for (size_t loc : interval.use_locations) {
-        os << loc << ", ";
-    }
-    os << std::endl;
-    switch (interval.op.type) {
-        case Operand::MACHINE_REG:
-            os << "MACHINE_REG ";
-            break;
-        case Operand::STACK_SLOT:
-            os << "STACK_SLOT ";
-            break;
-        default:
-            os << "UNINIT ";
-            break;
-    }
-    os << interval.op.index << std::endl;
-    return os;
-}
 
 bool LiveInterval::empty() const {
     return this->ranges.empty();
@@ -135,48 +92,6 @@ auto LiveInterval::split_at(size_t pos) -> LiveInterval {
     this->use_locations.resize(remaining_use_locs);
     return result;
 }
-
-// auto LiveInterval::split_at(size_t pos) -> LiveInterval {
-//     LiveInterval result;
-//     result.reg_id = this->reg_id;
-//     vector<pair<size_t, size_t>> remaining_ranges;
-//     vector<size_t> remaining_use_loc;
-
-//     for (size_t rev_i = 0; rev_i < this->ranges.size(); ++rev_i) {
-//         size_t i = this->ranges.size() - rev_i - 1;
-//         // split lands between ranges
-//         if (this->ranges[i].first >= pos) {
-//             // remaining ranges should move to result interval;
-//             for (size_t j = 0; j <= i; ++j) {
-//                 result.ranges.push_back(this->ranges[j]);
-//             }
-//             break;
-//         }
-//         // inside range
-//         if (this->ranges[i].first < pos && this->ranges[i].second >= pos) {
-//             remaining_ranges.push_back({this->ranges[i].first, pos - 1});
-//             for (size_t j = 0; j < i; ++j) {
-//                 result.ranges.push_back(this->ranges[j]);
-//             }
-//             result.ranges.push_back({pos, this->ranges[i].second});
-//             break;
-//         }
-//         remaining_ranges.push_back(this->ranges[i]);
-//     }
-
-//     for (size_t use_loc : this->use_locations) {
-//         if (use_loc < pos) {
-//             remaining_use_loc.push_back(use_loc);
-//         } else {
-//             result.use_locations.push_back(use_loc);
-//         }
-//     }
-
-//     std::reverse(remaining_ranges.begin(), remaining_ranges.end());
-//     this->ranges = std::move(remaining_ranges);
-//     this->use_locations = std::move(remaining_use_loc);
-//     return result;
-// }
 
 void IntervalBuilder::push_range(std::pair<size_t, size_t> range) {
     this->ranges.push_back(range);
@@ -334,18 +249,17 @@ std::array<MachineRegs, 9> caller_save_regs{
     MachineRegs::R11,
 };
 
-auto Function::compute_machine_assignments(
-    const vector<pair<size_t, size_t>>& block_range
-) -> vector<LiveInterval> {
-    vector<IntervalBuilder> builders;
+auto Function::compute_machine_assignments() -> std::vector<LiveInterval> {
+    std::vector<IntervalBuilder> builders;
     builders.resize(MACHINE_REG_COUNT);
     for (size_t i = 0; i < builders.size(); ++i) {
         builders[i].reg_id = i;
     }
 
+    size_t instr_id = 0;
     for (size_t i = 0; i < this->blocks.size(); ++i) {
+        instr_id += 2;
         for (size_t j = 0; j < this->blocks[i].instructions.size(); ++j) {
-            size_t instr_id = block_range[i].first + 2 * (j + 1);
             switch (this->blocks[i].instructions[j].op) {
             case Operation::LOAD_ARG:
                 // argument registers must be preserved from beginning to only point of use
@@ -358,6 +272,9 @@ auto Function::compute_machine_assignments(
                 builders[static_cast<size_t>(MachineRegs::RAX)].push_range({instr_id, instr_id + 1});
                 builders[static_cast<size_t>(MachineRegs::RDX)].push_range({instr_id, instr_id + 1});
                 break;
+            case Operation::SET_ARG:
+                // TODO arguments must survive until function call
+                break;
             case Operation::CALL:
                 // all caller saved registers must be flushed (worst case)
                 // clobbers do not help, as we don't know what we're gonna call statically
@@ -368,6 +285,7 @@ auto Function::compute_machine_assignments(
             default:
                 break;
             }
+            instr_id += 2;
         }
     }
 
@@ -379,9 +297,9 @@ auto Function::compute_machine_assignments(
 }
 
 auto Function::compute_live_intervals(
-    const vector<std::pair<size_t, size_t>>& block_range
-) -> vector<LiveInterval> {
-    vector<IntervalBuilder> builders;
+    const std::vector<std::pair<size_t, size_t>>& block_range
+) -> std::vector<LiveInterval> {
+    std::vector<IntervalBuilder> builders;
     builders.resize(this->virt_reg_count);
     for (size_t i = 0; i < builders.size(); ++i) {
         builders[i].reg_id = i;
@@ -582,7 +500,12 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     }
 
     auto intervals = this->compute_live_intervals(block_range);
-    auto machine_reg_uses = this->compute_machine_assignments(block_range);
+    auto machine_reg_uses = this->compute_machine_assignments();
+    std::cout << "machine intervals" << std::endl;
+    for (const auto& interval : machine_reg_uses) {
+        std::cout << interval << std::endl;
+    }
+    std::cout << "-----------------" << std::endl;
 
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>> unhandled(
         std::make_move_iterator(intervals.begin()), std::make_move_iterator(intervals.end()));
@@ -671,7 +594,6 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         // iterate over successors
         for (size_t succ : this->blocks[pred].successors) {
             // for every interval group
-            std::cout << "predecessor " << pred << " successor " << succ << std::endl;
             for (const auto& group : interval_groups) {
                 // if the corresponding vreg is live at the beginning of the successor
                 if (auto move_to = group.assignment_at(block_range[succ].first)) {
@@ -706,7 +628,6 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         }
     }
 
-    std::cout << "printing resolution" << std::endl;
     for (size_t i = 0; i < this->blocks.size(); ++i) {
         std::cout << "block " << i << std::endl;
         for (const auto& [from, to] : this->blocks[i].resolution_map) {
@@ -716,11 +637,6 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     // instruction rewriting
 
     return handled;
-}
-
-
-void RegallocPass::apply_to(Program& prog) {
-
 }
 
 };  // namespace IR

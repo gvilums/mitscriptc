@@ -53,8 +53,29 @@ std::string opr_str[] = {
     "STACK_SLOT"
 };
 
+std::string machine_reg_str[] = {
+	"RAX",
+	"RCX",
+	"RDX",
+	"RSI",
+	"RDI",
+	"R08",
+	"R09",
+	"R10",
+	"R11",
+	"R12",
+	"R13",
+	"R14",
+	"R15",
+	"RBX",
+};
+
 std::ostream& operator<<(std::ostream& os, const IR::Operand& opr){
-	os << "[" << opr_str[(int) opr.type] << " " << opr.index << "]";
+	if (opr.type == IR::Operand::MACHINE_REG) {
+		os << machine_reg_str[opr.index];
+	} else {
+		os << "[" << opr_str[(int) opr.type] << " " << opr.index << "]";
+	}
 	return os;
 }
 
@@ -113,3 +134,18 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 	return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
+    os << "interval reg id " << interval.reg_id << " {" << std::endl;
+    os << "ranges: ";
+    for (auto range = interval.ranges.rbegin(); range != interval.ranges.rend(); range++) {
+        os << range->first << " " << range->second << ", ";
+    }
+    os << std::endl;
+    os << "use locations: ";
+    for (size_t loc : interval.use_locations) {
+        os << loc << ", ";
+    }
+    os << std::endl;
+	os << interval.op << std::endl;
+    return os;
+}
