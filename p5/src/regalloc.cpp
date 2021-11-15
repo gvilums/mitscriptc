@@ -61,6 +61,7 @@ size_t LiveInterval::first_use() const {
 auto LiveInterval::split_at(size_t pos) -> LiveInterval {
     LiveInterval result;
     result.reg_id = this->reg_id;
+    result.split_off = true;
     
     for (size_t i = 0; i < this->ranges.size(); ++i) {
         auto [begin, end] = this->ranges[i];  
@@ -240,17 +241,17 @@ std::array<MachineRegs, 6> arg_regs{
     MachineRegs::R9
 };
 
-std::array<MachineRegs, 9> caller_save_regs{
-    MachineRegs::RDI, 
-    MachineRegs::RSI,
-    MachineRegs::RDX,
-    MachineRegs::RCX,
-    MachineRegs::R8,
-    MachineRegs::R9,
-    MachineRegs::RAX,
-    MachineRegs::R10,
-    MachineRegs::R11,
-};
+// std::array<MachineRegs, 9> caller_save_regs{
+//     MachineRegs::RDI, 
+//     MachineRegs::RSI,
+//     MachineRegs::RDX,
+//     MachineRegs::RCX,
+//     MachineRegs::R8,
+//     MachineRegs::R9,
+//     MachineRegs::RAX,
+//     MachineRegs::R10,
+//     MachineRegs::R11,
+// };
 
 auto Function::compute_machine_assignments() -> std::vector<LiveInterval> {
     std::vector<IntervalBuilder> builders;
@@ -294,10 +295,9 @@ auto Function::compute_machine_assignments() -> std::vector<LiveInterval> {
                 }
                 break;
             case Operation::CALL:
-                // all caller saved registers must be flushed (worst case)
-                // clobbers do not help, as we don't know what we're gonna call statically
-                for (auto reg : caller_save_regs) {
-                    builders[static_cast<size_t>(reg)].push_range({instr_id, instr_id + 1});
+                // call invalidates all registers (no callee saved registers in this model)
+                for (auto& builder : builders) {
+                    builder.push_range({instr_id, instr_id});
                 }
                 break;
             default:
@@ -419,8 +419,12 @@ auto try_alloc_reg(
     
     for (const auto& interval : machine_reg_uses) {
         if (auto intersection = current.next_intersection(interval)) {
-            size_t& free_until = free_until_pos[interval.reg_id];
-            free_until = std::min(free_until, *intersection);
+            if (*intersection == current.start_pos()) {
+                free_until_pos[interval.reg_id] = 0;
+            } else {
+                size_t& free_until = free_until_pos[interval.reg_id];
+                free_until = std::min(free_until, *intersection);
+            }
         }
     }
 
@@ -474,6 +478,15 @@ void alloc_blocked_reg(
             next_use = std::min(next_use, *intersection);
         }
     }
+    
+    for (const auto& interval : machine_reg_uses) {
+        if (auto intersection = current.next_intersection(interval)) {
+            // disallow allocation to blocked physical registers
+            if (intersection == current.start_pos()) {
+                next_use_pos[interval.reg_id] = 0;
+            }
+        }
+    }
 
     size_t max_use = next_use_pos[0];
     size_t max_use_index = 0;
@@ -513,6 +526,23 @@ void alloc_blocked_reg(
             size_t split_pos = (*pos >> 1) << 1;
             unhandled.push(current.split_at(split_pos));
         }
+    }
+}
+
+void rewrite_instructions(
+    Function& func, 
+    std::vector<IntervalGroup> groups, 
+    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> split_resolves
+) {
+    // current index in split resolve array
+    size_t resolve_index = 0;
+
+    size_t instr_id = 0;
+    for (size_t i = 0; i < func.blocks.size(); ++i) {
+        // initial block offset
+        instr_id += 2;
+        std::vector<Instruction> new_instructions;
+
     }
 }
 
@@ -630,6 +660,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         // iterate over successors
         for (size_t succ : this->blocks[pred].successors) {
             // handle phi nodes
+            // TODO handle phi nodes in separate loop
             for (const auto& phi : this->blocks[succ].phi_nodes) {
                 for (const auto& [block_index, operand] : phi.args) {
                     if (block_index == pred) {
@@ -665,6 +696,9 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     // check adjacent split intervals
     std::vector<std::pair<size_t, std::pair<Operand, Operand>>> split_resolves;
     for (const auto& group : interval_groups) {
+        if (group.intervals.size() < 2) {
+            continue;
+        }
         for (size_t i = 0; i < group.intervals.size() - 1; ++i) {
             // if two intervals are adjacent and are assigned to different registers, insert a move
             size_t prev_end = group.intervals[i].end_pos();
@@ -676,6 +710,11 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
             }
         }
     }
+    std::sort(split_resolves.begin(), split_resolves.end(), [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
+    
+    for (const auto& [pos, operands] : split_resolves) {
+        std::cout << pos << ": " << operands.first << " -> " << operands.second << std::endl;
+    }
 
     for (size_t i = 0; i < this->blocks.size(); ++i) {
         std::cout << "block " << i << std::endl;
@@ -684,6 +723,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         }
     }
     // instruction rewriting
+    
 
     return handled;
 }
