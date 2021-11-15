@@ -42,8 +42,9 @@ auto main(int argc, const char* argv[]) -> int {
     
     std::cout << *prog << std::endl;
     
-    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
-  	prog->functions.back().allocate_registers();
+    IR::Function& func = prog->functions[prog->functions.size() - 2];
+    pretty_print_function(std::cout, func) << std::endl;
+    func.allocate_registers();
     
     delete program;
     return 0;
