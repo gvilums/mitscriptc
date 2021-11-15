@@ -132,7 +132,7 @@ struct IntervalBuilder {
     
     void push_range(std::pair<size_t, size_t> range);
     void push_use(size_t pos);
-    void shorten_last(size_t new_begin);
+    void shorten(size_t new_begin);
     
     auto finish() -> LiveInterval;
 };

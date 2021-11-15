@@ -82,7 +82,7 @@ int main() {
         6,
     };
 
-    std::cout << test_fn << std::endl;
+    pretty_print_function(std::cout, test_fn) << std::endl;
     test_fn.allocate_registers();
     
     // Program prog{{test_fn}, {}, 0};

@@ -14,4 +14,5 @@ std::ostream& operator<<(std::ostream& os, const IR::Function& fun);
 std::ostream& operator<<(std::ostream& os, const IR::Program& prog);
 std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval);
 
+std::ostream& pretty_print_function(std::ostream& os, const IR::Function& fun);
 // };

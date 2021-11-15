@@ -137,9 +137,9 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
     os << "interval reg id " << interval.reg_id << " {" << std::endl;
     os << "ranges: ";
-    for (auto range = interval.ranges.rbegin(); range != interval.ranges.rend(); range++) {
-        os << range->first << " " << range->second << ", ";
-    }
+	for (const auto [begin, end] : interval.ranges) {
+		std::cout << begin << " " << end << "; ";
+	}
     os << std::endl;
     os << "use locations: ";
     for (size_t loc : interval.use_locations) {
@@ -148,4 +148,24 @@ std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
     os << std::endl;
 	os << interval.op << std::endl;
     return os;
+}
+
+std::ostream& pretty_print_function(std::ostream& os, const IR::Function& fun) {
+	size_t line_nr = 0;	
+	for (size_t i = 0; i < fun.blocks.size(); ++i) {
+		auto& bb = fun.blocks[i];
+		os << line_nr << "\tblock " << i << std::endl;
+		for (const auto& pn : bb.phi_nodes) {
+			os << '\t' << pn.out << " ";
+			for (auto opr : pn.args)
+				os << "(" << opr.first << ", " << opr.second << ") ";
+			os << std::endl;
+		}
+		line_nr += 2;
+		for (const auto& instr : bb.instructions) {
+			os << line_nr << "\t" << instr << std::endl;
+			line_nr += 2;
+		}
+	}
+	return os;
 }

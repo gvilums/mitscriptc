@@ -101,9 +101,12 @@ void IntervalBuilder::push_use(size_t pos) {
     this->use_locations.push_back(pos);
 }
 
-void IntervalBuilder::shorten_last(size_t new_begin) {
-    assert(!this->ranges.empty());
-    this->ranges.back().first = new_begin;
+void IntervalBuilder::shorten(size_t new_begin) {
+    for (auto& [begin, end] : this->ranges) {
+        if (begin < new_begin) {
+            begin = new_begin;
+        }
+    }
 }
 
 auto IntervalBuilder::finish() -> LiveInterval {
@@ -256,6 +259,8 @@ auto Function::compute_machine_assignments() -> std::vector<LiveInterval> {
         builders[i].reg_id = i;
     }
 
+    std::optional<size_t> next_call = std::nullopt;
+    size_t arg_index = 0;
     size_t instr_id = 0;
     for (size_t i = 0; i < this->blocks.size(); ++i) {
         instr_id += 2;
@@ -269,11 +274,24 @@ auto Function::compute_machine_assignments() -> std::vector<LiveInterval> {
                 break;
             case Operation::DIV:
             case Operation::MUL:
-                builders[static_cast<size_t>(MachineRegs::RAX)].push_range({instr_id, instr_id + 1});
-                builders[static_cast<size_t>(MachineRegs::RDX)].push_range({instr_id, instr_id + 1});
+                builders[static_cast<size_t>(MachineRegs::RAX)].push_range({instr_id, instr_id});
+                builders[static_cast<size_t>(MachineRegs::RDX)].push_range({instr_id, instr_id});
                 break;
             case Operation::SET_ARG:
                 // TODO arguments must survive until function call
+                if (!next_call.has_value()) {
+                    size_t temp_instr_id = instr_id;
+                    size_t k = j;
+                    while (this->blocks[i].instructions[k].op != Operation::CALL) {
+                        ++k;
+                        temp_instr_id += 2;
+                    }
+                    next_call = temp_instr_id;
+                }
+                arg_index = this->blocks[i].instructions[j].args[0].index;
+                if (arg_index < 6) {
+                    builders[static_cast<size_t>(arg_regs[arg_index])].push_range({instr_id, *next_call - 1});
+                }
                 break;
             case Operation::CALL:
                 // all caller saved registers must be flushed (worst case)
@@ -320,7 +338,6 @@ auto Function::compute_live_intervals(
                 for (const auto& [id, reg] : phi.args) {
                     if (id == block_index && reg.type == Operand::VIRT_REG) {
                         live.insert(reg.index);
-                        // successor is loop header
                         builders[reg.index].use_locations.push_back(block_range[block_index].second);
                         break;
                     }
@@ -329,7 +346,7 @@ auto Function::compute_live_intervals(
         }
 
         for (size_t opd : live) {
-            builders[opd].push_range(block_range[block_index]);
+            builders[opd].push_range({block_range[block_index].first, block_range[block_index].second});
         }
 
         for (size_t inr = block.instructions.size(); inr > 0; --inr) {
@@ -340,7 +357,7 @@ auto Function::compute_live_intervals(
             if (instr.out.type == Operand::VIRT_REG) {
                 // temporary debug assert
                 // output operands
-                builders[instr.out.index].shorten_last(instr_id);
+                builders[instr.out.index].shorten(instr_id + 1);
                 live.erase(instr.out.index);
             }
 
@@ -355,6 +372,8 @@ auto Function::compute_live_intervals(
 
         for (const PhiNode& phi : block.phi_nodes) {
             assert(phi.out.type == Operand::VIRT_REG);
+            // phi outputs are defined to start living at one past the beginning of the block
+            builders[phi.out.index].shorten(block_range[block_index].first + 1);
             live.erase(phi.out.index);
         }
 
@@ -363,7 +382,7 @@ auto Function::compute_live_intervals(
                 builders[opd].push_range({block_range[block_index].first, block_range[block.final_loop_block].second});
             }
         }
-
+        
         block_live_regs[block_index] = std::move(live);
     }
 
@@ -379,7 +398,8 @@ auto try_alloc_reg(
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>& unhandled,
     std::vector<LiveInterval>& active,
     std::vector<LiveInterval>& inactive,
-    const std::vector<LiveInterval>& machine_reg_uses) -> bool {
+    const std::vector<LiveInterval>& machine_reg_uses,
+    std::vector<std::pair<size_t, Operand>>& interval_splits) -> bool {
     std::array<size_t, MACHINE_REG_COUNT> free_until_pos;
     free_until_pos.fill(std::numeric_limits<size_t>::max());
 
@@ -387,7 +407,7 @@ auto try_alloc_reg(
         assert(interval.op.type != Operand::NONE);
         free_until_pos[interval.op.index] = 0;
     }
-
+    
     // TODO omit intersection test when possible
     for (const auto& interval : inactive) {
         if (auto intersection = current.next_intersection(interval)) {
@@ -416,7 +436,9 @@ auto try_alloc_reg(
     if (max_free > 0) {
         // register allocation succeeded
         if (current.end_pos() >= max_free) {
-            unhandled.push(current.split_at(max_free));
+            // split should happen *before* an instruction
+            size_t split_pos = (max_free >> 1) << 1;
+            unhandled.push(current.split_at(split_pos));
         }
         current.op.type = Operand::MACHINE_REG;
         current.op.index = max_free_index;
@@ -432,7 +454,8 @@ void alloc_blocked_reg(
     std::vector<LiveInterval>& active,
     std::vector<LiveInterval>& inactive,
     size_t& stack_slot,
-    const std::vector<LiveInterval>& machine_reg_uses) {
+    const std::vector<LiveInterval>& machine_reg_uses,
+    std::vector<std::pair<size_t, Operand>>& interval_splits) {
     std::array<size_t, MACHINE_REG_COUNT> next_use_pos;
     next_use_pos.fill(std::numeric_limits<size_t>::max());
 
@@ -473,19 +496,22 @@ void alloc_blocked_reg(
         for (auto& interval : active) {
             assert(interval.op.type == Operand::MACHINE_REG);
             if (interval.op.index == current.op.index) {
-                unhandled.push(interval.split_at(position));
+                size_t split_pos = (position >> 1) << 1;
+                unhandled.push(interval.split_at(split_pos));
                 break;
             }
         }
         for (auto& interval : inactive) {
             assert(interval.op.type == Operand::MACHINE_REG);
             if (interval.op.index == current.op.index) {
+                // TODO do we need the splitting rounding here? because we are currently in lifetime hole
                 unhandled.push(interval.split_at(interval.next_alive_after(position)));
             }
         }
         // intersection check with fixed interval        
         if (auto pos = current.next_intersection(machine_reg_uses[current.op.index])) {
-            unhandled.push(current.split_at(*pos));
+            size_t split_pos = (*pos >> 1) << 1;
+            unhandled.push(current.split_at(split_pos));
         }
     }
 }
@@ -500,12 +526,17 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     }
 
     auto intervals = this->compute_live_intervals(block_range);
+    // for (const auto& interval : intervals) {
+    //     std::cout << interval << std::endl;
+    // }
+    // std::cout << "------------------" << std::endl;
+
     auto machine_reg_uses = this->compute_machine_assignments();
-    std::cout << "machine intervals" << std::endl;
-    for (const auto& interval : machine_reg_uses) {
-        std::cout << interval << std::endl;
-    }
-    std::cout << "-----------------" << std::endl;
+    // std::cout << "machine intervals" << std::endl;
+    // for (const auto& interval : machine_reg_uses) {
+    //     std::cout << interval << std::endl;
+    // }
+    // std::cout << "-----------------" << std::endl;
 
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>> unhandled(
         std::make_move_iterator(intervals.begin()), std::make_move_iterator(intervals.end()));
@@ -515,6 +546,9 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     size_t stack_slot{0};
 
     std::vector<LiveInterval> handled;
+    
+    // vector holding positions and virtual register descriptors of registers split in middle of lifetime
+    std::vector<std::pair<size_t, Operand>> interval_splits;
 
     while (!unhandled.empty()) {
         LiveInterval current = unhandled.top();
@@ -550,9 +584,8 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         inactive = std::move(new_inactive);
 
         // try allocate register
-        if (!try_alloc_reg(current, unhandled, active, inactive, machine_reg_uses)) {
-            alloc_blocked_reg(current, position, unhandled, active, inactive, stack_slot, machine_reg_uses);
-            // TODO check intersection with fixed registers
+        if (!try_alloc_reg(current, unhandled, active, inactive, machine_reg_uses, interval_splits)) {
+            alloc_blocked_reg(current, position, unhandled, active, inactive, stack_slot, machine_reg_uses, interval_splits);
         }
 
         if (current.op.type == Operand::MACHINE_REG) {
@@ -564,7 +597,6 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         }
     }  // while (!unhandled.empty())
 
-    // TODO think about this
     handled.insert(handled.end(),
                    std::make_move_iterator(active.begin()), std::make_move_iterator(active.end()));
     handled.insert(handled.end(),
@@ -580,6 +612,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     for (LiveInterval& interval : handled) {
         intervals_by_vreg[interval.reg_id].push_back(std::move(interval));
     }
+    // sort intervals in ascending order (they are guaranteed to be disjoint)
     for (auto& group : intervals_by_vreg) {
         std::sort(group.begin(), group.end());
     }
@@ -593,37 +626,50 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     for (size_t pred = 0; pred < this->blocks.size(); ++pred) {
         // iterate over successors
         for (size_t succ : this->blocks[pred].successors) {
-            // for every interval group
-            for (const auto& group : interval_groups) {
-                // if the corresponding vreg is live at the beginning of the successor
-                if (auto move_to = group.assignment_at(block_range[succ].first)) {
-                    Operand move_from;
-                    // if the vreg is *defined* at the beginning of successor (through a phi function)
-                    if (group.begins_at(block_range[succ].first)) {
-                        Operand defining_op;
-                        for (const auto& phi : this->blocks[succ].phi_nodes) {
-                            for (const auto& [block_index, operand] : phi.args) {
-                                if (block_index == pred) {
-                                    defining_op = operand;
-                                    break;
-                                }
-                            }
-                        }
-                        assert(defining_op.type != Operand::NONE);
-                        if (defining_op.type == Operand::VIRT_REG) {
-                            move_from = interval_groups[defining_op.index].assignment_at(block_range[pred].second).value();
-                        } else if (defining_op.type == Operand::IMMEDIATE) {
-                            move_from = defining_op;
+            // handle phi nodes
+            for (const auto& phi : this->blocks[succ].phi_nodes) {
+                for (const auto& [block_index, operand] : phi.args) {
+                    if (block_index == pred) {
+                        // phi function defining some value in successor
+                        Operand move_from;
+                        if (operand.type == Operand::VIRT_REG) {
+                            move_from = interval_groups[operand.index].assignment_at(block_range[pred].second).value();
+                        } else if (operand.type == Operand::IMMEDIATE) {
+                            move_from = operand;
                         } else {
                             assert(false && "unsupported operand");
                         }
-                    } else {  // if the vreg continues living from a previous block
-                        move_from = group.assignment_at(block_range[pred].second).value();
+                        Operand move_to = interval_groups[phi.out.index].assignment_at(block_range[succ].first + 1).value();
+                        if (!(move_from == move_to)) {
+                            this->blocks[pred].resolution_map.push_back({move_from, move_to});
+                        }
                     }
+                }
+            }
+            // for every interval group
+            for (const auto& group : interval_groups) {
+                // check intervals that span multiple blocks
+                if (auto move_to = group.assignment_at(block_range[succ].first)) {
+                    Operand move_from = group.assignment_at(block_range[pred].second).value();
                     if (!(move_from == *move_to)) {
                         this->blocks[pred].resolution_map.push_back({move_from, *move_to});
                     }
                 }
+            }
+        }
+    }
+    
+    // check adjacent split intervals
+    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> split_resolves;
+    for (const auto& group : interval_groups) {
+        for (size_t i = 0; i < group.intervals.size() - 1; ++i) {
+            // if two intervals are adjacent and are assigned to different registers, insert a move
+            size_t prev_end = group.intervals[i].end_pos();
+            size_t next_start = group.intervals[i + 1].start_pos();
+            Operand prev_op = group.intervals[i].op;
+            Operand next_op = group.intervals[i + 1].op;
+            if (prev_end + 1 == next_start && !(prev_op == next_op)) {
+                split_resolves.push_back({group.intervals[i + 1].start_pos(), {prev_op, next_op}});
             }
         }
     }
