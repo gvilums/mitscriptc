@@ -314,8 +314,8 @@ class Compiler : public Visitor {
     		if (local_vars_[var.first] != var.second) {
     			IR::PhiNode pn;
         		pn.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};        		
-        		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
-        		pn.args.push_back({last_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
+        		pn.args.push_back({last_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
+        		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
         		
         		fun_->blocks[last_idx + 1].phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
