@@ -18,7 +18,7 @@ namespace IR {
 
 const size_t MACHINE_REG_COUNT = 14;
 
-enum class MachineRegs : size_t {
+enum class MachineReg : size_t {
     RAX,
     RCX,
     RDX,
