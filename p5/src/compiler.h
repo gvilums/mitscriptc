@@ -165,7 +165,7 @@ class Compiler : public Visitor {
 				block_->instructions.push_back(s_ref);
 			}
 			else { // check for error ? 
-				local_vars_[s] = reg_cnt_++;
+				// local_vars_[s] = reg_cnt_;
 				if (is_opr_) {
 					block_->instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr_});
 					local_vars_[s] = reg_cnt_++;
