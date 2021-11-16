@@ -307,9 +307,8 @@ class Compiler : public Visitor {
         fun_->blocks[last_idx + 1].successors.push_back(block1_idx);
         block1->successors.push_back(last_idx + 1);
         fun_->blocks[last_idx + 1].predecessors.push_back(block1_idx);
-    	fun_->blocks.push_back(*block_);
-    	delete block_;
     	
+    	std::map<size_t, size_t> new_args;
     	for (auto var : tlocal_vars) {
     		if (local_vars_[var.first] != var.second) {
     			IR::PhiNode pn;
@@ -317,11 +316,37 @@ class Compiler : public Visitor {
         		pn.args.push_back({last_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
         		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
         		
+        		new_args[local_vars_[var.first]] = reg_cnt_;
+        		
         		fun_->blocks[last_idx + 1].phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
         		reg_cnt_++;
     		}
     	}
+    	
+    	size_t cur_block =	fun_->blocks.size(); 
+    	fun_->blocks.push_back(*block_);
+    	stack<int> st;
+    	st.push(cur_block);
+    	std::set<int> vis;
+    	
+    	while(!st.empty()){
+    		int cur = st.top();
+    		st.pop();
+    		vis.insert(cur);
+    		
+    		for (auto ins : fun_->blocks[cur].instructions)
+    			for (auto& op : ins.args)
+    				if (op.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.index))
+    					op.index = new_args[op.index];
+    				
+    		for (auto pred : fun_->blocks[cur].predecessors)
+    			if(!vis.count(pred) && pred != last_idx + 1)
+    				st.push(pred);
+    	}
+    	
+    	
+    	delete block_;
     	
     	block_ = block2;
         block2_idx = fun_->blocks.size();
