@@ -82,6 +82,8 @@ enum class Operation {
     PRINT,
     INPUT,
     INTCAST,
+    
+    SWAP,
 };
 
 struct Operand {

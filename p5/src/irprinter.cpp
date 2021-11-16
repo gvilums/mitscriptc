@@ -41,7 +41,8 @@ std::string op_str[] = {
     "ASSERT_NONZERO",
     "PRINT",
     "INPUT",
-    "INTCAST"
+    "INTCAST",
+	"SWAP"
 };
 
 std::string opr_str[] = {

@@ -15,6 +15,7 @@
 #include "regalloc.h"
 
 namespace std {
+
 template <>
 struct hash<::IR::LiveInterval> {
     size_t operator()(const ::IR::LiveInterval& interval) {
@@ -34,6 +35,16 @@ struct hash<::IR::LiveInterval> {
         return value;
     }
 };
+
+template <>
+struct hash<::IR::Operand> {
+    size_t operator()(const ::IR::Operand& operand) {
+        std::hash<int> inthash;
+        std::hash<size_t> sizethash;
+        return inthash(static_cast<int>(operand.type)) ^ (sizethash(operand.index) << 1);
+    }
+};
+
 };  // namespace std
 
 namespace IR {
@@ -312,6 +323,59 @@ auto Function::compute_machine_assignments() -> std::vector<LiveInterval> {
         intervals.push_back(builder.finish());
     }
     return intervals;
+}
+
+auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& mapping) -> std::vector<Instruction> {
+    std::vector<Instruction> instructions;
+    
+    std::vector<Operand> operands;
+    std::vector<Operand> inputs;
+    std::vector<Operand> outputs;
+    for (const auto& [from, to] : mapping) {
+        if (std::find(operands.begin(), operands.end(), from) == operands.end()) {
+            operands.push_back(from);
+        }
+        if (std::find(operands.begin(), operands.end(), to) == operands.end()) {
+            operands.push_back(to);
+        }
+        inputs.push_back(from);
+        outputs.push_back(to);
+    }
+
+    enum class OpState {
+        Leaving,
+        Staying,
+        Entering,
+    };
+    
+    std::vector<OpState> states(operands.size());
+    for (size_t i = 0; i < operands.size(); ++i) {
+        bool is_input = std::find(inputs.begin(), inputs.end(), operands[i]) != inputs.end();
+        bool is_output = std::find(outputs.begin(), outputs.end(), operands[i]) != outputs.end();
+        if (is_input && is_output) {
+            states[i] = OpState::Staying;
+        } else if (is_input) {
+            states[i] = OpState::Leaving;
+        } else {
+            states[i] = OpState::Entering;
+        }
+    }
+    
+    // handle all entering registers
+    for (const auto& [from, to] : mapping) {
+        size_t i = 0;
+        while (!(operands[i] == to)) {
+            ++i;
+        }
+        if (states[i] == OpState::Entering) {
+            instructions.push_back(Instruction{Operation::MOV, Operand{}, from, to, Operand{}});
+        }
+    }
+    
+    // handle all permuted registers
+    
+
+    return instructions;
 }
 
 auto Function::compute_live_intervals(
@@ -724,6 +788,9 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
     }
     // instruction rewriting
     
+    for (size_t i = 0; i < this->blocks.size(); ++i) {
+        
+    }
 
     return handled;
 }
