@@ -6,3 +6,15 @@ CompileFlags:
 
 Index:
   Background: Build
+  
+Diagnostics:
+  ClangTidy:
+    Add:
+      - bugprone*
+      - clang-analyze*
+      - performance*
+      - portability*
+      # - readability*
+      # - modernize*
+    Remove:
+      # - readability-magic-number

@@ -8,6 +8,8 @@
 #include "compiler.h"
 #include "parsercode.h"
 #include "irprinter.h"
+#include "ir.h"
+#include "regalloc.h"
 
 
 auto main(int argc, const char* argv[]) -> int {
@@ -44,7 +46,8 @@ auto main(int argc, const char* argv[]) -> int {
     
     IR::Function& func = prog->functions[prog->functions.size() - 2];
     pretty_print_function(std::cout, func) << std::endl;
-    func.allocate_registers();
+    IR::allocate_registers(func);
+    pretty_print_function(std::cout, func) << std::endl;
     
     delete program;
     return 0;

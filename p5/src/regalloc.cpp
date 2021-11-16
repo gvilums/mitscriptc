@@ -318,6 +318,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
     }
 
     std::vector<LiveInterval> intervals;
+    intervals.reserve(builders.size());
     for (auto& builder : builders) {
         intervals.push_back(builder.finish());
     }
@@ -326,6 +327,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
 
 auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& mapping) -> std::vector<Instruction> {
     std::vector<Instruction> instructions;
+    instructions.reserve(mapping.size());
     
     std::vector<Operand> operands;
     std::vector<Operand> inputs;
@@ -458,6 +460,7 @@ auto compute_live_intervals(
     }
 
     std::vector<LiveInterval> intervals;
+    intervals.reserve(builders.size());
     for (auto& builder : builders) {
         intervals.push_back(builder.finish());
     }
@@ -598,20 +601,52 @@ void alloc_blocked_reg(
     }
 }
 
+auto set_instr_machine_regs(const Instruction& instr, size_t instr_id, std::vector<IntervalGroup> groups) -> Instruction {
+    Instruction changed{instr};
+    for (auto& arg : changed.args) {
+        if (arg.type == Operand::VIRT_REG) {
+            arg = groups[arg.index].assignment_at(instr_id - 1).value();    
+        }
+    }
+    if (instr.out.type == Operand::VIRT_REG) {
+        if (auto out_reg = groups[instr.out.index].assignment_at(instr_id + 1)) {
+            changed.out = *out_reg;
+        } else {
+            changed.out = Operand{};
+        }
+    }
+    return changed;
+}
+
 void rewrite_instructions(
     Function& func, 
-    std::vector<IntervalGroup> groups, 
-    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> split_resolves
+    const std::vector<IntervalGroup>& groups, 
+    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> resolves
 ) {
     // current index in split resolve array
     size_t resolve_index = 0;
 
     size_t instr_id = 0;
-    for (size_t i = 0; i < func.blocks.size(); ++i) {
+    for (auto& block : func.blocks) {
         // initial block offset
         instr_id += 2;
         std::vector<Instruction> new_instructions;
 
+        for (const auto& instr : block.instructions) {
+            new_instructions.push_back(set_instr_machine_regs(instr, instr_id, groups));
+            instr_id += 2;
+
+            std::vector<std::pair<Operand, Operand>> current_resolves;
+            while (resolve_index < resolves.size() && resolves[resolve_index].first < instr_id) {
+                current_resolves.push_back(resolves[resolve_index].second);
+                ++resolve_index;
+            }
+            std::vector<Instruction> resolving_moves = mapping_to_instructions(current_resolves);
+            new_instructions.insert(new_instructions.end(), resolving_moves.begin(), resolving_moves.end());
+        }
+        
+        block.phi_nodes.clear();
+        block.instructions = std::move(new_instructions);
     }
 }
 
@@ -695,9 +730,9 @@ void allocate_registers(Function& func) {
     handled.insert(handled.end(),
                    std::make_move_iterator(inactive.begin()), std::make_move_iterator(inactive.end()));
 
-    for (auto& interval : handled) {
-        std::cout << interval << std::endl;
-    }
+    // for (auto& interval : handled) {
+    //     std::cout << interval << std::endl;
+    // }
 
     // group intervals by vreg_id
     std::vector<std::vector<LiveInterval>> intervals_by_vreg;
@@ -711,51 +746,56 @@ void allocate_registers(Function& func) {
     }
 
     std::vector<IntervalGroup> interval_groups;
+    interval_groups.reserve(intervals_by_vreg.size());
     for (auto& group : intervals_by_vreg) {
         interval_groups.emplace_back(std::move(group));
     }
 
-    // resolution
-    for (size_t pred = 0; pred < func.blocks.size(); ++pred) {
-        // iterate over successors
-        for (size_t succ : func.blocks[pred].successors) {
-            // handle phi nodes
-            // TODO handle phi nodes in separate loop
-            for (const auto& phi : func.blocks[succ].phi_nodes) {
-                for (const auto& [block_index, operand] : phi.args) {
-                    if (block_index == pred) {
-                        // phi function defining some value in successor
-                        Operand move_from;
-                        if (operand.type == Operand::VIRT_REG) {
-                            move_from = interval_groups[operand.index].assignment_at(block_range[pred].second).value();
-                        } else if (operand.type == Operand::IMMEDIATE) {
-                            move_from = operand;
-                        } else {
-                            assert(false && "unsupported operand");
-                        }
-                        Operand move_to = interval_groups[phi.out.index].assignment_at(block_range[succ].first + 1).value();
-                        if (move_from != move_to) {
-                            func.blocks[pred].resolution_map.push_back({move_from, move_to});
-                        }
+    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> resolve_moves;
+    // phi node decomposition
+    for (size_t succ = 0; succ < func.blocks.size(); ++succ) {
+        for (const auto& phi :func.blocks[succ].phi_nodes) {
+            for (const auto& [pred, operand] : phi.args) {
+                Operand move_from;
+                if (operand.type == Operand::VIRT_REG) {
+                    move_from = interval_groups[operand.index].assignment_at(block_range[pred].second).value();
+                } else if (operand.type == Operand::IMMEDIATE) {
+                    move_from = operand;
+                } else {
+                    assert(false && "unsupported operand");
+                }
+                if (auto to = interval_groups[phi.out.index].assignment_at(block_range[succ].first + 1)) {
+                    Operand move_to = *to;
+                    if (move_from != move_to) {
+                        // func.blocks[pred].resolution_map.push_back({move_from, move_to});
+                        resolve_moves.push_back({block_range[pred].first, {move_from, move_to}});
                     }
                 }
             }
-            // TODO only if pred and succ are not adjacent
-            // for every interval group
+        }
+    }
+
+
+    // nonsuccessive interval split handling
+    for (size_t pred = 0; pred < func.blocks.size(); ++pred) {
+        for (size_t succ : func.blocks[pred].successors) {
+            if (succ == pred + 1) {
+                continue;
+            }
             for (const auto& group : interval_groups) {
                 // check intervals that span multiple blocks
                 if (auto move_to = group.assignment_at(block_range[succ].first)) {
                     Operand move_from = group.assignment_at(block_range[pred].second).value();
                     if (!(move_from == *move_to)) {
-                        func.blocks[pred].resolution_map.push_back({move_from, *move_to});
+                        resolve_moves.push_back({block_range[pred].first, {move_from, *move_to}});
+                        // func.blocks[pred].resolution_map.push_back({move_from, *move_to});
                     }
                 }
             }
         }
     }
     
-    // check adjacent split intervals
-    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> split_resolves;
+    // successive interval split handling
     for (const auto& group : interval_groups) {
         if (group.intervals.size() < 2) {
             continue;
@@ -767,24 +807,17 @@ void allocate_registers(Function& func) {
             Operand prev_op = group.intervals[i].op;
             Operand next_op = group.intervals[i + 1].op;
             if (prev_end + 1 == next_start && prev_op != next_op) {
-                split_resolves.push_back({group.intervals[i + 1].start_pos(), {prev_op, next_op}});
+                resolve_moves.push_back({prev_end, {prev_op, next_op}});
             }
         }
     }
-    std::sort(split_resolves.begin(), split_resolves.end(), [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
+    std::sort(resolve_moves.begin(), resolve_moves.end(), [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
     
-    for (const auto& [pos, operands] : split_resolves) {
-        std::cout << pos << ": " << operands.first << " -> " << operands.second << std::endl;
-    }
-
-    for (size_t i = 0; i < func.blocks.size(); ++i) {
-        std::cout << "block " << i << std::endl;
-        for (const auto& [from, to] : func.blocks[i].resolution_map) {
-            std::cout << from << " -> " << to << std::endl;
-        }
-    }
+    // for (const auto& [pos, operands] : resolve_moves) {
+    //     std::cout << pos << ": " << operands.first << " -> " << operands.second << std::endl;
+    // }
     
-    rewrite_instructions(func, interval_groups, split_resolves);
+    rewrite_instructions(func, interval_groups, resolve_moves);
 }
 
 };  // namespace IR

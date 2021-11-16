@@ -100,14 +100,12 @@ struct PhiNode {
 
 struct BasicBlock {
     std::vector<PhiNode> phi_nodes;
-    std::deque<Instruction> instructions;
+    std::vector<Instruction> instructions;
     std::vector<size_t> predecessors;
     std::vector<size_t> successors;
 
     bool is_loop_header;
     size_t final_loop_block;
-
-    std::vector<std::pair<Operand, Operand>> resolution_map;
 };
 
 struct Function {

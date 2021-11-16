@@ -79,8 +79,8 @@ void allocate_registers(Function& func);
 
 void rewrite_instructions(
     Function& func, 
-    std::vector<IntervalGroup> groups, 
-    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> splits
+    const std::vector<IntervalGroup>& groups, 
+    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> resolves
 );
 
 auto compute_live_intervals(
