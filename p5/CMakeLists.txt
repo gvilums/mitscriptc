@@ -39,7 +39,7 @@ include_directories(${ANTLR_SampleGrammarLexer_OUTPUT_DIR})
 set(CMAKE_BUILD_TYPE "Debug")
 
 # add generated grammar to demo binary target
-add_executable(mitscriptc src/compiler.cpp src/parsercode.cpp src/irprinter.cpp src/regalloc.cpp
+add_executable(mitscriptc src/compilertest.cpp src/compiler.cpp src/parsercode.cpp src/irprinter.cpp src/regalloc.cpp
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
             
