@@ -296,6 +296,7 @@ class Compiler : public Visitor {
     	fun_->blocks[last_idx].successors.push_back(last_idx + 1);
     	block0->predecessors.push_back(last_idx);
         expr.Expr->accept(*((Visitor*)this));
+        block_->is_loop_header = true;
         fun_->blocks.push_back(*block_);
         delete block_;
         
@@ -317,9 +318,7 @@ class Compiler : public Visitor {
         		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
         		
         		new_args[var.second] = reg_cnt_;
-        		
-        		std::cout << var.second << " " << reg_cnt_ << std::endl;
-        		
+        		     		
         		fun_->blocks[last_idx + 1].phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
         		reg_cnt_++;
@@ -327,6 +326,7 @@ class Compiler : public Visitor {
     	}
     	
     	size_t cur_block =	fun_->blocks.size(); 
+    	fun_->blocks[last_idx + 1].final_loop_block = cur_block;
     	fun_->blocks.push_back(*block_);
     
     	for (int i = cur_block; i > last_idx; i--) {

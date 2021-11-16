@@ -109,6 +109,9 @@ std::ostream& operator<<(std::ostream& os, const IR::BasicBlock& bb){
 	for (auto idx : bb.predecessors)
 		os << idx << " ";
 	os << std::endl;
+	if (bb.is_loop_header) {
+		os << "\t\t\t\tthis block is loop header with final block " << bb.final_loop_block << std::endl;	
+	}
 	return os;
 }
 
