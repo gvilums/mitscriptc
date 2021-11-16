@@ -6,6 +6,7 @@
 #include "Assigns.h"
 #include "FreeVariables.h"
 #include "ir.h"
+#include "irprinter.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ class Compiler : public Visitor {
   
     IR::Program* program_;
     IR::Function* fun_;
-    IR::BasicBlock* block_;
+    IR::BasicBlock block_;
     IR::Operand opr_;
     bool is_opr_;
     size_t reg_cnt_;
@@ -46,7 +47,7 @@ class Compiler : public Visitor {
 		program_->functions.push_back(input_);
 		program_->functions.push_back(intcast_);
 		fun_ = new IR::Function(); // this is the global scope
-		block_ = new IR::BasicBlock();
+		block_ = IR::BasicBlock();
 		
 		names_["print"] = 0;
 		names_["input"] = 1;
@@ -82,8 +83,8 @@ class Compiler : public Visitor {
    		store_glob.args[0] = {IR::Operand::OpType::LOGICAL, 0};
    		store_glob.args[1] = {IR::Operand::OpType::VIRT_REG, reg_cnt_++};
    		
-        block_->instructions.push_back(a_closure);
-        block_->instructions.push_back(store_glob);
+        block_.instructions.push_back(a_closure);
+        block_.instructions.push_back(store_glob);
        
    		a_closure.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
    		a_closure.args[0] = {IR::Operand::OpType::LOGICAL, 1};
@@ -91,8 +92,8 @@ class Compiler : public Visitor {
    		store_glob.args[0] = {IR::Operand::OpType::LOGICAL, 1};
    		store_glob.args[1] = {IR::Operand::OpType::VIRT_REG, reg_cnt_++};
    		
-        block_->instructions.push_back(a_closure);
-        block_->instructions.push_back(store_glob);
+        block_.instructions.push_back(a_closure);
+        block_.instructions.push_back(store_glob);
         
         a_closure.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
    		a_closure.args[0] = {IR::Operand::OpType::LOGICAL, 2};
@@ -100,8 +101,8 @@ class Compiler : public Visitor {
    		store_glob.args[0] = {IR::Operand::OpType::LOGICAL, 2};
    		store_glob.args[1] = {IR::Operand::OpType::VIRT_REG, reg_cnt_++};
    		
-        block_->instructions.push_back(a_closure);
-        block_->instructions.push_back(store_glob);
+        block_.instructions.push_back(a_closure);
+        block_.instructions.push_back(store_glob);
     }
 
     IR::Program* get_program() {
@@ -112,10 +113,9 @@ class Compiler : public Visitor {
         for (auto c : expr.children)
             c->accept(*((Visitor*)this));
   		
-        fun_->blocks.push_back(*block_);
+        fun_->blocks.push_back(block_);
         fun_->virt_reg_count = reg_cnt_;
     	program_->functions.push_back(*fun_);
-    	delete block_;
     	delete fun_;
     	program_->num_globals = globals_.size();
     }
@@ -131,7 +131,7 @@ class Compiler : public Visitor {
         expr.Expr->accept(*((Visitor*)this));
         if (!is_opr_)
             opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};  
-        block_->instructions.push_back({IR::Operation::RETURN, IR::Operand(), opr_});
+        block_.instructions.push_back({IR::Operation::RETURN, IR::Operand(), opr_});
     }
 
     void visit(AST::Assignment& expr) {
@@ -153,7 +153,7 @@ class Compiler : public Visitor {
    				store_glob.args[0] = {IR::Operand::OpType::LOGICAL, names_[s]};
    				store_glob.args[1] = opr_;
             	
-            	block_->instructions.push_back(store_glob);
+            	block_.instructions.push_back(store_glob);
             }
 			else if (local_reference_vars_.count(s)) {
 				if (!is_opr_)
@@ -162,12 +162,11 @@ class Compiler : public Visitor {
    				s_ref.op = IR::Operation::REF_STORE;
    				s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
    				s_ref.args[1] = opr_;
-				block_->instructions.push_back(s_ref);
+				block_.instructions.push_back(s_ref);
 			}
-			else { // check for error ? 
-				// local_vars_[s] = reg_cnt_;
+			else { // check for error ?
 				if (is_opr_) {
-					block_->instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr_});
+					block_.instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr_});
 					local_vars_[s] = reg_cnt_++;
 				}
 				else 
@@ -195,7 +194,7 @@ class Compiler : public Visitor {
 	   		store_field.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
 	   		store_field.args[1] = {IR::Operand::OpType::IMMEDIATE, idx};
 	   		store_field.args[2] = opr_;
-		    block_->instructions.push_back(store_field);
+		    block_.instructions.push_back(store_field);
 		    
         } else if (expr.Lhs->isIndexExpression()) {
             AST::IndexExpression* exp = ((AST::IndexExpression*)expr.Lhs);
@@ -216,121 +215,125 @@ class Compiler : public Visitor {
 	   		store_index.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
 	   		store_index.args[1] = idx_opr;
 	   		store_index.args[2] = opr_;
-		    block_->instructions.push_back(store_index);
+		    block_.instructions.push_back(store_index);
         }
     }
 
-    void visit(AST::IfStatement& expr) {
-    	IR::BasicBlock* block0 = new IR::BasicBlock;
-    	IR::BasicBlock* block1 = new IR::BasicBlock;
-    	IR::BasicBlock* block2 = new IR::BasicBlock;
-    	IR::BasicBlock* block3 = new IR::BasicBlock;
+    void visit(AST::IfStatement& expr) {	
+    	size_t last_idx = fun_->blocks.size(), cond_idx, last_if_idx, last_else_idx, next_idx;
+    	last_idx = fun_->blocks.size();
+    	cond_idx = last_idx + 1;
+    	last_else_idx = cond_idx;
+    	 	
+    	block_.successors.push_back(cond_idx);
+    	fun_->blocks.push_back(block_);
     	
-    	size_t last_idx = fun_->blocks.size(), block1_idx, block2_idx, next_idx;
-    	block2_idx = last_idx;
-    	fun_->blocks.push_back(*block_);
-    	delete block_;
-    	
-    	block_ = block0;
-    	fun_->blocks[last_idx].successors.push_back(last_idx + 1);
-    	block0->predecessors.push_back(last_idx);
+    	block_ = IR::BasicBlock();
+    	block_.predecessors.push_back(last_idx);
+    	block_.successors.push_back(cond_idx + 1);
         expr.Expr->accept(*((Visitor*)this));
-        fun_->blocks.push_back(*block_);
-        delete block_;
+        
+        fun_->blocks.push_back(block_);
         
         std::map<std::string, size_t> tlocal_vars1 = local_vars_, tlocal_vars2 = local_vars_;
-        block_ = block1;
+        block_ = IR::BasicBlock();
+        block_.predecessors.push_back(cond_idx);
+        
         expr.children[0]->accept(*((Visitor*)this));
-        block1_idx = fun_->blocks.size();
-        block1->predecessors.push_back(last_idx + 1);
-        block3->predecessors.push_back(block1_idx);
-        fun_->blocks[last_idx + 1].successors.push_back(block1_idx);
-    	fun_->blocks.push_back(*block_);
+  
+        last_if_idx = fun_->blocks.size();
+    	fun_->blocks.push_back(block_);
     	tlocal_vars1 = local_vars_;
-    	delete block_;
-		
+    	
         if (expr.children.size() > 1) {
         	local_vars_ = tlocal_vars2;
         	
-        	block_ = block2;
+        	block_ = IR::BasicBlock();
+        	block_.predecessors.push_back(cond_idx);
+        	fun_->blocks[cond_idx].successors.push_back(last_if_idx + 1);
+        	 	
         	expr.children[1]->accept(*((Visitor*)this));
-        	block2_idx = fun_->blocks.size();
-        	block2->predecessors.push_back(last_idx + 1);
-        	block3->predecessors.push_back(block2_idx);
-        	fun_->blocks[last_idx + 1].successors.push_back(block2_idx);
-    		fun_->blocks.push_back(*block_);
+        	last_else_idx = fun_->blocks.size();
+        	
+    		fun_->blocks.push_back(block_);
     		tlocal_vars2 = local_vars_;
-    		delete block_;	
         }
         
-        block_ = block3;
-        next_idx = fun_->blocks.size();
-        fun_->blocks[block1_idx].successors.push_back(next_idx);
-        if (expr.children.size() > 1)
-        	fun_->blocks[block2_idx].successors.push_back(next_idx);
+        next_idx = fun_->blocks.size();       
+        block_ = IR::BasicBlock();
+        block_.predecessors.push_back(last_if_idx);
+        fun_->blocks[last_if_idx].successors.push_back(next_idx);
+        
+        if (expr.children.size() > 1) {
+        	fun_->blocks[last_else_idx].successors.push_back(next_idx);
+        	block_.predecessors.push_back(last_else_idx);
+        }
+        else {
+        	fun_->blocks[cond_idx].successors.push_back(next_idx);
+        	block_.predecessors.push_back(cond_idx);
+        }
         
         for (auto var : tlocal_vars1) {
         	if (tlocal_vars2[var.first] != var.second) {
         		IR::PhiNode pn;
         		pn.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};        		
-        		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
-        		pn.args.push_back({block2_idx, {IR::Operand::OpType::VIRT_REG, tlocal_vars2[var.first]}});
+        		pn.args.push_back({last_if_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
+        		pn.args.push_back({last_else_idx, {IR::Operand::OpType::VIRT_REG, tlocal_vars2[var.first]}});
         	
-        		block_->phi_nodes.push_back(pn);
+        		block_.phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
         		reg_cnt_++;
         	}
         } 
-    }
+        
+       
+   	}
 
     void visit(AST::WhileLoop& expr) { // could contain empty blocks
-    	IR::BasicBlock* block0 = new IR::BasicBlock;
-    	IR::BasicBlock* block1 = new IR::BasicBlock;
-    	IR::BasicBlock* block2 = new IR::BasicBlock;
+    	size_t last_idx, header_idx, last_body_idx;
+    	  	
+    	last_idx = fun_->blocks.size();
+    	header_idx = last_idx + 1;
+    	block_.successors.push_back(header_idx);
+    	fun_->blocks.push_back(block_);
     	
-    	size_t last_idx = fun_->blocks.size(), block1_idx, block2_idx;
-    	fun_->blocks.push_back(*block_);
-    	delete block_;
-    	
-    	block_ = block0;
-    	fun_->blocks[last_idx].successors.push_back(last_idx + 1);
-    	block0->predecessors.push_back(last_idx);
+    	block_ = IR::BasicBlock();
+    	block_.predecessors.push_back(last_idx);
+    	block_.successors.push_back(last_idx + 2);
+    	block_.is_loop_header = true;
         expr.Expr->accept(*((Visitor*)this));
-        block_->is_loop_header = true;
-        fun_->blocks.push_back(*block_);
-        delete block_;
+        fun_->blocks.push_back(block_);
         
         std::map<std::string, size_t> tlocal_vars = local_vars_;
-        block_ = block1;
+        block_ = IR::BasicBlock();
+        block_.predecessors.push_back(header_idx);
+        
         expr.children[0]->accept(*((Visitor*)this));
-        block1_idx = fun_->blocks.size();
-        block1->predecessors.push_back(last_idx + 1);
-        fun_->blocks[last_idx + 1].successors.push_back(block1_idx);
-        block1->successors.push_back(last_idx + 1);
-        fun_->blocks[last_idx + 1].predecessors.push_back(block1_idx);
-    	
+    	last_body_idx =	fun_->blocks.size(); 
+    	block_.successors.push_back(header_idx);
+    	fun_->blocks[header_idx].predecessors.push_back(last_body_idx);
+    	fun_->blocks[header_idx].final_loop_block = last_body_idx;
+    	fun_->blocks.push_back(block_);
+                  	
     	std::map<size_t, size_t> new_args;
     	for (auto var : tlocal_vars) {
     		if (local_vars_[var.first] != var.second) {
     			IR::PhiNode pn;
         		pn.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};        		
         		pn.args.push_back({last_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
-        		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
+        		pn.args.push_back({last_body_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
         		
         		new_args[var.second] = reg_cnt_;
         		     		
-        		fun_->blocks[last_idx + 1].phi_nodes.push_back(pn);
+        		fun_->blocks[header_idx].phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
         		reg_cnt_++;
     		}
     	}
     	
-    	size_t cur_block =	fun_->blocks.size(); 
-    	fun_->blocks[last_idx + 1].final_loop_block = cur_block;
-    	fun_->blocks.push_back(*block_);
-    
-    	for (int i = cur_block; i > last_idx; i--) {
-    		if (i != last_idx + 1) {
+
+    	for (int i = last_body_idx; i > last_idx; i--) {
+    		if (i != header_idx) {
     			for (auto& pn : fun_->blocks[i].phi_nodes) {
 					for (auto& op : pn.args) 
 						if (op.second.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.second.index)) 
@@ -345,17 +348,14 @@ class Compiler : public Visitor {
     		}
     	}
     	  	
-    	delete block_;
-    	
-    	block_ = block2;
-        block2_idx = fun_->blocks.size();
-    	fun_->blocks[last_idx + 1].successors.push_back(block2_idx);
-    	block2->predecessors.push_back(last_idx + 1);
+    	block_ = IR::BasicBlock();
+    	fun_->blocks[header_idx].successors.push_back(last_body_idx + 1);
+    	block_.predecessors.push_back(header_idx);
     }
 
     void visit(AST::FunctionDeclaration& expr) {
     	IR::Function* tfun = fun_;
-    	IR:: BasicBlock* tblock = block_;
+    	IR:: BasicBlock tblock = block_;
     	bool tscope = global_scope_;
     	std::set<string> tglobals = globals_;
 		std::set<string> tref = ref_;
@@ -371,7 +371,7 @@ class Compiler : public Visitor {
      	free_vars_ = std::map<std::string, size_t>();
      	
 		fun_ = new IR::Function;
-		block_ = new IR::BasicBlock;
+		block_ = IR::BasicBlock();
 		reg_cnt_ = 0;
 		global_scope_ = false;
 		fun_->parameter_count = expr.arguments.size();
@@ -430,27 +430,27 @@ class Compiler : public Visitor {
                 free_vars_[s] = - 1;
         
         IR::Operand fun_reg = {IR::Operand::OpType::VIRT_REG, treg_cnt};
-        size_t b_idx = tblock->instructions.size();
-        tblock->instructions.push_back({});
+        size_t b_idx = tblock.instructions.size();
+        tblock.instructions.push_back({});
         
         tret_reg = treg_cnt;
         treg_cnt++;
         
         size_t args_idx = 0;
         for (auto s : expr.arguments)
-        	block_->instructions.push_back({IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, local_vars_[s]}, {IR::Operand::OpType::LOGICAL, args_idx++}});
+        	block_.instructions.push_back({IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, local_vars_[s]}, {IR::Operand::OpType::LOGICAL, args_idx++}});
          
         size_t idx = 0;
         vector<IR::Instruction> instr;
         for (auto s : free_vars_){
-        	block_->instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, idx}});
+        	block_.instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, idx}});
         	free_vars_[s.first] = reg_cnt_++; // could be done later
         	
         	if (tlocal_reference_vars.count(s.first)){
         		instr.push_back({IR::Operation::SET_CAPTURE, {IR::Operand::OpType::LOGICAL, idx}, fun_reg, {IR::Operand::OpType::VIRT_REG, tlocal_vars[s.first]}});
         	}
         	else if (tfree_vars.count(s.first)) {	
-        		tblock->instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, treg_cnt}, {IR::Operand::OpType::VIRT_REG, tfree_vars[s.first]}});
+        		tblock.instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, treg_cnt}, {IR::Operand::OpType::VIRT_REG, tfree_vars[s.first]}});
         		instr.push_back({IR::Operation::SET_CAPTURE, {IR::Operand::OpType::LOGICAL, idx}, fun_reg, {IR::Operand::OpType::VIRT_REG, reg_cnt_}});
         		treg_cnt++; 		
         	}
@@ -458,10 +458,10 @@ class Compiler : public Visitor {
         }
         
         for (auto ins : instr)
-        	tblock->instructions.push_back(ins);
+        	tblock.instructions.push_back(ins);
         
        	for (auto reg : new_ass)
-       		block_->instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg}, {IR::Operand::OpType::IMMEDIATE, 0}});
+       		block_.instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg}, {IR::Operand::OpType::IMMEDIATE, 0}});
         
         
         expr.block->accept(*((Visitor*)this));
@@ -474,14 +474,13 @@ class Compiler : public Visitor {
    		a_closure.args[0] = {IR::Operand::OpType::LOGICAL, program_->functions.size()};
    		a_closure.args[1] = {IR::Operand::OpType::LOGICAL, expr.arguments.size()};
    		a_closure.args[2] = {IR::Operand::OpType::LOGICAL, free_vars_.size()};
-   		tblock->instructions[b_idx] = a_closure;
+   		tblock.instructions[b_idx] = a_closure;
    		
-        block_->instructions.push_back({IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}});   
+        block_.instructions.push_back({IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}});   
         fun_->virt_reg_count = reg_cnt_;
-        fun_->blocks.push_back(*block_);
+        fun_->blocks.push_back(block_);
 		program_->functions.push_back(*fun_);
 		delete fun_;
-		delete block_;
 	
 		local_vars_ = tlocal_vars;
      	local_reference_vars_ = tlocal_reference_vars;
@@ -510,8 +509,8 @@ class Compiler : public Visitor {
         
         if (expr.op == "<=" || expr.op == "<") {
         	IR::Operation opr_t = (expr.op == "<") ? IR::Operation::GEQ : IR::Operation::GT;
-            block_->instructions.push_back({opr_t, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
-        	block_->instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_ + 1}, {IR::Operand::OpType::VIRT_REG, reg_cnt_}});
+            block_.instructions.push_back({opr_t, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
+        	block_.instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_ + 1}, {IR::Operand::OpType::VIRT_REG, reg_cnt_}});
         	ret_reg_ = reg_cnt_ + 1;
         	reg_cnt_ += 2;
             return;
@@ -537,7 +536,7 @@ class Compiler : public Visitor {
         else if (expr.op == "|")
             op = IR::Operation::OR;
 
-        block_->instructions.push_back({op, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
+        block_.instructions.push_back({op, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
         is_opr_ = false;
         ret_reg_ = reg_cnt_;
         reg_cnt_++;
@@ -552,11 +551,11 @@ class Compiler : public Visitor {
         	opr = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 
         if (expr.op == "!") {
-        	block_->instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr});
+        	block_.instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr});
         }
         else {
         	IR::Operand zero = {IR::Operand::OpType::IMMEDIATE, 3};
-        	block_->instructions.push_back({IR::Operation::SUB, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, zero, opr});
+        	block_.instructions.push_back({IR::Operation::SUB, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, zero, opr});
         }
         is_opr_ = false;
         ret_reg_ = reg_cnt_;
@@ -578,7 +577,7 @@ class Compiler : public Visitor {
    			set_arg.args[0] = {IR::Operand::OpType::LOGICAL, arg_cnt++};
    			set_arg.args[1] = opr_;
             
-            block_->instructions.push_back(set_arg);
+            block_.instructions.push_back(set_arg);
         }
         
         IR::Instruction call;
@@ -587,7 +586,7 @@ class Compiler : public Visitor {
    		call.args[0] = {IR::Operand::OpType::LOGICAL, arg_cnt};
    		call.args[1] = {IR::Operand::OpType::VIRT_REG, fun_reg};
    		
-        block_->instructions.push_back(call);
+        block_.instructions.push_back(call);
         is_opr_ = false;
         ret_reg_ = reg_cnt_;
         reg_cnt_++;
@@ -609,7 +608,7 @@ class Compiler : public Visitor {
    		load_field.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
    		load_field.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
    		load_field.args[1] = {IR::Operand::OpType::IMMEDIATE, idx};
-        block_->instructions.push_back(load_field);
+        block_.instructions.push_back(load_field);
         reg_cnt_++;
         is_opr_ = false;
     }
@@ -627,14 +626,14 @@ class Compiler : public Visitor {
    		load_idx.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
    		load_idx.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
    		load_idx.args[1] = opr_;
-        block_->instructions.push_back(load_idx);
+        block_.instructions.push_back(load_idx);
         reg_cnt_++;
         is_opr_ = false;
     }
 
     void visit(AST::Record& expr) {
     	size_t rec_reg = reg_cnt_;
-    	block_->instructions.push_back({IR::Operation::ALLOC_REC, {IR::Operand::OpType::VIRT_REG, rec_reg}});
+    	block_.instructions.push_back({IR::Operation::ALLOC_REC, {IR::Operand::OpType::VIRT_REG, rec_reg}});
     	reg_cnt_++;
     	
         for (auto p : expr.dict) {
@@ -655,7 +654,7 @@ class Compiler : public Visitor {
 	   		store_field.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
 	   		store_field.args[1] = {IR::Operand::OpType::IMMEDIATE, idx};
 	   		store_field.args[2] = opr_;
-		    block_->instructions.push_back(store_field);
+		    block_.instructions.push_back(store_field);
         }
     }
 
@@ -694,16 +693,16 @@ class Compiler : public Visitor {
             }
         	
             if (globals_.count(s)) {
-            	block_->instructions.push_back({IR::Operation::LOAD_GLOBAL, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, names_[s]}});
+            	block_.instructions.push_back({IR::Operation::LOAD_GLOBAL, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, names_[s]}});
             	ret_reg_ = reg_cnt_++;
                 return;
             }
             else if (local_reference_vars_.count(s)) {
-            	block_->instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, local_vars_[s]}});
+            	block_.instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, local_vars_[s]}});
             	ret_reg_ = reg_cnt_++;
             }
             else if (free_vars_.count(s)) {
-            	block_->instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, free_vars_[s]}});
+            	block_.instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, free_vars_[s]}});
             	ret_reg_ = reg_cnt_++;
             }
             else {

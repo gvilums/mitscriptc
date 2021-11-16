@@ -35,7 +35,7 @@ auto main(int argc, const char* argv[]) -> int {
         std::cout << "Parsing failed" << std::endl;
         return 1;
     }
-
+    
     Compiler compiler;
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
