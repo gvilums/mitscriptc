@@ -97,7 +97,13 @@ struct Operand {
     } type{NONE};
     size_t index{0};
 
-    bool operator==(const Operand& other) const = default;
+    bool operator==(const Operand& other) const {
+        return this->type == other.type && this->index == other.index;
+    }
+
+    bool operator!=(const Operand& other) const {
+        return this->type != other.type || this->index != other.index;
+    }
 };
 
 struct LiveInterval {

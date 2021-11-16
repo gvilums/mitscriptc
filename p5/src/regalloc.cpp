@@ -342,38 +342,45 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
         outputs.push_back(to);
     }
 
-    enum class OpState {
-        Leaving,
-        Staying,
-        Entering,
-    };
+    std::vector<std::pair<Operand, Operand>> out_only;
+    std::vector<std::pair<Operand, Operand>> permuted;
+    std::vector<std::pair<Operand, Operand>> in_only;
     
-    std::vector<OpState> states(operands.size());
-    for (size_t i = 0; i < operands.size(); ++i) {
-        bool is_input = std::find(inputs.begin(), inputs.end(), operands[i]) != inputs.end();
-        bool is_output = std::find(outputs.begin(), outputs.end(), operands[i]) != outputs.end();
-        if (is_input && is_output) {
-            states[i] = OpState::Staying;
-        } else if (is_input) {
-            states[i] = OpState::Leaving;
+    for (const auto& [from, to] : mapping) {
+        bool out_is_in = std::find(inputs.begin(), inputs.end(), to) != inputs.end();
+        bool in_is_out = std::find(outputs.begin(), outputs.end(), from) != outputs.end();
+        if (out_is_in && in_is_out) {
+            permuted.push_back({from, to});
+        } else if (!out_is_in) {
+            out_only.push_back({from, to});
+        } else if (!in_is_out) {
+            in_only.push_back({from, to});
         } else {
-            states[i] = OpState::Entering;
+            assert(false);
         }
     }
-    
-    // handle all entering registers
-    for (const auto& [from, to] : mapping) {
-        size_t i = 0;
-        while (!(operands[i] == to)) {
-            ++i;
-        }
-        if (states[i] == OpState::Entering) {
-            instructions.push_back(Instruction{Operation::MOV, Operand{}, from, to, Operand{}});
-        }
+
+    // can first overwrite any registers which are only outputs
+    for (const auto& [from, to] : out_only) {
+        instructions.push_back(Instruction{Operation::MOV, to, from});
     }
     
     // handle all permuted registers
+    for (size_t i = 0; i < permuted.size(); ++i) {
+        if (permuted[i].first != permuted[i].second) {
+            size_t j = 0;
+            while (permuted[j].first != permuted[i].second) {
+                ++j;
+            }
+            instructions.push_back(Instruction{Operation::SWAP, {}, permuted[i].first, permuted[j].first, {}});
+            std::swap(permuted[i].second, permuted[j].second);
+        }
+    }
     
+    // finally handle all input only registers. Can be handled last as they are no overwritten by def.
+    for (const auto& [from, to] : in_only) {
+        instructions.push_back(Instruction{Operation::MOV, to, from});
+    }
 
     return instructions;
 }
@@ -462,8 +469,7 @@ auto try_alloc_reg(
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>& unhandled,
     std::vector<LiveInterval>& active,
     std::vector<LiveInterval>& inactive,
-    const std::vector<LiveInterval>& machine_reg_uses,
-    std::vector<std::pair<size_t, Operand>>& interval_splits) -> bool {
+    const std::vector<LiveInterval>& machine_reg_uses) -> bool {
     std::array<size_t, MACHINE_REG_COUNT> free_until_pos;
     free_until_pos.fill(std::numeric_limits<size_t>::max());
 
@@ -522,8 +528,7 @@ void alloc_blocked_reg(
     std::vector<LiveInterval>& active,
     std::vector<LiveInterval>& inactive,
     size_t& stack_slot,
-    const std::vector<LiveInterval>& machine_reg_uses,
-    std::vector<std::pair<size_t, Operand>>& interval_splits) {
+    const std::vector<LiveInterval>& machine_reg_uses) {
     std::array<size_t, MACHINE_REG_COUNT> next_use_pos;
     next_use_pos.fill(std::numeric_limits<size_t>::max());
 
@@ -681,8 +686,8 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
         inactive = std::move(new_inactive);
 
         // try allocate register
-        if (!try_alloc_reg(current, unhandled, active, inactive, machine_reg_uses, interval_splits)) {
-            alloc_blocked_reg(current, position, unhandled, active, inactive, stack_slot, machine_reg_uses, interval_splits);
+        if (!try_alloc_reg(current, unhandled, active, inactive, machine_reg_uses)) {
+            alloc_blocked_reg(current, position, unhandled, active, inactive, stack_slot, machine_reg_uses);
         }
 
         if (current.op.type == Operand::MACHINE_REG) {
@@ -738,12 +743,13 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
                             assert(false && "unsupported operand");
                         }
                         Operand move_to = interval_groups[phi.out.index].assignment_at(block_range[succ].first + 1).value();
-                        if (!(move_from == move_to)) {
+                        if (move_from != move_to) {
                             this->blocks[pred].resolution_map.push_back({move_from, move_to});
                         }
                     }
                 }
             }
+            // TODO only if pred and succ are not adjacent
             // for every interval group
             for (const auto& group : interval_groups) {
                 // check intervals that span multiple blocks
@@ -769,7 +775,7 @@ auto Function::allocate_registers() -> std::vector<LiveInterval> {
             size_t next_start = group.intervals[i + 1].start_pos();
             Operand prev_op = group.intervals[i].op;
             Operand next_op = group.intervals[i + 1].op;
-            if (prev_end + 1 == next_start && !(prev_op == next_op)) {
+            if (prev_end + 1 == next_start && prev_op != next_op) {
                 split_resolves.push_back({group.intervals[i + 1].start_pos(), {prev_op, next_op}});
             }
         }
