@@ -1,7 +1,9 @@
-#include "ir.h"
 
 #include <iostream>
 #include <string>
+
+#include "ir.h"
+#include "irprinter.h"
 
 std::string op_str[] = {
 	"ADD", 
