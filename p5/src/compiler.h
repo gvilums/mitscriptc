@@ -316,7 +316,7 @@ class Compiler : public Visitor {
         		pn.args.push_back({last_idx, {IR::Operand::OpType::VIRT_REG, var.second}});
         		pn.args.push_back({block1_idx, {IR::Operand::OpType::VIRT_REG, local_vars_[var.first]}});
         		
-        		new_args[local_vars_[var.first]] = reg_cnt_;
+        		new_args[var.second] = reg_cnt_;
         		
         		fun_->blocks[last_idx + 1].phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
@@ -335,16 +335,16 @@ class Compiler : public Visitor {
     		st.pop();
     		vis.insert(cur);
     		
-    		for (auto ins : fun_->blocks[cur].instructions)
-    			for (auto& op : ins.args)
-    				if (op.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.index))
+    		for (auto& ins : fun_->blocks[cur].instructions) {
+    			for (auto& op : ins.args) 
+    				if (op.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.index)) 
     					op.index = new_args[op.index];
+    		}
     				
     		for (auto pred : fun_->blocks[cur].predecessors)
     			if(!vis.count(pred) && pred != last_idx + 1)
     				st.push(pred);
     	}
-    	
     	
     	delete block_;
     	
