@@ -335,6 +335,14 @@ class Compiler : public Visitor {
     		st.pop();
     		vis.insert(cur);
     		
+    		if (cur != last_idx + 1) {
+    			for (auto& pn : fun_->blocks[cur].phi_nodes) {
+					for (auto& op : pn.args) 
+						if (op.second.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.second.index)) 
+							op.second.index = new_args[op.second.index];
+    			}	
+    		}
+    		
     		for (auto& ins : fun_->blocks[cur].instructions) {
     			for (auto& op : ins.args) 
     				if (op.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.index)) 
