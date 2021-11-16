@@ -342,7 +342,7 @@ class Compiler : public Visitor {
     		}
     				
     		for (auto pred : fun_->blocks[cur].predecessors)
-    			if(!vis.count(pred) && pred != last_idx + 1)
+    			if(!vis.count(pred) && pred != last_idx)
     				st.push(pred);
     	}
     	
