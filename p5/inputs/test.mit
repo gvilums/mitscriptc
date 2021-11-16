@@ -6,4 +6,5 @@ f = fun() {
         i = i + 1;
     }
     print(i);
+    print(x + i);
 };
