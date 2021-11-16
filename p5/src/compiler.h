@@ -318,6 +318,8 @@ class Compiler : public Visitor {
         		
         		new_args[var.second] = reg_cnt_;
         		
+        		std::cout << var.second << " " << reg_cnt_ << std::endl;
+        		
         		fun_->blocks[last_idx + 1].phi_nodes.push_back(pn);
         		local_vars_[var.first] = reg_cnt_;
         		reg_cnt_++;
@@ -326,34 +328,23 @@ class Compiler : public Visitor {
     	
     	size_t cur_block =	fun_->blocks.size(); 
     	fun_->blocks.push_back(*block_);
-    	stack<int> st;
-    	st.push(cur_block);
-    	std::set<int> vis;
-    	
-    	while(!st.empty()){
-    		int cur = st.top();
-    		st.pop();
-    		vis.insert(cur);
-    		
-    		if (cur != last_idx + 1) {
-    			for (auto& pn : fun_->blocks[cur].phi_nodes) {
+    
+    	for (int i = cur_block; i > last_idx; i--) {
+    		if (i != last_idx + 1) {
+    			for (auto& pn : fun_->blocks[i].phi_nodes) {
 					for (auto& op : pn.args) 
 						if (op.second.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.second.index)) 
 							op.second.index = new_args[op.second.index];
     			}	
     		}
     		
-    		for (auto& ins : fun_->blocks[cur].instructions) {
+    		for (auto& ins : fun_->blocks[i].instructions) {
     			for (auto& op : ins.args) 
     				if (op.type == IR::Operand::OpType::VIRT_REG && new_args.count(op.index)) 
     					op.index = new_args[op.index];
     		}
-    				
-    		for (auto pred : fun_->blocks[cur].predecessors)
-    			if(!vis.count(pred) && pred != last_idx)
-    				st.push(pred);
     	}
-    	
+    	  	
     	delete block_;
     	
     	block_ = block2;
