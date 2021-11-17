@@ -17,7 +17,6 @@ TEST_CASE("LiveInterval::split_at") {
         auto split_off = interval.split_at(2);
         REQUIRE(interval.ranges.size() == 1);
         REQUIRE(split_off.ranges.size() == 2);
-        std::cout << interval.ranges[0].first << " " << interval.ranges[0].second << std::endl;
         CHECK(interval.ranges[0] == std::pair<size_t, size_t>{0, 1});
         CHECK(split_off.ranges[0] == std::pair<size_t, size_t>{2, 5});
         CHECK(split_off.ranges[1] == std::pair<size_t, size_t>{10, 15});

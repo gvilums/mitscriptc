@@ -53,6 +53,7 @@ struct String {
 struct Closure {
     std::uint64_t fnptr;
     std::uint64_t n_args;
+    std::uint64_t n_free_vars;
     Value free_vars[];
 };
 
@@ -62,16 +63,24 @@ struct Record {
 
 ValueKind value_get_kind(Value val);
 
+bool value_get_bool(Value val);
+int value_get_int32(Value val);
+std::string value_get_std_string(Value val);
+Value* value_get_ref(Value val);
+String* value_get_string_ptr(Value val);
+Record* value_get_record(Value val);
+Closure* value_get_closure(Value val);
+
 // checks types
 Value value_add(Value lhs, Value rhs);
 
 // below assume integer values
+Value value_add_int32(Value lhs, Value rhs);
 Value value_sub(Value lhs, Value rhs);
 Value value_mul(Value lhs, Value rhs);
 Value value_div(Value lhs, Value rhs);
 
 Value value_to_string(Value val);
-
 
 Value from_bool(bool b);
 Value from_int32(int32_t i);
@@ -93,9 +102,25 @@ struct HeapObject {
     std::uint64_t data[];
 };
 
-Value* alloc_ref();
-String* alloc_string(size_t length);
-Record* alloc_record();
-Closure* alloc_closure(size_t num_free);
+struct AllocationContext {
+    size_t total_alloc{0};
+    
+    Value none_string;
+    Value false_string;
+    Value true_string;
+    Value function_string;
+    
+    AllocationContext();
+    
+    auto alloc_ref() -> Value*;
+    auto alloc_string(size_t length) -> String*;
+    auto alloc_record() -> Record*;
+    auto alloc_closure(size_t num_free) -> Closure*;
+    
+    auto allocate(size_t n_bytes) -> void*;
+    void deallocate(HeapObject* obj);
+};
+
+auto get_alloc() -> AllocationContext&;
 
 };
