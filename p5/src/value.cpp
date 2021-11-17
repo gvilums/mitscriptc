@@ -32,7 +32,7 @@ Value from_bool(bool b) {
     return (static_cast<uint64_t>(b) << 4) | static_cast<uint64_t>(ValueKind::Bool);
 }
 
-Value from_int(int i) {
+Value from_int32(int32_t i) {
     return (static_cast<uint64_t>(i) << 4) | static_cast<uint64_t>(ValueKind::Int);
 }
 

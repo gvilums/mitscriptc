@@ -6,15 +6,16 @@
 #include "ir.h"
 #include "irprinter.h"
 #include "compiler.h"
+#include "value.h"
 
 using namespace std;
 
 Compiler::Compiler() {
     program_ = new IR::Program; 
     
-	IR::Function print_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}, {IR::Operand::OpType::LOGICAL, 0}}, {IR::Operation::PRINT, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}}}, {}, {}, false, 0}}, 0, 0, {}};
-	IR::Function input_ = {{{{}, {{IR::Operation::INPUT, {IR::Operand::OpType::VIRT_REG, 0}},{IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}}, {}, {}, false, 0}}, 0, 0, {}};
-	IR::Function intcast_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::ASSERT_STRING, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::INTCAST, {IR::Operand::OpType::VIRT_REG, 1}, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 1}}}, {}, {}, false, 0}}, 0, 0, {}};
+	IR::Function print_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}, {IR::Operand::OpType::LOGICAL, 0}}, {IR::Operation::PRINT, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}}}, {}, {}, false, 0}}, 1, 1, {}};
+	IR::Function input_ = {{{{}, {{IR::Operation::INPUT, {IR::Operand::OpType::VIRT_REG, 0}},{IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}}, {}, {}, false, 0}}, 1, 0, {}};
+	IR::Function intcast_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::ASSERT_STRING, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::INTCAST, {IR::Operand::OpType::VIRT_REG, 1}, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 1}}}, {}, {}, false, 0}}, 2, 1, {}};
 	
 	program_->functions.push_back(print_);
 	program_->functions.push_back(input_);
@@ -29,10 +30,10 @@ Compiler::Compiler() {
 	globals_.insert("input");
 	globals_.insert("intcast");
 	
-	// program_->immediates.push_back(); // NONE
-	// program_->immediates.push_back(); // TRUE
-	// program_->immediates.push_back(); // FALSE
-	// program_->immediates.push_back(); // 0
+	program_->immediates.push_back(0); // NONE
+	program_->immediates.push_back(runtime::from_bool(true)); // TRUE
+	program_->immediates.push_back(runtime::from_bool(false)); // FALSE
+	program_->immediates.push_back(runtime::from_int32(0)); // 0
 
 	reg_cnt_ = 0;
 	imm_cnt_ = 4;
@@ -154,7 +155,7 @@ void Compiler::visit(AST::Assignment& expr) {
 
         size_t idx;
 		if (!str_const_.count(exp->field)) {
-			// program_->immediates.push_back(); // expr->field
+			program_->immediates.push_back(runtime::from_std_string(exp->field));
 			str_const_[exp->field] = imm_cnt_++;
 		}
 		idx = str_const_[exp->field];
@@ -307,7 +308,7 @@ void Compiler::visit(AST::WhileLoop& expr) { // could contain empty blocks
 	}
 	
 
-	for (int i = last_body_idx; i > last_idx; i--) {
+	for (size_t i = last_body_idx; i > last_idx; i--) {
 		if (i != header_idx) {
 			for (auto& pn : fun_->blocks[i].phi_nodes) {
 				for (auto& op : pn.args) 
@@ -586,7 +587,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 	
 	size_t idx;
 	if (!str_const_.count(expr.field)) {
-		// program_->immediates.push_back(); // expr.field
+		program_->immediates.push_back(runtime::from_std_string(expr.field));
 		str_const_[expr.field] = imm_cnt_++;
 	}
 	idx = str_const_[expr.field];
@@ -633,7 +634,7 @@ void Compiler::visit(AST::Record& expr) {
         
         size_t idx;
 		if (!str_const_.count(p.first)) {
-			// program_->immediates.push_back(); // expr.field
+			program_->immediates.push_back(runtime::from_std_string(p.first));
 			str_const_[p.first] = imm_cnt_++;
 		}
 		idx = str_const_[p.first];
@@ -652,7 +653,7 @@ void Compiler::visit(AST::IntegerConstant& expr) {
 	int val = expr.getVal();
 	size_t idx;
 	if (!int_const_.count(val)) {
-		// program_->immediates.push_back(); // val
+		program_->immediates.push_back(runtime::from_int32(val)); // val
 		int_const_[val] = imm_cnt_++;
 	}
 	idx = int_const_[val];
@@ -669,7 +670,7 @@ void Compiler::visit(AST::StringConstant& expr) {
     	
     	size_t idx;
 		if (!str_const_.count(str)) {
-			// program_->immediates.push_back(); // str
+			program_->immediates.push_back(runtime::from_std_string(str)); // str
 			str_const_[str] = imm_cnt_++;
 		}
 		idx = str_const_[str];

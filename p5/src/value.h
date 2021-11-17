@@ -74,7 +74,7 @@ Value value_to_string(Value val);
 
 
 Value from_bool(bool b);
-Value from_int(uint32_t i);
+Value from_int32(int32_t i);
 Value from_std_string(const std::string& str);
 Value from_ref(Value* ref);
 Value from_string_ptr(String* str);
