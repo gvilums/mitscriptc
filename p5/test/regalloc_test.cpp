@@ -1,6 +1,7 @@
 #include "doctest.h"
 
 #include "ir.h"
+#include "regalloc.h"
 
 TEST_CASE("LiveInterval operator==") {
     CHECK(IR::LiveInterval{} == IR::LiveInterval{});    
@@ -48,5 +49,21 @@ TEST_CASE("LiveInterval::split_at") {
         CHECK(interval.ranges[1] == std::pair<size_t, size_t>{10, 11});
         CHECK(split_off.ranges[0] == std::pair<size_t, size_t>{12, 15});
         CHECK(split_off.ranges[1] == std::pair<size_t, size_t>{20, 25});
+    }
+}
+
+bool check_mapping(std::vector<std::pair<IR::Operand, IR::Operand>>& mapping, std::vector<IR::Instruction>& instrs) {
+    return false;
+}
+
+TEST_CASE("move and swap ordering") {
+    using namespace IR;
+    SUBCASE("mapping without intersections") {
+        std::vector<std::pair<Operand, Operand>> mapping{
+            {{Operand::MACHINE_REG, 0}, {Operand::MACHINE_REG, 1}},
+            {{Operand::MACHINE_REG, 2}, {Operand::MACHINE_REG, 3}},
+        };
+        auto instructions = mapping_to_instructions(mapping);
+        
     }
 }

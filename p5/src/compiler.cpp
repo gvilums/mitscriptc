@@ -127,8 +127,7 @@ void Compiler::visit(AST::Assignment& expr) {
 			store_glob.args[1] = opr_;
         	
         	block_.instructions.push_back(store_glob);
-        }
-		else if (local_reference_vars_.count(s)) {
+        } else if (local_reference_vars_.count(s)) {
 			if (!is_opr_)
         		opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 			IR::Instruction s_ref;
@@ -136,8 +135,7 @@ void Compiler::visit(AST::Assignment& expr) {
 			s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
 			s_ref.args[1] = opr_;
 			block_.instructions.push_back(s_ref);
-		}
-		else { // check for error ?
+		} else { // check for error ?
 			if (is_opr_) {
 				block_.instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr_});
 				local_vars_[s] = reg_cnt_++;
@@ -682,21 +680,17 @@ void Compiler::visit(AST::StringConstant& expr) {
             names_[s] = names_cnt_++;
             globals_.insert(s);
         }
-    	
         if (globals_.count(s)) {
         	block_.instructions.push_back({IR::Operation::LOAD_GLOBAL, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, names_[s]}});
         	ret_reg_ = reg_cnt_++;
             return;
-        }
-        else if (local_reference_vars_.count(s)) {
+        } else if (local_reference_vars_.count(s)) {
         	block_.instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, local_vars_[s]}});
         	ret_reg_ = reg_cnt_++;
-        }
-        else if (free_vars_.count(s)) {
+        } else if (free_vars_.count(s)) {
         	block_.instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, free_vars_[s]}});
         	ret_reg_ = reg_cnt_++;
-        }
-        else {
+        } else {
         	is_opr_ = true;
         	opr_ = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
         } // should default be globals? 

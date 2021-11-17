@@ -1,5 +1,10 @@
 find_package(Java QUIET COMPONENTS Runtime)
 
+# if(CMAKE_VERSION VERSION_EQUAL "3.19.0" OR
+#    CMAKE_VERSION VERSION_GREATER "3.19.0")
+# cmake_policy(SET CMP0114 NEW)
+# endif()
+
 if(NOT ANTLR_EXECUTABLE)
   find_program(ANTLR_EXECUTABLE
                NAMES antlr.jar antlr4.jar antlr-4.jar antlr-4.9.3-complete.jar)

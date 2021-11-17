@@ -1,7 +1,9 @@
-#include "ir.h"
 
 #include <iostream>
 #include <string>
+
+#include "ir.h"
+#include "irprinter.h"
 
 std::string op_str[] = {
 	"ADD", 
@@ -41,7 +43,8 @@ std::string op_str[] = {
     "ASSERT_NONZERO",
     "PRINT",
     "INPUT",
-    "INTCAST"
+    "INTCAST",
+	"SWAP"
 };
 
 std::string opr_str[] = {
@@ -91,10 +94,11 @@ std::ostream& operator<<(std::ostream& os, const IR::Instruction& ins){
 
 std::ostream& operator<<(std::ostream& os, const IR::BasicBlock& bb){
 	os << "\t\t\t\tPhi Nodes: " << std::endl;
-	for (auto pn : bb.phi_nodes) {
+	for (const auto& pn : bb.phi_nodes) {
 		os << "\t\t\t\t\t" << pn.out << " ";
-		for (auto opr : pn.args)
+		for (auto opr : pn.args) {
 			os << "(" << opr.first << ", " << opr.second << ")";
+		}
 		os << std::endl;
 	}
 	
@@ -156,7 +160,7 @@ std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
 std::ostream& pretty_print_function(std::ostream& os, const IR::Function& fun) {
 	size_t line_nr = 0;	
 	for (size_t i = 0; i < fun.blocks.size(); ++i) {
-		auto& bb = fun.blocks[i];
+		const auto& bb = fun.blocks[i];
 		os << line_nr << "\tblock " << i << std::endl;
 		for (const auto& pn : bb.phi_nodes) {
 			os << '\t' << pn.out << " ";

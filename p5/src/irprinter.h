@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "ir.h"
+#include "regalloc.h"
 
 // namespace IR {
 
