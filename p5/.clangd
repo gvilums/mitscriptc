@@ -16,5 +16,3 @@ Diagnostics:
       - portability*
       # - readability*
       # - modernize*
-    Remove:
-      # - readability-magic-number

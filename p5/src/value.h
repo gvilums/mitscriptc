@@ -79,6 +79,12 @@ Value value_add_int32(Value lhs, Value rhs);
 Value value_sub(Value lhs, Value rhs);
 Value value_mul(Value lhs, Value rhs);
 Value value_div(Value lhs, Value rhs);
+Value value_eq(Value lhs, Value rhs);
+Value value_geq(Value lhs, Value rhs);
+Value value_gt(Value lhs, Value rhs);
+Value value_and(Value lhs, Value rhs);
+Value value_or(Value lhs, Value rhs);
+Value value_not(Value val);
 
 Value value_to_string(Value val);
 auto value_to_std_string(Value val) -> std::string;
