@@ -152,6 +152,8 @@ void Compiler::visit(AST::Assignment& expr) {
        	block_.instructions.push_back({IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
         
         expr.Expr->accept(*((Visitor*)this));
+		if (!is_opr_)
+        	opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 
         size_t idx;
 		if (!str_const_.count(exp->field)) {
@@ -387,11 +389,11 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
         	ref_.erase(s);
     }
     
-    std::vector<size_t> new_ass;
+    std::vector<std::string> new_ass;
     for (auto s : ass_var) {
         if (count(glob_var.begin(), glob_var.end(), s))
             continue;
-        new_ass.push_back(reg_cnt_);
+        new_ass.push_back(s);
         local_vars_[s] = reg_cnt_++;
         if (count(nb_var.begin(), nb_var.end(), s))
             local_reference_vars_.insert(s); 
@@ -436,8 +438,18 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     for (auto ins : instr)
     	tblock.instructions.push_back(ins);
     
-   	for (auto reg : new_ass)
-   		block_.instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, reg}, {IR::Operand::OpType::IMMEDIATE, 0}});
+   	for (auto var : new_ass) {
+		if (local_reference_vars_.count(var)) {
+			block_.instructions.push_back({IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, local_vars_[var]}});
+			IR::Instruction s_ref;
+			s_ref.op = IR::Operation::REF_STORE;
+			s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, local_vars_[var]};
+			s_ref.args[1] = {IR::Operand::OpType::IMMEDIATE, 0};
+			block_.instructions.push_back(s_ref);
+		}
+		else 
+   			block_.instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, local_vars_[var]}, {IR::Operand::OpType::IMMEDIATE, 0}});
+	   }
     
     
     expr.block->accept(*((Visitor*)this));
@@ -631,7 +643,7 @@ void Compiler::visit(AST::Record& expr) {
         
         if (!is_opr_)
         	opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
-        
+		
         size_t idx;
 		if (!str_const_.count(p.first)) {
 			program_->immediates.push_back(runtime::from_std_string(p.first));
@@ -646,6 +658,9 @@ void Compiler::visit(AST::Record& expr) {
    		store_field.args[2] = opr_;
 	    block_.instructions.push_back(store_field);
     }
+
+	is_opr_ = false;
+	ret_reg_ = rec_reg;
 }
 
 void Compiler::visit(AST::IntegerConstant& expr) {

@@ -133,10 +133,10 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 	for (size_t i = 0; i < prog.functions.size(); i++)
 		os << "\t\t" << i << " : {" << std::endl << prog.functions[i] << "\t\t}" << std::endl;
 	os << "\t}" << std::endl;
-	os << "\timmediates { " << std::endl;
+	os << "\timmediates {";
 	for (size_t i = 0; i < prog.immediates.size(); i++)
-		os << "\t\t" << i << " : {" << std::endl << "}" << std::endl;
-	os << "\t}" << std::endl;
+		os << i << " : ,";
+	os << "}" << std::endl;
 	os << "}";
 	return os;
 }

@@ -10,6 +10,6 @@ public:
     optimizer(IR::Program* prog);
     IR::Program* optimize();
 
-    bool is_unused_var();
+    bool is_unused_op(const IR::Operation op);
     void rm_unused_var();
 };
