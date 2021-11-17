@@ -1,0 +1,13 @@
+Array = fun(size){
+  this = {
+	print: fun(){
+		i = 1;
+	    while(true){
+		    i = this.get(i);
+      }
+	    
+	};
+
+  };
+};
+

@@ -111,12 +111,13 @@ void Compiler::visit(AST::Return& expr) {
 void Compiler::visit(AST::Assignment& expr) {
     if (expr.Lhs->isStringConstant()) {
         string s = ((AST::StringConstant*)expr.Lhs)->getVal();
-		expr.Expr->accept(*((Visitor*)this));
 				
         if (global_scope_ && !globals_.count(s)) {
             names_[s] = names_cnt_++;
             globals_.insert(s);
         }
+
+		expr.Expr->accept(*((Visitor*)this));
         
         if (globals_.count(s)) {
         	if (!is_opr_)
@@ -389,11 +390,16 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
         	ref_.erase(s);
     }
     
-    std::vector<std::string> new_ass;
+    std::set<std::string> new_ass;
     for (auto s : ass_var) {
         if (count(glob_var.begin(), glob_var.end(), s))
             continue;
-        new_ass.push_back(s);
+		if (count(expr.arguments.begin(), expr.arguments.end(), s))
+			continue;
+		if (new_ass.count(s))
+			continue;
+		
+        new_ass.insert(s);
         local_vars_[s] = reg_cnt_++;
         if (count(nb_var.begin(), nb_var.end(), s))
             local_reference_vars_.insert(s); 
@@ -425,11 +431,21 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     	free_vars_[s.first] = reg_cnt_++; // could be done later
     	
     	if (tlocal_reference_vars.count(s.first)){
-    		instr.push_back({IR::Operation::SET_CAPTURE, {IR::Operand::OpType::LOGICAL, idx}, fun_reg, {IR::Operand::OpType::VIRT_REG, tlocal_vars[s.first]}});
+			IR::Instruction set_c;
+			set_c.op = IR::Operation::SET_CAPTURE;
+			set_c.args[0] = {IR::Operand::OpType::LOGICAL, idx};
+			set_c.args[1] = fun_reg;
+			set_c.args[2] = {IR::Operand::OpType::VIRT_REG, tlocal_vars[s.first]};
+    		instr.push_back(set_c);
     	}
     	else if (tfree_vars.count(s.first)) {	
     		tblock.instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, treg_cnt}, {IR::Operand::OpType::VIRT_REG, tfree_vars[s.first]}});
-    		instr.push_back({IR::Operation::SET_CAPTURE, {IR::Operand::OpType::LOGICAL, idx}, fun_reg, {IR::Operand::OpType::VIRT_REG, reg_cnt_}});
+			IR::Instruction set_c;
+			set_c.op = IR::Operation::SET_CAPTURE;
+			set_c.args[0] = {IR::Operand::OpType::LOGICAL, idx};
+			set_c.args[1] = fun_reg;
+			set_c.args[2] = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
+    		instr.push_back(set_c);
     		treg_cnt++; 		
     	}
     	idx++;
@@ -446,11 +462,10 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 			s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, local_vars_[var]};
 			s_ref.args[1] = {IR::Operand::OpType::IMMEDIATE, 0};
 			block_.instructions.push_back(s_ref);
-		}
-		else 
+		} else {
    			block_.instructions.push_back({IR::Operation::MOV, {IR::Operand::OpType::VIRT_REG, local_vars_[var]}, {IR::Operand::OpType::IMMEDIATE, 0}});
-	   }
-    
+		}
+	}
     
     expr.block->accept(*((Visitor*)this));
 	
@@ -610,6 +625,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 	load_field.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
 	load_field.args[1] = {IR::Operand::OpType::IMMEDIATE, idx};
     block_.instructions.push_back(load_field);
+	ret_reg_ = reg_cnt_;
     reg_cnt_++;
     is_opr_ = false;
 }
@@ -629,6 +645,7 @@ void Compiler::visit(AST::IndexExpression& expr) {
 	load_idx.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
 	load_idx.args[1] = opr_;
     block_.instructions.push_back(load_idx);
+	ret_reg_ = reg_cnt_;
     reg_cnt_++;
     is_opr_ = false;
 }
@@ -696,6 +713,7 @@ void Compiler::visit(AST::StringConstant& expr) {
             names_[s] = names_cnt_++;
             globals_.insert(s);
         }
+
         if (globals_.count(s)) {
         	block_.instructions.push_back({IR::Operation::LOAD_GLOBAL, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, names_[s]}});
         	ret_reg_ = reg_cnt_++;
@@ -707,8 +725,7 @@ void Compiler::visit(AST::StringConstant& expr) {
         	block_.instructions.push_back({IR::Operation::REF_LOAD, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::VIRT_REG, free_vars_[s]}});
         	ret_reg_ = reg_cnt_++;
         } else {
-        	is_opr_ = true;
-        	opr_ = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
+			ret_reg_ = local_vars_[s];
         } // should default be globals? 
     }
 }
