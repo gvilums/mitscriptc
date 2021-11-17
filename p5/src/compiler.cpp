@@ -14,7 +14,7 @@ Compiler::Compiler() {
     
 	IR::Function print_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}, {IR::Operand::OpType::LOGICAL, 0}}, {IR::Operation::PRINT, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}}}, {}, {}, false, 0}}, 0, 0, {}};
 	IR::Function input_ = {{{{}, {{IR::Operation::INPUT, {IR::Operand::OpType::VIRT_REG, 0}},{IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}}, {}, {}, false, 0}}, 0, 0, {}};
-	IR::Function intcast_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}, {IR::Operand::OpType::LOGICAL, 0}}, {IR::Operation::INTCAST, {IR::Operand::OpType::VIRT_REG, 1}, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 1}}}, {}, {}, false, 0}}, 0, 0, {}};
+	IR::Function intcast_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::ASSERT_STRING, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::INTCAST, {IR::Operand::OpType::VIRT_REG, 1}, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 1}}}, {}, {}, false, 0}}, 0, 0, {}};
 	
 	program_->functions.push_back(print_);
 	program_->functions.push_back(input_);
@@ -148,11 +148,10 @@ void Compiler::visit(AST::Assignment& expr) {
         AST::FieldDereference* exp = ((AST::FieldDereference*)expr.Lhs);
         exp->baseexpr->accept(*((Visitor*)this));
         size_t rec_reg = ret_reg_;
+       	block_.instructions.push_back({IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
         
         expr.Expr->accept(*((Visitor*)this));
-        if (!is_opr_)
-        	opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
-       
+
         size_t idx;
 		if (!str_const_.count(exp->field)) {
 			// program_->immediates.push_back(); // expr->field
@@ -171,10 +170,9 @@ void Compiler::visit(AST::Assignment& expr) {
         AST::IndexExpression* exp = ((AST::IndexExpression*)expr.Lhs);
         exp->baseexpr->accept(*((Visitor*)this));
         size_t rec_reg = ret_reg_;
+		block_.instructions.push_back({IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
         
         exp->index->accept(*((Visitor*)this));
-        if (!is_opr_)
-        	opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
         IR::Operand idx_opr = opr_;
         
         expr.Expr->accept(*((Visitor*)this));
@@ -203,6 +201,10 @@ void Compiler::visit(AST::IfStatement& expr) {
 	block_.predecessors.push_back(last_idx);
 	block_.successors.push_back(cond_idx + 1);
     expr.Expr->accept(*((Visitor*)this));
+
+	if (!is_opr_)
+		opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
+	block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr_});
     
     fun_->blocks.push_back(block_);
     
@@ -271,6 +273,10 @@ void Compiler::visit(AST::WhileLoop& expr) { // could contain empty blocks
 	block_.successors.push_back(last_idx + 2);
 	block_.is_loop_header = true;
     expr.Expr->accept(*((Visitor*)this));
+
+	if (!is_opr_)
+		opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
+	block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr_});
     fun_->blocks.push_back(block_);
     
     std::map<std::string, size_t> tlocal_vars = local_vars_;
@@ -486,24 +492,33 @@ void Compiler::visit(AST::BinaryExpression& expr) {
     }
 
     IR::Operation op;
+	bool bool_op, int_op;
     if (expr.op == "+")
         op = IR::Operation::ADD;
     else if (expr.op == "-")
-        op = IR::Operation::SUB;
+        op = IR::Operation::SUB, int_op = true;
     else if (expr.op == "/")
-        op = IR::Operation::DIV;
+        op = IR::Operation::DIV, int_op = true;
     else if (expr.op == "*")
-        op = IR::Operation::MUL;
+        op = IR::Operation::MUL, int_op = true;
     else if (expr.op == ">")
-        op = IR::Operation::GT;
+        op = IR::Operation::GT, int_op = true;
     else if (expr.op == ">=")
-        op = IR::Operation::GEQ;
+        op = IR::Operation::GEQ, int_op = true;
     else if (expr.op == "==")
         op = IR::Operation::EQ;
     else if (expr.op == "&")
-        op = IR::Operation::AND;
+        op = IR::Operation::AND, bool_op = true;
     else if (expr.op == "|")
-        op = IR::Operation::OR;
+        op = IR::Operation::OR, bool_op = true;
+
+	if (int_op) {
+		block_.instructions.push_back({IR::Operation::ASSERT_INT, IR::Operand(), opr1});
+		block_.instructions.push_back({IR::Operation::ASSERT_INT, IR::Operand(), opr2});
+	} else if (bool_op) {
+		block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr1});
+		block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr2});
+	}
 
     block_.instructions.push_back({op, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
     is_opr_ = false;
@@ -520,10 +535,12 @@ void Compiler::visit(AST::UnaryExpression& expr) {
     	opr = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 
     if (expr.op == "!") {
+		block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr});
     	block_.instructions.push_back({IR::Operation::NOT, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr});
     }
     else {
     	IR::Operand zero = {IR::Operand::OpType::IMMEDIATE, 3};
+		block_.instructions.push_back({IR::Operation::ASSERT_INT, IR::Operand(), opr});
     	block_.instructions.push_back({IR::Operation::SUB, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, zero, opr});
     }
     is_opr_ = false;
@@ -533,6 +550,7 @@ void Compiler::visit(AST::UnaryExpression& expr) {
 
 void Compiler::visit(AST::Call& expr) {
     expr.expr->accept(*((Visitor*)this));
+	block_.instructions.push_back({IR::Operation::ASSERT_CLOSURE, IR::Operand(), {IR::Operand::VIRT_REG, ret_reg_}});
     size_t fun_reg = ret_reg_;
     
     size_t arg_cnt = 0;
@@ -564,6 +582,7 @@ void Compiler::visit(AST::Call& expr) {
 void Compiler::visit(AST::FieldDereference& expr) {
 	expr.baseexpr->accept(*((Visitor*)this));
 	size_t rec_reg = ret_reg_;
+	block_.instructions.push_back({IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
 	
 	size_t idx;
 	if (!str_const_.count(expr.field)) {
@@ -585,6 +604,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 void Compiler::visit(AST::IndexExpression& expr) {
     expr.baseexpr->accept(*((Visitor*)this));
     size_t rec_reg = ret_reg_;
+	block_.instructions.push_back({IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
     
     expr.index->accept(*((Visitor*)this));
     if (!is_opr_)
