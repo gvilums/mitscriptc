@@ -29,10 +29,10 @@ Compiler::Compiler() {
 	globals_.insert("input");
 	globals_.insert("intcast");
 	
-	// program_->immediates.push_back(); // NONE
-	// program_->immediates.push_back(); // TRUE
-	// program_->immediates.push_back(); // FALSE
-	// program_->immediates.push_back(); // 0
+	// program_->immediates.push_back(0); // NONE
+	// program_->immediates.push_back(from_bool(true)); // TRUE
+	// program_->immediates.push_back(from_bool(false)); // FALSE
+	// program_->immediates.push_back(from_int(0)); // 0
 
 	reg_cnt_ = 0;
 	imm_cnt_ = 4;
