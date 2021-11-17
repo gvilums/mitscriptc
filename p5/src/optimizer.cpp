@@ -3,100 +3,57 @@
 #include "optimizer.h"
 #include "value.h"
 #include <set>
+#include "irprinter.h"
 
-using namespace IR;
-
-const std::set<IR::Instruction> unused_ins = {ADD,
-    
-    ADD_INT,
-    SUB,
-    MUL,
-    DIV,
-    EQ,
-    GT,
-    GEQ,
-    AND,
-    OR,
-    NOT,
-    MOV,
-    ASSERT_BOOL,
-    ASSERT_INT,
-    ASSERT_STRING,
-    ASSERT_RECORD,
-    ASSERT_CLOSURE,
-    ASSERT_NONZERO};
-
+const std::set<IR::Operation> unused_ins = {IR::Operation::ADD, IR::Operation::ADD_INT, IR::Operation::SUB, IR::Operation::MUL, IR::Operation::DIV, IR::Operation::EQ, IR::Operation::GT, IR::Operation::GEQ, IR::Operation::AND, IR::Operation::OR, IR::Operation::NOT, IR::Operation::MOV, IR::Operation::ASSERT_BOOL, IR::Operation::ASSERT_INT, IR::Operation::ASSERT_STRING, IR::Operation::ASSERT_RECORD, IR::Operation::ASSERT_CLOSURE, IR::Operation::ASSERT_NONZERO};
 
 optimizer::optimizer(IR::Program* prog) : prog_(prog){};
 
 IR::Program* optimizer::optimize() {
+    rm_unused_var(); // REMOVE NOT USED REGISTERS
     return prog_;
 }
 
-bool optimizer::is_unused_var(const IR::Operation op){
-    return unused_ins.contains();
+bool optimizer::is_unused_op(const IR::Operation op){
+    return unused_ins.contains(op);
 }
 
 void optimizer::rm_unused_var(){
     for (auto& fun : prog_->functions) {
-        std::unordered_set<int> used_var;
-        for (size_t idx = fun.blocks.size() - 1; idx >= 0; idx--) {
+        std::unordered_set<size_t> used_var;
+        for (int idx = fun.blocks.size() - 1; idx >= 0; idx--) {
             IR::BasicBlock new_block;
-            std::vector<IR::Instruction>::reverse_iterator rit = fun.blocks[idx].instructions.rbegin();
-            for (; rit != fun.blocks[idx].instructions.rend(); rit++) {
+            size_t b_size = fun.blocks[idx].instructions.size();
+            for (int i = b_size - 1; i >= 0; i--) {
+                IR::Instruction rit = fun.blocks[idx].instructions[i]; 
+                if (is_unused_op(rit.op) && rit.out.type == IR::Operand::VIRT_REG && !used_var.contains(rit.out.index))      
+                    continue;
                 
+                
+                for (auto arg : rit.args)
+                    if (arg.type == IR::Operand::VIRT_REG)
+                        used_var.insert(arg.index);
+                
+                new_block.instructions.push_back(rit);
             }
+            new_block.predecessors = fun.blocks[idx].predecessors;
+            new_block.successors = fun.blocks[idx].successors;
+            new_block.is_loop_header = fun.blocks[idx].is_loop_header;
+            new_block.final_loop_block = fun.blocks[idx].final_loop_block;
+
+            
+
+            for (auto pn : fun.blocks[idx].phi_nodes) {
+                if (used_var.contains(pn.out.index)) {
+                    for (auto arg : pn.args)
+                        if (arg.second.type == IR::Operand::VIRT_REG)
+                            used_var.insert(arg.second.index);
+                    new_block.phi_nodes.push_back(pn);
+                }
+            }
+        
+            std::reverse(new_block.instructions.begin(), new_block.instructions.end());
+            fun.blocks[idx] = new_block;
         }
     }
 }
-
-enum class Operation {
-    ADD,
-    ADD_INT,
-    SUB,
-    MUL,
-    DIV,
-    EQ,
-    GT,
-    GEQ,
-    AND,
-    OR,
-    NOT,
-
-    LOAD_ARG,  // LOAD_ARG (VIRT_REG id) <- (LOGICAL index)
-
-    LOAD_FREE_REF,  // LOAD_FREE_REF (VIRT_REG id) <- (LOGICAL index)
-
-    REF_LOAD,   // REF_LOAD (VIRT_REG id) <- (VIRT_REG id)
-    REF_STORE,  // REF_STORE (VIRT_REG id) <- (VIRT_REG id)
-    REC_LOAD_NAME,
-    REC_LOAD_INDX,
-    REC_STORE_NAME,
-    REC_STORE_INDX,
-
-    ALLOC_REF,
-    ALLOC_REC,
-    ALLOC_CLOSURE,		// (VIRT_REG id), FUNCTION IDX, #SET_CAPTUREs
-    
-    SET_CAPTURE,        // SET_CAPTURE NONE <- (LOGICAL index) (VIRT_REG id) (VIRT_REG id)
-
-    SET_ARG,            // SET_ARG NONE <- (LOGICAL index) (VIRT_REG id)
-    CALL,               // CALL (VIRT_REG id) <- (LOGICAL num_args) (VIRT_REG id)
-    RETURN,
-
-    MOV,
-    LOAD_GLOBAL,
-    STORE_GLOBAL,
-    ASSERT_BOOL,
-    ASSERT_INT,
-    ASSERT_STRING,
-    ASSERT_RECORD,
-    ASSERT_CLOSURE,
-    ASSERT_NONZERO,
-
-    PRINT,
-    INPUT,
-    INTCAST,
-    
-    SWAP,
-};
