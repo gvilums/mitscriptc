@@ -5,8 +5,10 @@
 #include <string>
 
 namespace runtime {
+    
+struct Runtime;
 
-enum class ValueKind : uint64_t {
+enum class ValueType : uint64_t {
     None,
     Bool,
     Int,
@@ -61,15 +63,13 @@ struct Record {
     std::unordered_map<Value, Value, ValueHash> entries;
 };
 
-ValueKind value_get_kind(Value val);
-
-bool value_get_bool(Value val);
-int value_get_int32(Value val);
-std::string value_get_std_string(Value val);
-Value* value_get_ref(Value val);
-String* value_get_string_ptr(Value val);
-Record* value_get_record(Value val);
-Closure* value_get_closure(Value val);
+auto value_get_type(Value val) -> ValueType;
+auto value_get_bool(Value val) -> bool;
+auto value_get_int32(Value val) -> int;
+auto value_get_ref(Value val) -> Value*;
+auto value_get_string_ptr(Value val) -> String*;
+auto value_get_record(Value val) -> Record*;
+auto value_get_closure(Value val) -> Closure*;
 
 // checks types
 Value value_add(Value lhs, Value rhs);
@@ -79,16 +79,25 @@ Value value_add_int32(Value lhs, Value rhs);
 Value value_sub(Value lhs, Value rhs);
 Value value_mul(Value lhs, Value rhs);
 Value value_div(Value lhs, Value rhs);
+Value value_eq(Value lhs, Value rhs);
+Value value_geq(Value lhs, Value rhs);
+Value value_gt(Value lhs, Value rhs);
+Value value_and(Value lhs, Value rhs);
+Value value_or(Value lhs, Value rhs);
+Value value_not(Value val);
 
 Value value_to_string(Value val);
+auto value_to_std_string(Value val) -> std::string;
 
-Value from_bool(bool b);
-Value from_int32(int32_t i);
-Value from_std_string(const std::string& str);
-Value from_ref(Value* ref);
-Value from_string_ptr(String* str);
-Value from_record_ptr(Record* rec);
-Value from_closure_ptr(Closure*);
+Value to_value(bool b);
+Value to_value(int32_t i);
+Value to_value(const std::string& str, Runtime& alloc);
+Value to_value(const std::string& str);
+Value to_value(const char* str);
+Value to_value(Value* ref);
+Value to_value(String* str);
+Value to_value(Record* rec);
+Value to_value(Closure*);
 
 struct HeapObject {
     HeapObject* next{nullptr};
@@ -102,25 +111,28 @@ struct HeapObject {
     std::uint64_t data[];
 };
 
-struct AllocationContext {
+struct Runtime {
     size_t total_alloc{0};
+    HeapObject* heap_head{nullptr};
     
     Value none_string;
     Value false_string;
     Value true_string;
     Value function_string;
     
-    AllocationContext();
+    Runtime();
     
     auto alloc_ref() -> Value*;
     auto alloc_string(size_t length) -> String*;
     auto alloc_record() -> Record*;
     auto alloc_closure(size_t num_free) -> Closure*;
     
-    auto allocate(size_t n_bytes) -> void*;
-    void deallocate(HeapObject* obj);
+    auto alloc_tracked(size_t data_size) -> HeapObject*;
+    void dealloc_tracked(HeapObject* obj);
+    
+    void collect();
 };
 
-auto get_alloc() -> AllocationContext&;
+auto global_runtime() -> Runtime&;
 
 };
