@@ -116,20 +116,10 @@ struct Function {
     std::vector<Operand> clobbered_regs;
 };
 
-class BasePass;
-
 struct Program {
     std::vector<Function> functions;
-    std::vector<Value> immediates;
+    std::vector<runtime::Value> immediates;
     int num_globals;
-    
-    void apply_pass(BasePass& pass);
-};
-
-class BasePass {
-   public:
-    virtual void apply_to(Program& program) = 0;
-    virtual ~BasePass() {};
 };
 
 }; 

@@ -1,26 +1,101 @@
 #pragma once
 
 #include <cstdint>
+#include <unordered_map>
+#include <string>
 
+namespace runtime {
+
+enum class ValueKind : uint64_t {
+    None,
+    Bool,
+    Int,
+    InlineString,
+    HeapString,
+    Record,
+    Closure,
+    Reference,
+};
+
+/*
+    3 lower bits are used to store type. possibilities are:
+    000 - None
+    001 - Bool
+    010 - Int
+    011 - Inline String
+    100 - Heap String
+    101 - Record
+    110 - Closure
+    111 - Reference
+    
+    Formats:
+    None            - 0000...0000
+    Bool            - 0000...[bool 0/1]0001
+    Int             - 0000... [int32_t 32 x 0/1]0010
+    Inline String   - [char data[7] 56 x 0/1][length 4 x 0/1]0011
+    Pointer Based   - ptr | 0000...0100
+*/
 using Value = std::uint64_t;
 
+struct ValueHash {
+    std::size_t operator()(const Value& val) const noexcept;
+};
+
+const std::uint64_t TAG_MASK = 0b111;
+const std::uint64_t DATA_MASK = ~TAG_MASK;
+
+
 struct String {
-    std::size_t len;
+    std::uint64_t len;
     char data[];
 };
 
 struct Closure {
     std::uint64_t fnptr;
-    std::size_t n_args;
+    std::uint64_t n_args;
     Value free_vars[];
 };
 
 struct Record {
-    
+    std::unordered_map<Value, Value, ValueHash> entries;
 };
+
+ValueKind value_get_kind(Value val);
+
+// checks types
+Value value_add(Value lhs, Value rhs);
+
+// below assume integer values
+Value value_sub(Value lhs, Value rhs);
+Value value_mul(Value lhs, Value rhs);
+Value value_div(Value lhs, Value rhs);
+
+Value value_to_string(Value val);
+
 
 Value from_bool(bool b);
 Value from_int(uint32_t i);
-Value from_str_ptr(String* str);
-Value from_rec_ptr(Record* rec);
-Value from_closure_ptr(Closure* clsr);
+Value from_std_string(const std::string& str);
+Value from_ref(Value* ref);
+Value from_string_ptr(String* str);
+Value from_record_ptr(Record* rec);
+Value from_closure_ptr(Closure*);
+
+struct HeapObject {
+    HeapObject* next{nullptr};
+    enum {
+        REF,
+        STR,
+        REC,
+        CLOSURE,
+    } type;
+    bool marked{false};
+    std::uint64_t data[];
+};
+
+Value* alloc_ref();
+String* alloc_string(size_t length);
+Record* alloc_record();
+Closure* alloc_closure(size_t num_free);
+
+};
