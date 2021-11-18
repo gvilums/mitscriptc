@@ -48,7 +48,7 @@ auto main(int argc, const char* argv[]) -> int {
     DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
 
-    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
     
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
