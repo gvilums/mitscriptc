@@ -26,7 +26,6 @@ void DeadCodeRemover::rm_dead_code(){
 
             if (!fun.blocks[idx].successors.empty() && fun.blocks[idx].successors[0] < idx) {
                 size_t header = fun.blocks[idx].successors[0];
-                std::cout << header << std::endl;
                 for (auto pn : fun.blocks[header].phi_nodes) {
                     for (auto arg : pn.args)
                         if (arg.second.type == IR::Operand::VIRT_REG) {
