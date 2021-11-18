@@ -20,12 +20,12 @@ TEST_CASE("string") {
     using namespace runtime;
     SUBCASE("inline") {
         auto val = to_value(std::string{"hello"});
-        std::string str = value_to_std_string(val);
+        std::string str = value_get_std_string(val);
         CHECK(str == "hello");
     }
     SUBCASE("heap allocated") {
         auto val = to_value(std::string{"hello world"});
-        std::string str = value_to_std_string(val);
+        std::string str = value_get_std_string(val);
         CHECK(str == "hello world");
     }
 }
@@ -46,23 +46,23 @@ TEST_CASE("addition") {
     }
     
     SUBCASE("short strings") {
-        CHECK(value_to_std_string(value_add(string_empty, string_space)) == " ");
-        CHECK(value_to_std_string(value_add(string_hello, string_space)) == "hello ");
+        CHECK(value_get_std_string(value_add(string_empty, string_space)) == " ");
+        CHECK(value_get_std_string(value_add(string_hello, string_space)) == "hello ");
     }
     
     SUBCASE("long strings") {
-        CHECK(value_to_std_string(value_add(string_long, string_long)) 
+        CHECK(value_get_std_string(value_add(string_long, string_long)) 
                 == "this is a long stringthis is a long string");
     }
     
     SUBCASE("short and long strings") {
-        CHECK(value_to_std_string(value_add(string_hello, string_long)) == "hellothis is a long string");
-        CHECK(value_to_std_string(value_add(string_hello, value_add(string_space, string_hello))) == "hello hello");
+        CHECK(value_get_std_string(value_add(string_hello, string_long)) == "hellothis is a long string");
+        CHECK(value_get_std_string(value_add(string_hello, value_add(string_space, string_hello))) == "hello hello");
     }
     
     SUBCASE("stringify in print") {
-        CHECK(value_to_std_string(value_add(string_empty, int0)) == "0");
-        CHECK(value_to_std_string(value_add(int1, string_hello)) == "1hello");
-        CHECK(value_to_std_string(value_add(string_long, int2)) == "this is a long string2");
+        CHECK(value_get_std_string(value_add(string_empty, int0)) == "0");
+        CHECK(value_get_std_string(value_add(int1, string_hello)) == "1hello");
+        CHECK(value_get_std_string(value_add(string_long, int2)) == "this is a long string2");
     }
 }

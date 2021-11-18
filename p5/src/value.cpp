@@ -4,6 +4,8 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 #include "value.h"
 
@@ -171,34 +173,58 @@ Value value_div(Value lhs, Value rhs) {
     return to_value(value_get_int32(lhs) / denom);
 }
 
-Value value_eq(Value lhs, Value rhs) {
+auto value_eq_bool(Value lhs, Value rhs) -> bool {
     ValueType lhs_type = value_get_type(lhs);
     ValueType rhs_type = value_get_type(rhs);
     if (lhs_type != rhs_type) {
-        return to_value(false);
+        return false;
     }
     ValueType type = lhs_type;
     if (type == ValueType::None || type == ValueType::Int 
         || type == ValueType::Bool || type == ValueType::InlineString 
         || type == ValueType::Record) {
         // bitwise comparison
-        return to_value(lhs == rhs);
+        return lhs == rhs;
     }
     if (type == ValueType::HeapString) {
         auto lhs_str = value_get_string_ptr(lhs);
         auto rhs_str = value_get_string_ptr(rhs);
         size_t len = lhs_str->len;
         if (rhs_str->len != len) {
-            return to_value(false);
+            return false;
         }
         for (size_t i = 0; i < len; ++i) {
             if (lhs_str->data[i] != rhs_str->data[i]) {
-                return to_value(false);
+                return false;
             }
         }
-        return to_value(true);
+        return true;
     }
-    return to_value(false);
+    return false;
+}
+
+Value value_eq(Value lhs, Value rhs) {
+    return to_value(value_eq_bool(lhs, rhs));
+}
+
+Value value_geq(Value lhs, Value rhs) {
+    return to_value(value_get_int32(lhs) >= value_get_int32(rhs));
+}
+
+Value value_gt(Value lhs, Value rhs) {
+    return to_value(value_get_int32(lhs) > value_get_int32(rhs));
+}
+
+Value value_and(Value lhs, Value rhs) {
+    return to_value(value_get_bool(lhs) && value_get_bool(rhs));
+}
+
+Value value_or(Value lhs, Value rhs) {
+    return to_value(value_get_bool(lhs) || value_get_bool(rhs));
+}
+
+Value value_not(Value val) {
+    return to_value(!value_get_bool(val));
 }
 
 Value value_to_string(Value val) {
@@ -221,8 +247,7 @@ Value value_to_string(Value val) {
         return to_value(std::to_string(value_get_int32(val)));
     }
     if (type == ValueType::Record) {
-        // TODO
-        return 0;
+        return to_value(value_get_std_string(val));
     }
     if (type == ValueType::Closure) {
         return global_runtime().function_string;
@@ -230,7 +255,7 @@ Value value_to_string(Value val) {
     return 0;
 }
 
-auto value_to_std_string(Value val) -> std::string {
+auto value_get_std_string(Value val) -> std::string {
     auto type = value_get_type(val);
     if (type == ValueType::None) {
         return "None";
@@ -243,12 +268,24 @@ auto value_to_std_string(Value val) -> std::string {
         }
     }
     if (type == ValueType::Int) {
-        // TODO make more efficient
         return std::to_string(value_get_int32(val));
     }
     if (type == ValueType::Record) {
-        // TODO
-        return "RECORD";
+        Record* record = value_get_record(val);
+        std::string out{"{"};
+        std::vector<std::pair<Value, Value>> vals{record->fields.begin(), record->fields.end()};
+        std::sort(vals.begin(), vals.end(),
+                  [](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) {
+                      return value_get_std_string(l.first) < value_get_std_string(r.first);
+                  });
+        for (auto [key, field_value] : vals) {
+            out.append(value_get_std_string(key));
+            out.push_back(':');
+            out.append(value_get_std_string(field_value));
+            out.push_back(' ');
+        }
+        out.push_back('}');
+        return out;
     }
     if (type == ValueType::Closure) {
         return "FUNCTION";
@@ -388,6 +425,10 @@ std::size_t ValueHash::operator()(const Value& val) const noexcept {
         return output;
     }
     return val;
+}
+
+bool ValueEq::operator()(const Value& lhs, const Value& rhs) const noexcept {
+    return value_eq_bool(lhs, rhs);
 }
 
 };  // namespace runtime

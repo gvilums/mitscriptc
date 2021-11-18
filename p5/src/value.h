@@ -43,6 +43,10 @@ struct ValueHash {
     std::size_t operator()(const Value& val) const noexcept;
 };
 
+struct ValueEq {
+    bool operator()(const Value& lhs, const Value& rhs) const noexcept;
+};
+
 const std::uint64_t TAG_MASK = 0b111;
 const std::uint64_t DATA_MASK = ~TAG_MASK;
 
@@ -60,7 +64,7 @@ struct Closure {
 };
 
 struct Record {
-    std::unordered_map<Value, Value, ValueHash> entries;
+    std::unordered_map<Value, Value, ValueHash, ValueEq> fields;
 };
 
 auto value_get_type(Value val) -> ValueType;
@@ -70,11 +74,12 @@ auto value_get_ref(Value val) -> Value*;
 auto value_get_string_ptr(Value val) -> String*;
 auto value_get_record(Value val) -> Record*;
 auto value_get_closure(Value val) -> Closure*;
+auto value_get_std_string(Value val) -> std::string;
+auto value_eq_bool(Value lhs, Value rhs) -> bool;
 
 // checks types
 Value value_add(Value lhs, Value rhs);
-
-// below assume integer values
+// below assume correct types
 Value value_add_int32(Value lhs, Value rhs);
 Value value_sub(Value lhs, Value rhs);
 Value value_mul(Value lhs, Value rhs);
@@ -87,7 +92,6 @@ Value value_or(Value lhs, Value rhs);
 Value value_not(Value val);
 
 Value value_to_string(Value val);
-auto value_to_std_string(Value val) -> std::string;
 
 Value to_value(bool b);
 Value to_value(int32_t i);
