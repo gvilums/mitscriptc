@@ -9,9 +9,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <deque>
 
-#include "allocator.h"
 #include "value.h"
 
 namespace IR {
@@ -104,22 +102,22 @@ struct BasicBlock {
     std::vector<size_t> predecessors;
     std::vector<size_t> successors;
 
-    bool is_loop_header;
-    size_t final_loop_block;
+    bool is_loop_header{false};
+    size_t final_loop_block{0};
 };
 
 struct Function {
     std::vector<BasicBlock> blocks;
     size_t virt_reg_count;
     size_t parameter_count;
-
-    std::vector<Operand> clobbered_regs;
+    
+    auto split_edge(size_t from, size_t to) -> BasicBlock&;
 };
 
 struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
-    int num_globals;
+    size_t num_globals;
 };
 
 }; 

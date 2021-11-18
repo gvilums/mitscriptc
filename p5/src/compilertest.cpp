@@ -43,7 +43,7 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
     
-    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
 
     // optimizer opt(prog);
     // prog = opt.optimize();

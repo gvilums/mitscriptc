@@ -653,18 +653,18 @@ void rewrite_instructions(
 
 void allocate_registers(Function& func) {
     // compute live intervals
-    std::vector<std::pair<size_t, size_t>> block_range;
+    std::vector<std::pair<size_t, size_t>> block_ranges;
     size_t current_from = 0;
     for (const BasicBlock& block : func.blocks) {
-        block_range.push_back({current_from, current_from + 2 * block.instructions.size() + 1});
+        block_ranges.push_back({current_from, current_from + 2 * block.instructions.size() + 1});
         current_from += 2 * block.instructions.size() + 2;
     }
 
-    auto intervals = compute_live_intervals(func, block_range);
+    auto intervals = compute_live_intervals(func, block_ranges);
     
-    for (const auto& interval : intervals) {
-        std::cout << interval << std::endl;
-    }
+    // for (const auto& interval : intervals) {
+    //     std::cout << interval << std::endl;
+    // }
 
     auto machine_reg_uses = compute_machine_assignments(func);
 
@@ -756,50 +756,85 @@ void allocate_registers(Function& func) {
         interval_groups.emplace_back(std::move(group));
     }
 
-    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> resolve_moves;
+    
+    // std::vector<std::vector<std::vector<std::pair<Operand, Operand>>>> edge_resolves;
+    // for (const auto& block : func.blocks) {
+    //     edge_resolves.push_back(std::vector<std::vector<std::pair<Operand, Operand>>>(block.successors.size()));
+    // }
+
     // phi node decomposition
-    for (size_t succ = 0; succ < func.blocks.size(); ++succ) {
-        for (const auto& phi :func.blocks[succ].phi_nodes) {
-            for (const auto& [pred, operand] : phi.args) {
-                Operand move_from;
-                if (operand.type == Operand::VIRT_REG) {
-                    move_from = interval_groups[operand.index].assignment_at(block_range[pred].second).value();
-                } else if (operand.type == Operand::IMMEDIATE) {
-                    move_from = operand;
-                } else {
-                    assert(false && "unsupported operand");
-                }
-                if (auto to = interval_groups[phi.out.index].assignment_at(block_range[succ].first + 1)) {
-                    Operand move_to = *to;
-                    if (move_from != move_to) {
-                        // func.blocks[pred].resolution_map.push_back({move_from, move_to});
-                        resolve_moves.push_back({block_range[pred].first, {move_from, move_to}});
-                    }
-                }
-            }
-        }
-    }
+    // for (size_t succ = 0; succ < func.blocks.size(); ++succ) {
+    //     for (const auto& phi :func.blocks[succ].phi_nodes) {
+    //         for (const auto& [pred, operand] : phi.args) {
+    //             Operand move_from;
+    //             if (operand.type == Operand::VIRT_REG) {
+    //                 move_from = interval_groups[operand.index].assignment_at(block_ranges[pred].second).value();
+    //             } else if (operand.type == Operand::IMMEDIATE) {
+    //                 move_from = operand;
+    //             } else {
+    //                 assert(false && "unsupported operand");
+    //             }
+    //             if (auto to = interval_groups[phi.out.index].assignment_at(block_ranges[succ].first + 1)) {
+    //                 Operand move_to = *to;
+    //                 if (move_from != move_to) {
+    //                     // func.blocks[pred].resolution_map.push_back({move_from, move_to});
+    //                     for (size_t i = 0; i < func.blocks[pred].successors.size(); ++i) {
+    //                         if (func.blocks[pred].successors[i] == succ) {
+    //                             edge_resolves[pred][i].push_back({move_from, move_to});
+    //                             break;
+    //                         }
+    //                     }
+    //                     // resolve_moves.push_back({block_range[pred].first, {move_from, move_to}});
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
 
     // nonsuccessive interval split handling
-    for (size_t pred = 0; pred < func.blocks.size(); ++pred) {
+    size_t initial_blocks = func.blocks.size();
+    for (size_t pred = 0; pred < initial_blocks; ++pred) {
         for (size_t succ : func.blocks[pred].successors) {
-            if (succ == pred + 1) {
-                continue;
+            std::vector<std::pair<Operand, Operand>> resolve_moves;
+            for (const auto& phi :func.blocks[succ].phi_nodes) {
+                for (const auto& [phi_pred, operand] : phi.args) {
+                    if (phi_pred != pred) {
+                        continue;
+                    }
+                    Operand move_from;
+                    if (operand.type == Operand::VIRT_REG) {
+                        move_from = interval_groups[operand.index].assignment_at(block_ranges[phi_pred].second).value();
+                    } else if (operand.type == Operand::IMMEDIATE) {
+                        move_from = operand;
+                    } else {
+                        assert(false && "unsupported operand");
+                    }
+                    if (auto to = interval_groups[phi.out.index].assignment_at(block_ranges[succ].first + 1)) {
+                        Operand move_to = *to;
+                        if (move_from != move_to) {
+                            resolve_moves.push_back({move_from, move_to});
+                        }
+                    }
+                }
             }
             for (const auto& group : interval_groups) {
                 // check intervals that span multiple blocks
-                if (auto move_to = group.assignment_at(block_range[succ].first)) {
-                    Operand move_from = group.assignment_at(block_range[pred].second).value();
+                if (auto move_to = group.assignment_at(block_ranges[succ].first)) {
+                    Operand move_from = group.assignment_at(block_ranges[pred].second).value();
                     if (!(move_from == *move_to)) {
-                        resolve_moves.push_back({block_range[pred].first, {move_from, *move_to}});
-                        // func.blocks[pred].resolution_map.push_back({move_from, *move_to});
+                        resolve_moves.push_back({move_from, *move_to});
                     }
                 }
+            }
+            if (!resolve_moves.empty()) {
+                func.split_edge(pred, succ).instructions = mapping_to_instructions(resolve_moves);
             }
         }
     }
     
+    std::vector<std::pair<size_t, std::pair<Operand, Operand>>> resolve_moves;
+
     // successive interval split handling
     for (const auto& group : interval_groups) {
         if (group.intervals.size() < 2) {
@@ -811,7 +846,15 @@ void allocate_registers(Function& func) {
             size_t next_start = group.intervals[i + 1].start_pos();
             Operand prev_op = group.intervals[i].op;
             Operand next_op = group.intervals[i + 1].op;
-            if (prev_end + 1 == next_start && prev_op != next_op) {
+            // TODO check in same block
+            bool same_block = true;
+            for (const auto& [begin, end] : block_ranges) {
+                if (prev_end <= end && next_start > end) {
+                    same_block = false;
+                    break;
+                }
+            }
+            if (same_block && prev_end + 1 == next_start && prev_op != next_op) {
                 resolve_moves.push_back({prev_end, {prev_op, next_op}});
             }
         }

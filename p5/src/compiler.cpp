@@ -13,9 +13,9 @@ using namespace std;
 Compiler::Compiler() {
     program_ = new IR::Program; 
     
-	IR::Function print_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}, {IR::Operand::OpType::LOGICAL, 0}}, {IR::Operation::PRINT, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}}}, {}, {}, false, 0}}, 1, 1, {}};
-	IR::Function input_ = {{{{}, {{IR::Operation::INPUT, {IR::Operand::OpType::VIRT_REG, 0}},{IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}}, {}, {}, false, 0}}, 1, 0, {}};
-	IR::Function intcast_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::ASSERT_STRING, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::INTCAST, {IR::Operand::OpType::VIRT_REG, 1}, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 1}}}, {}, {}, false, 0}}, 2, 1, {}};
+	IR::Function print_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}, {IR::Operand::OpType::LOGICAL, 0}}, {IR::Operation::PRINT, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}}}, {}, {}, false, 0}}, 1, 1};
+	IR::Function input_ = {{{{}, {{IR::Operation::INPUT, {IR::Operand::OpType::VIRT_REG, 0}},{IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}}, {}, {}, false, 0}}, 1, 0};
+	IR::Function intcast_ = {{{{}, {{IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::ASSERT_STRING, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::INTCAST, {IR::Operand::OpType::VIRT_REG, 1}, {IR::Operand::OpType::VIRT_REG, 0}}, {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::VIRT_REG, 1}}}, {}, {}, false, 0}}, 2, 1};
 	
 	program_->functions.push_back(print_);
 	program_->functions.push_back(input_);
@@ -250,7 +250,7 @@ void Compiler::visit(AST::IfStatement& expr) {
     	block_.predecessors.push_back(cond_idx);
     }
     
-    for (auto var : tlocal_vars1) {
+    for (const auto& var : tlocal_vars1) {
     	if (tlocal_vars2[var.first] != var.second) {
     		IR::PhiNode pn;
     		pn.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};        		
@@ -295,7 +295,7 @@ void Compiler::visit(AST::WhileLoop& expr) { // could contain empty blocks
 	fun_->blocks.push_back(block_);
               	
 	std::map<size_t, size_t> new_args;
-	for (auto var : tlocal_vars) {
+	for (const auto& var : tlocal_vars) {
 		if (local_vars_[var.first] != var.second) {
 			IR::PhiNode pn;
     		pn.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};        		
@@ -355,7 +355,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 	global_scope_ = false;
 	fun_->parameter_count = expr.arguments.size();
 	
-	for (auto s : tlocal_reference_vars)
+	for (const auto& s : tlocal_reference_vars)
     	ref_.insert(s);
     
     FreeVariables freeVar; 
@@ -374,7 +374,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     
     // QUI INIZIA IL CASINO
     
-    for (auto s : expr.arguments) {
+    for (const auto& s : expr.arguments) {
         local_vars_[s] = reg_cnt_++;
         if (count(nb_var.begin(), nb_var.end(), s))
             local_reference_vars_.insert(s); 
@@ -384,14 +384,14 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
         	ref_.erase(s); 
     }
 
-    for (auto s : glob_var) {
+    for (const auto& s : glob_var) {
         globals_.insert(s);
         if (ref_.count(s))
         	ref_.erase(s);
     }
     
     std::set<std::string> new_ass;
-    for (auto s : ass_var) {
+    for (const auto& s : ass_var) {
         if (count(glob_var.begin(), glob_var.end(), s))
             continue;
 		if (count(expr.arguments.begin(), expr.arguments.end(), s))
@@ -409,7 +409,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
         	ref_.erase(s);
     }
     
-    for (auto s : free_var) 
+    for (const auto& s : free_var) 
         if (ref_.count(s))
             free_vars_[s] = - 1;
     
@@ -421,12 +421,12 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     treg_cnt++;
     
     size_t args_idx = 0;
-    for (auto s : expr.arguments)
+    for (const auto& s : expr.arguments)
     	block_.instructions.push_back({IR::Operation::LOAD_ARG, {IR::Operand::OpType::VIRT_REG, local_vars_[s]}, {IR::Operand::OpType::LOGICAL, args_idx++}});
      
     size_t idx = 0;
     vector<IR::Instruction> instr;
-    for (auto s : free_vars_){
+    for (const auto& s : free_vars_){
     	block_.instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, {IR::Operand::OpType::LOGICAL, idx}});
     	free_vars_[s.first] = reg_cnt_++; // could be done later
     	
@@ -454,7 +454,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     for (auto ins : instr)
     	tblock.instructions.push_back(ins);
     
-   	for (auto var : new_ass) {
+   	for (const auto& var : new_ass) {
 		if (local_reference_vars_.count(var)) {
 			block_.instructions.push_back({IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, local_vars_[var]}});
 			IR::Instruction s_ref;
