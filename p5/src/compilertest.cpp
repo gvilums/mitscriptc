@@ -45,16 +45,16 @@ auto main(int argc, const char* argv[]) -> int {
     
     std::cout << *prog << std::endl;
 
-    optimizer opt(prog);
-    prog = opt.optimize();
+    // optimizer opt(prog);
+    // prog = opt.optimize();
 
-    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
     
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
     
-    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
     
     // IR::Function& func = prog->functions[prog->functions.size() - 2];
     // pretty_print_function(std::cout, func) << std::endl;
