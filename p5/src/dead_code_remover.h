@@ -11,5 +11,5 @@ public:
     IR::Program* optimize();
 
     bool is_dc_op(const IR::Operation op);
-    void optimize();
+    void rm_dead_code();
 };

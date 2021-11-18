@@ -310,7 +310,6 @@ void Compiler::visit(AST::WhileLoop& expr) { // could contain empty blocks
 		}
 	}
 	
-
 	for (size_t i = last_body_idx; i > last_idx; i--) {
 		if (i != header_idx) {
 			for (auto& pn : fun_->blocks[i].phi_nodes) {
