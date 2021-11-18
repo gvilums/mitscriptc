@@ -4,6 +4,7 @@
 
 #include "ir.h"
 #include "irprinter.h"
+#include "value.h"
 
 std::string op_str[] = {
 	"ADD", 
@@ -135,7 +136,7 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 	os << "\t}" << std::endl;
 	os << "\timmediates {";
 	for (size_t i = 0; i < prog.immediates.size(); i++)
-		os << i << " : ,";
+		os << i << " : " << runtime::value_to_std_string(prog.immediates[i]) << ", ";
 	os << "}" << std::endl;
 	os << "}";
 	return os;

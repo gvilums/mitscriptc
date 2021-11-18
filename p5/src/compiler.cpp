@@ -31,9 +31,9 @@ Compiler::Compiler() {
 	globals_.insert("intcast");
 	
 	program_->immediates.push_back(0); // NONE
-	program_->immediates.push_back(runtime::from_bool(true)); // TRUE
-	program_->immediates.push_back(runtime::from_bool(false)); // FALSE
-	program_->immediates.push_back(runtime::from_int32(0)); // 0
+	program_->immediates.push_back(runtime::to_value(true)); // TRUE
+	program_->immediates.push_back(runtime::to_value(false)); // FALSE
+	program_->immediates.push_back(runtime::to_value(0)); // 0
 
 	reg_cnt_ = 0;
 	imm_cnt_ = 4;
@@ -158,7 +158,7 @@ void Compiler::visit(AST::Assignment& expr) {
 
         size_t idx;
 		if (!str_const_.count(exp->field)) {
-			program_->immediates.push_back(runtime::from_std_string(exp->field));
+			program_->immediates.push_back(runtime::to_value(exp->field));
 			str_const_[exp->field] = imm_cnt_++;
 		}
 		idx = str_const_[exp->field];
@@ -444,7 +444,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 			set_c.op = IR::Operation::SET_CAPTURE;
 			set_c.args[0] = {IR::Operand::OpType::LOGICAL, idx};
 			set_c.args[1] = fun_reg;
-			set_c.args[2] = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
+			set_c.args[2] = {IR::Operand::OpType::VIRT_REG, treg_cnt};
     		instr.push_back(set_c);
     		treg_cnt++; 		
     	}
@@ -614,7 +614,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 	
 	size_t idx;
 	if (!str_const_.count(expr.field)) {
-		program_->immediates.push_back(runtime::from_std_string(expr.field));
+		program_->immediates.push_back(runtime::to_value(expr.field));
 		str_const_[expr.field] = imm_cnt_++;
 	}
 	idx = str_const_[expr.field];
@@ -663,7 +663,7 @@ void Compiler::visit(AST::Record& expr) {
 		
         size_t idx;
 		if (!str_const_.count(p.first)) {
-			program_->immediates.push_back(runtime::from_std_string(p.first));
+			program_->immediates.push_back(runtime::to_value(p.first));
 			str_const_[p.first] = imm_cnt_++;
 		}
 		idx = str_const_[p.first];
@@ -685,7 +685,7 @@ void Compiler::visit(AST::IntegerConstant& expr) {
 	int val = expr.getVal();
 	size_t idx;
 	if (!int_const_.count(val)) {
-		program_->immediates.push_back(runtime::from_int32(val)); // val
+		program_->immediates.push_back(runtime::to_value(val)); // val
 		int_const_[val] = imm_cnt_++;
 	}
 	idx = int_const_[val];
@@ -702,7 +702,7 @@ void Compiler::visit(AST::StringConstant& expr) {
     	
     	size_t idx;
 		if (!str_const_.count(str)) {
-			program_->immediates.push_back(runtime::from_std_string(str)); // str
+			program_->immediates.push_back(runtime::to_value(str)); // str
 			str_const_[str] = imm_cnt_++;
 		}
 		idx = str_const_[str];
