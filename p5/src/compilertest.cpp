@@ -10,7 +10,7 @@
 #include "irprinter.h"
 #include "ir.h"
 #include "regalloc.h"
-#include "optimizer.h"
+#include "dead_code_remover.h"
 
 
 auto main(int argc, const char* argv[]) -> int {
@@ -43,12 +43,12 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
     
-    std::cout << *prog << std::endl;
-
-    // optimizer opt(prog);
-    // prog = opt.optimize();
-
     // std::cout << *prog << std::endl;
+
+    dead_code_remover dc_opt(prog);
+    prog = dc_opt.optimize();
+
+    std::cout << *prog << std::endl;
     
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
