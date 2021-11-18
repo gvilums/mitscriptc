@@ -43,9 +43,9 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
     
-    // std::cout << *prog << std::endl;
+    std::cout << *prog << std::endl;
 
-    dead_code_remover dc_opt(prog);
+    DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
 
     std::cout << *prog << std::endl;

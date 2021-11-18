@@ -5,24 +5,37 @@
 #include <set>
 #include "irprinter.h"
 
-const std::set<IR::Operation> dc_ins = {IR::Operation::ADD, IR::Operation::ADD_INT, IR::Operation::SUB, IR::Operation::MUL, IR::Operation::DIV, IR::Operation::EQ, IR::Operation::GT, IR::Operation::GEQ, IR::Operation::AND, IR::Operation::OR, IR::Operation::NOT, IR::Operation::MOV, IR::Operation::ASSERT_BOOL, IR::Operation::ASSERT_INT, IR::Operation::ASSERT_STRING, IR::Operation::ASSERT_RECORD, IR::Operation::ASSERT_CLOSURE, IR::Operation::ASSERT_NONZERO};
+const std::set<IR::Operation> dc_ins = {IR::Operation::ADD, IR::Operation::ADD_INT, IR::Operation::SUB, IR::Operation::MUL, IR::Operation::DIV, IR::Operation::EQ, IR::Operation::GT, IR::Operation::GEQ, IR::Operation::AND, IR::Operation::OR, IR::Operation::NOT, IR::Operation::MOV};
 
-dead_code_remover::dead_code_remover(IR::Program* prog) : prog_(prog){};
+DeadCodeRemover::DeadCodeRemover(IR::Program* prog) : prog_(prog){};
 
-IR::Program* dead_code_remover::optimize() {
+IR::Program* DeadCodeRemover::optimize() {
     rm_dead_code(); // REMOVE NOT USED REGISTERS
     return prog_;
 }
 
-bool dead_code_remover::is_dc_op(const IR::Operation op){
+bool DeadCodeRemover::is_dc_op(const IR::Operation op){
     return dc_ins.contains(op);
 }
 
-void dead_code_remover::rm_dead_code(){
+void DeadCodeRemover::rm_dead_code(){
     for (auto& fun : prog_->functions) {
         std::unordered_set<size_t> used_var;
         for (int idx = fun.blocks.size() - 1; idx >= 0; idx--) {
             IR::BasicBlock new_block;
+
+            if (!fun.blocks[idx].successors.empty() && fun.blocks[idx].successors[0] < idx) {
+                size_t header = fun.blocks[idx].successors[0];
+                std::cout << header << std::endl;
+                for (auto pn : fun.blocks[header].phi_nodes) {
+                    for (auto arg : pn.args)
+                        if (arg.second.type == IR::Operand::VIRT_REG) {
+                            used_var.insert(arg.second.index);     
+                        // new_block.phi_nodes.push_back(pn);
+                    }
+                }
+            }
+
             size_t b_size = fun.blocks[idx].instructions.size();
             for (int i = b_size - 1; i >= 0; i--) {
                 IR::Instruction rit = fun.blocks[idx].instructions[i]; 
@@ -41,14 +54,14 @@ void dead_code_remover::rm_dead_code(){
             new_block.is_loop_header = fun.blocks[idx].is_loop_header;
             new_block.final_loop_block = fun.blocks[idx].final_loop_block;
 
-            
-
-            for (auto pn : fun.blocks[idx].phi_nodes) {
-                if (used_var.contains(pn.out.index)) {
-                    for (auto arg : pn.args)
-                        if (arg.second.type == IR::Operand::VIRT_REG)
-                            used_var.insert(arg.second.index);
-                    new_block.phi_nodes.push_back(pn);
+            if (fun.blocks[idx].successors.empty() || fun.blocks[idx].successors[0] >= idx){
+                for (auto pn : fun.blocks[idx].phi_nodes) {
+                    if (used_var.contains(pn.out.index)) {
+                        for (auto arg : pn.args)
+                            if (arg.second.type == IR::Operand::VIRT_REG)
+                                used_var.insert(arg.second.index);
+                        new_block.phi_nodes.push_back(pn);
+                    }
                 }
             }
         

@@ -2,13 +2,13 @@
 #include "ir.h"
 #include "const_propagator.h"
 
-const_propagator::const_propagator(IR::Program* prog) : prog_(prog){}
+ConstPropagator::ConstPropagator(IR::Program* prog) : prog_(prog){}
 
-IR::Program* const_propagator::optimize() {
+IR::Program* ConstPropagator::optimize() {
     propagate_const();
     return prog_;
 }
 
-void const_propagator::propagate_const() {
-
+void ConstPropagator::propagate_const() {
+    
 }
