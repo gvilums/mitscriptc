@@ -43,7 +43,7 @@ add_executable(mitscriptc src/value.cpp src/compilertest.cpp src/compiler.cpp sr
                ${ANTLR_SampleGrammarLexer_CXX_OUTPUTS})
             #    ${ANTLR_SampleGrammarParser_CXX_OUTPUTS})
             
-add_executable(test_regalloc src/test_regalloc.cpp src/regalloc.cpp src/ir.cpp src/irprinter.cpp)
+add_executable(test_regalloc src/test_regalloc.cpp src/regalloc.cpp src/ir.cpp src/irprinter.cpp src/value.cpp)
 
 add_executable(test test/doctest.cpp test/regalloc_test.cpp src/regalloc.cpp src/irprinter.cpp src/value.cpp test/value_test.cpp)
 
