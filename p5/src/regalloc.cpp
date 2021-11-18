@@ -453,6 +453,7 @@ auto compute_live_intervals(
         if (block.is_loop_header) {
             for (size_t opd : live) {
                 builders[opd].push_range({block_ranges[block_index].first, block_ranges[block.final_loop_block].second});
+                builders[opd].push_use(block_ranges[block.final_loop_block].second);
             }
         }
         
@@ -660,6 +661,10 @@ void allocate_registers(Function& func) {
     }
 
     auto intervals = compute_live_intervals(func, block_range);
+    
+    for (const auto& interval : intervals) {
+        std::cout << interval << std::endl;
+    }
 
     auto machine_reg_uses = compute_machine_assignments(func);
 
