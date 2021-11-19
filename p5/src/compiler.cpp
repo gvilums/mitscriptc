@@ -570,11 +570,7 @@ void Compiler::visit(AST::BinaryExpression& expr) {
     }
 
     IR::Operation op;
-<<<<<<< HEAD
 	bool bool_op = false, int_op = false;
-=======
-    bool bool_op, int_op;
->>>>>>> 0c2fdf8d8391f176c7cf2b3bac7ee09f7d11b04d
     if (expr.op == "+")
         op = IR::Operation::ADD;
     else if (expr.op == "-")

@@ -761,7 +761,7 @@ void allocate_registers(Function& func) {
     std::vector<IntervalGroup> interval_groups;
     interval_groups.reserve(intervals_by_vreg.size());
     for (auto& group : intervals_by_vreg) {
-        interval_groups.emplace_back(std::move(group));
+        interval_groups.push_back({std::move(group)});
     }
 
     // std::vector<std::vector<std::vector<std::pair<Operand, Operand>>>> edge_resolves;
