@@ -44,8 +44,8 @@ target("asmjit")
     
 target("mitscriptc")
     set_kind("binary")
-    -- add_files("grammar/MITScript.g", {rule = "antlr_generate"})
-    add_files("grammar/*.cpp")
+    -- add_rules("c++.unity_build")
+    add_files("grammar/MITScript.cpp")
     add_includedirs("grammar")
 
     add_files("src/*.cpp")

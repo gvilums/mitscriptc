@@ -7,3 +7,5 @@ build/*
 .xmake
 .vscode
 compile_commands.json
+.idea
+cbuild/*

@@ -1,6 +1,7 @@
 #include <cassert>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #include "AST.h"
 #include "MITScript.h"
@@ -49,8 +50,12 @@ auto main(int argc, const char* argv[]) -> int {
     DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
 
-    ConstPropagator c_prop(prog);
-    prog = c_prop.optimize();
+    try {
+        ConstPropagator c_prop(prog);
+        prog = c_prop.optimize();
+    } catch (std::string e) {
+        std::cout << "ERROR: " << e << std::endl;
+    }
 
 
     // std::cout << *prog << std::endl;
