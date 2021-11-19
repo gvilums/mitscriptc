@@ -11,6 +11,7 @@
 #include "ir.h"
 #include "regalloc.h"
 #include "dead_code_remover.h"
+#include "const_propagator.h"
 
 
 auto main(int argc, const char* argv[]) -> int {
@@ -47,6 +48,10 @@ auto main(int argc, const char* argv[]) -> int {
 
     DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
+
+    ConstPropagator c_prop(prog);
+    prog = c_prop.optimize();
+
 
     // std::cout << *prog << std::endl;
     
