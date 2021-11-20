@@ -25,4 +25,10 @@ auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {
     return this->blocks.back();
 }
 
+auto Operand::get_machine() const -> std::optional<MachineReg> {
+    if (this->type == MACHINE_REG) {
+        return static_cast<MachineReg>(this->index);
+    }
+    return std::nullopt;
+}
 };

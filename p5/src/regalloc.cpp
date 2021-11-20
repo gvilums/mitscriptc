@@ -245,17 +245,17 @@ auto IntervalGroup::begins_at(size_t pos) const -> bool {
 std::array<MachineReg, 6> arg_regs{MachineReg::RDI, MachineReg::RSI, MachineReg::RDX,
                                    MachineReg::RCX, MachineReg::R8,  MachineReg::R9};
 
-// std::array<MachineRegs, 9> caller_save_regs{
-//     MachineRegs::RDI,
-//     MachineRegs::RSI,
-//     MachineRegs::RDX,
-//     MachineRegs::RCX,
-//     MachineRegs::R8,
-//     MachineRegs::R9,
-//     MachineRegs::RAX,
-//     MachineRegs::R10,
-//     MachineRegs::R11,
-// };
+ std::array<MachineReg, 9> caller_save_regs{
+     MachineReg::RDI,
+     MachineReg::RSI,
+     MachineReg::RDX,
+     MachineReg::RCX,
+     MachineReg::R8,
+     MachineReg::R9,
+     MachineReg::RAX,
+//     MachineReg::R10, R10 is temporary register
+//     MachineReg::R11, R11 is temporary register
+ };
 
 auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterval> {
     std::vector<IntervalBuilder> builders;

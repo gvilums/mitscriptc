@@ -45,7 +45,8 @@ std::string op_str[] = {
     "PRINT",
     "INPUT",
     "INTCAST",
-	"SWAP"
+	"SWAP",
+    "BRANCH"
 };
 
 std::string opr_str[] = {
