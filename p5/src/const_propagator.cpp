@@ -15,12 +15,14 @@ bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_
         else if (arg.type != IR::Operand::NONE)
             can_eliminate = false;
     }
+
     if (!can_eliminate)
         return false;
 
     runtime::Value new_value;
     runtime::Value imm0 = prog_->immediates[ins.args[0].index];
     runtime::Value imm1 = prog_->immediates[ins.args[1].index];
+    
     switch (ins.op) {
         case IR::Operation::ADD:
             break;
@@ -68,7 +70,15 @@ bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_
 }
 
 bool ConstPropagator::eliminate_assert(IR::Instruction ins, std::unordered_map<size_t, runtime::Value> &const_var) {
-    runtime::Value imm = prog_->immediates[ins.args[0].index];
+
+    runtime::Value imm;
+    if (ins.args[0].type == IR::Operand::VIRT_REG && const_var.count(ins.args[0].index))
+        imm = const_var[ins.args[0].index];
+    else if (ins.args[0].type == IR::Operand::IMMEDIATE)
+        imm = prog_->immediates[ins.args[0].index];
+    else
+        return false;
+
     switch (ins.op) {
         case IR::Operation::ASSERT_BOOL:
             if (runtime::value_get_type(imm) != runtime::ValueType::Bool)
@@ -118,6 +128,7 @@ void ConstPropagator::propagate_const() {
 
                 new_block.instructions.push_back(ins);
             }
+            
             new_block.predecessors = fun.blocks[idx].predecessors;
             new_block.successors = fun.blocks[idx].successors;
             new_block.is_loop_header = fun.blocks[idx].is_loop_header;

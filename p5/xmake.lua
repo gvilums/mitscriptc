@@ -8,7 +8,7 @@ rule("antlr_generate")
     before_build_file(function (target, sourcefile, opt)
         import("core.project.depend")
         -- os.mkdir(target:())
-        os.vrunv("java", {"-jar", "external/antlr.jar", "-package", "lexer", "-Dlanguage=Cpp", sourcefile})
+        -- os.vrunv("java", {"-jar", "external/antlr.jar", "-package", "lexer", "-Dlanguage=Cpp", sourcefile})
         -- local gendir = target:autogendir();
         -- local targetfile = path.join(gendir, path.basename(sourcefile) .. ".cpp")
         depend.on_changed(function()
