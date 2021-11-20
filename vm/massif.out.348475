@@ -1,0 +1,884 @@
+desc: (none)
+cmd: ./mitscript -mem 5 -s tests/gcpersonal/gctest1.mit
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=18954466
+mem_heap_B=849399
+mem_heap_extra_B=103137
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=44613295
+mem_heap_B=1814255
+mem_heap_extra_B=251953
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=62643160
+mem_heap_B=2491991
+mem_heap_extra_B=356513
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=88383083
+mem_heap_B=3461111
+mem_heap_extra_B=506001
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=110277258
+mem_heap_B=4284591
+mem_heap_extra_B=633025
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=137101975
+mem_heap_B=5290527
+mem_heap_extra_B=788161
+mem_stacks_B=0
+heap_tree=peak
+n4: 5290527 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 4975984 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 4975984 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 4975984 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 143535 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=7
+#-----------
+time=158366278
+mem_heap_B=1200831
+mem_heap_extra_B=157313
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=170757788
+mem_heap_B=1667367
+mem_heap_extra_B=229297
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=193720569
+mem_heap_B=2531303
+mem_heap_extra_B=362545
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=222431304
+mem_heap_B=3610495
+mem_heap_extra_B=528993
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=241567397
+mem_heap_B=4330663
+mem_heap_extra_B=640081
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=12
+#-----------
+time=266033601
+mem_heap_B=5251423
+mem_heap_extra_B=782113
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=292638553
+mem_heap_B=1360551
+mem_heap_extra_B=181985
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=313923386
+mem_heap_B=2160071
+mem_heap_extra_B=305281
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=337874967
+mem_heap_B=3062007
+mem_heap_extra_B=444417
+mem_stacks_B=0
+heap_tree=detailed
+n4: 3062007 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2757352 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 2757352 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 2757352 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 133647 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=16
+#-----------
+time=356495508
+mem_heap_B=3762623
+mem_heap_extra_B=552497
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=380440703
+mem_heap_B=4662335
+mem_heap_extra_B=691249
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=393746601
+mem_heap_B=5163503
+mem_heap_extra_B=768561
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=19
+#-----------
+time=414073928
+mem_heap_B=1036367
+mem_heap_extra_B=131969
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=434402137
+mem_heap_B=1801359
+mem_heap_extra_B=249953
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=464894891
+mem_heap_B=2948399
+mem_heap_extra_B=426881
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=490307360
+mem_heap_B=3904103
+mem_heap_extra_B=574289
+mem_stacks_B=0
+heap_tree=detailed
+n4: 3904103 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 3595800 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 3595800 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 3595800 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 137295 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=23
+#-----------
+time=510636120
+mem_heap_B=4667951
+mem_heap_extra_B=692113
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=24
+#-----------
+time=530965470
+mem_heap_B=542063
+mem_heap_extra_B=55681
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=556381692
+mem_heap_B=1497871
+mem_heap_extra_B=203153
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=571628927
+mem_heap_B=2070631
+mem_heap_extra_B=291521
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=591958978
+mem_heap_B=2836455
+mem_heap_extra_B=409633
+mem_stacks_B=0
+heap_tree=detailed
+n4: 2836455 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 2532712 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 2532712 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 2532712 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 132735 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n3: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n1: 32768 0x4917F98: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 32768 0x4917FBB: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 32768 0x4917FDE: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=28
+#-----------
+time=622460033
+mem_heap_B=3983807
+mem_heap_extra_B=586609
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=29
+#-----------
+time=647870970
+mem_heap_B=4939511
+mem_heap_extra_B=734017
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=678503762
+mem_heap_B=1199583
+mem_heap_extra_B=157121
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=701477416
+mem_heap_B=2062999
+mem_heap_extra_B=290289
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=724452236
+mem_heap_B=2928639
+mem_heap_extra_B=423841
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=739769372
+mem_heap_B=3503959
+mem_heap_extra_B=512561
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=755085183
+mem_heap_B=4080983
+mem_heap_extra_B=601585
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=778060555
+mem_heap_B=4944919
+mem_heap_extra_B=734833
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=793378002
+mem_heap_B=629567
+mem_heap_extra_B=69201
+mem_stacks_B=0
+heap_tree=detailed
+n8: 629567 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 335400 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 335400 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 335400 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n3: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n1: 32768 0x4917F98: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 32768 0x4917FBB: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 32768 0x4917FDE: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+ n0: 67391 in 131 places, all below massif's threshold (1.00%)
+ n2: 24576 0x49696D3: std::basic_filebuf<char, std::char_traits<char> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n3: 24576 0x4967469: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n1: 8192 0x4917EEA: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 8192 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 8192 0x4917F0D: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 8192 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 8192 0x4917F30: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 8192 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+ n1: 12584 0x165799: antlr4::atn::LexerATNSimulator::getEpsilonTarget(antlr4::CharStream*, std::shared_ptr<antlr4::atn::LexerATNConfig> const&, antlr4::atn::Transition*, antlr4::atn::ATNConfigSet*, bool, bool) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 12584 0x16517A: antlr4::atn::LexerATNSimulator::closure(antlr4::CharStream*, std::shared_ptr<antlr4::atn::LexerATNConfig> const&, antlr4::atn::ATNConfigSet*, bool, bool, bool) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 12584 in 3 places, all below massif's threshold (1.00%)
+ n1: 10208 0x15A171: antlr4::atn::ATNDeserializer::stateFactory(unsigned long, unsigned long) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 10208 0x15B09B: antlr4::atn::ATNDeserializer::deserialize(std::vector<unsigned short, std::allocator<unsigned short> > const&) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 10208 0x11F638: MITScript::Initializer::Initializer() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+    n1: 10208 0x1A27DC: __libc_csu_init (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+     n0: 10208 0x4AB503F: (below main) (libc-start.c:264)
+ n1: 8400 0x166011: antlr4::atn::LexerATNSimulator::computeTargetState(antlr4::CharStream*, antlr4::dfa::DFAState*, unsigned long) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n2: 8400 0x163881: antlr4::atn::LexerATNSimulator::execATN(antlr4::CharStream*, antlr4::dfa::DFAState*) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 8160 0x163C78: antlr4::atn::LexerATNSimulator::match(antlr4::CharStream*, unsigned long) (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+    n1: 8160 0x14C657: antlr4::Lexer::nextToken() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+     n1: 8160 0x14A6CC: antlr4::BufferedTokenStream::fill() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+      n0: 8160 0x11CBA8: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 240 in 1 place, below massif's threshold (1.00%)
+#-----------
+snapshot=37
+#-----------
+time=808695542
+mem_heap_B=1204991
+mem_heap_extra_B=157953
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=839326203
+mem_heap_B=2357127
+mem_heap_extra_B=335665
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=854644113
+mem_heap_B=2934255
+mem_heap_extra_B=424705
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=869961099
+mem_heap_B=3509367
+mem_heap_extra_B=513393
+mem_stacks_B=0
+heap_tree=detailed
+n4: 3509367 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 3202888 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 3202888 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 3202888 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 135471 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=41
+#-----------
+time=892935980
+mem_heap_B=4373967
+mem_heap_extra_B=646785
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=908255570
+mem_heap_B=4950535
+mem_heap_extra_B=735697
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=923570336
+mem_heap_B=635287
+mem_heap_extra_B=70081
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=44
+#-----------
+time=946544819
+mem_heap_B=1499119
+mem_heap_extra_B=203329
+mem_stacks_B=0
+heap_tree=detailed
+n5: 1499119 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 1201304 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 1201304 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 1201304 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 102231 in 134 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n3: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n1: 32768 0x4917F98: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 32768 0x4917FBB: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n1: 32768 0x4917FDE: std::ios_base::sync_with_stdio(bool) (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+    n0: 32768 0x11CA4C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+ n2: 24576 0x49696D3: std::basic_filebuf<char, std::char_traits<char> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 24576 0x4967469: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 24576 in 3 places, all below massif's threshold (1.00%)
+  n0: 0 in 1 place, below massif's threshold (1.00%)
+#-----------
+snapshot=45
+#-----------
+time=961859624
+mem_heap_B=2074791
+mem_heap_extra_B=292145
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=977179927
+mem_heap_B=2651463
+mem_heap_extra_B=381073
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=992497094
+mem_heap_B=3227447
+mem_heap_extra_B=469937
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=48
+#-----------
+time=1007815189
+mem_heap_B=3803807
+mem_heap_extra_B=558817
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=1030791674
+mem_heap_B=4667327
+mem_heap_extra_B=692001
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=1043184110
+mem_heap_B=5134695
+mem_heap_extra_B=764113
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=1055577427
+mem_heap_B=707671
+mem_heap_extra_B=81217
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=52
+#-----------
+time=1067970606
+mem_heap_B=1175143
+mem_heap_extra_B=153361
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=53
+#-----------
+time=1080363937
+mem_heap_B=1640287
+mem_heap_extra_B=225105
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=54
+#-----------
+time=1092756998
+mem_heap_B=2107655
+mem_heap_extra_B=297217
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=55
+#-----------
+time=1105150553
+mem_heap_B=2572799
+mem_heap_extra_B=368945
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=56
+#-----------
+time=1117542335
+mem_heap_B=3040063
+mem_heap_extra_B=441041
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=57
+#-----------
+time=1129934537
+mem_heap_B=3505311
+mem_heap_extra_B=512785
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=58
+#-----------
+time=1142328248
+mem_heap_B=3972367
+mem_heap_extra_B=584849
+mem_stacks_B=0
+heap_tree=detailed
+n4: 3972367 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 3663608 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 3663608 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 3663608 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 137751 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=59
+#-----------
+time=1154720692
+mem_heap_B=4437927
+mem_heap_extra_B=656641
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=60
+#-----------
+time=1167113883
+mem_heap_B=4904463
+mem_heap_extra_B=728625
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=61
+#-----------
+time=1179505399
+mem_heap_B=916351
+mem_heap_extra_B=113393
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=62
+#-----------
+time=1191897194
+mem_heap_B=945223
+mem_heap_extra_B=117905
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=63
+#-----------
+time=1204290370
+mem_heap_B=1410679
+mem_heap_extra_B=189681
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=64
+#-----------
+time=1216682268
+mem_heap_B=1877319
+mem_heap_extra_B=261681
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=65
+#-----------
+time=1229076660
+mem_heap_B=2343295
+mem_heap_extra_B=333537
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=66
+#-----------
+time=1241470349
+mem_heap_B=2809415
+mem_heap_extra_B=405457
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=67
+#-----------
+time=1253865409
+mem_heap_B=3275911
+mem_heap_extra_B=477393
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=68
+#-----------
+time=1266258158
+mem_heap_B=3741199
+mem_heap_extra_B=549185
+mem_stacks_B=0
+heap_tree=detailed
+n4: 3741199 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 3433352 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 3433352 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 3433352 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 136839 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=69
+#-----------
+time=1278649990
+mem_heap_B=4208423
+mem_heap_extra_B=621233
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=70
+#-----------
+time=1291041708
+mem_heap_B=4673359
+mem_heap_extra_B=692929
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=71
+#-----------
+time=1303434570
+mem_heap_B=5140831
+mem_heap_extra_B=765057
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=72
+#-----------
+time=1315827582
+mem_heap_B=714367
+mem_heap_extra_B=82289
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=73
+#-----------
+time=1328220767
+mem_heap_B=1181279
+mem_heap_extra_B=154305
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=74
+#-----------
+time=1340613663
+mem_heap_B=1646215
+mem_heap_extra_B=226001
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=75
+#-----------
+time=1353005977
+mem_heap_B=2113687
+mem_heap_extra_B=298129
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=76
+#-----------
+time=1365400317
+mem_heap_B=2578831
+mem_heap_extra_B=369857
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=77
+#-----------
+time=1377793038
+mem_heap_B=3046199
+mem_heap_extra_B=441969
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=78
+#-----------
+time=1390184927
+mem_heap_B=3511343
+mem_heap_extra_B=513697
+mem_stacks_B=0
+heap_tree=detailed
+n4: 3511343 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 3204864 0x13F0CD: VM::VirtualMachine::step() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+  n1: 3204864 0x140772: VM::VirtualMachine::exec() (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+   n0: 3204864 0x11CD2C: main (in /home/jakob/Desktop/fa21-jakob-nogler/vm/mitscript)
+ n0: 135471 in 135 places, all below massif's threshold (1.00%)
+ n1: 98304 0x496B466: std::basic_filebuf<wchar_t, std::char_traits<wchar_t> >::_M_allocate_internal_buffer() (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 98304 0x4967659: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+   n0: 98304 in 3 places, all below massif's threshold (1.00%)
+ n1: 72704 0x4902C69: ??? (in /usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.29)
+  n1: 72704 0x4011B89: call_init.part.0 (dl-init.c:72)
+   n1: 72704 0x4011C90: call_init (dl-init.c:30)
+    n1: 72704 0x4011C90: _dl_init (dl-init.c:119)
+     n1: 72704 0x4001139: ??? (in /usr/lib/x86_64-linux-gnu/ld-2.31.so)
+      n1: 72704 0x4: ???
+       n1: 72704 0x1FFF0001B2: ???
+        n1: 72704 0x1FFF0001BE: ???
+         n1: 72704 0x1FFF0001C3: ???
+          n1: 72704 0x1FFF0001C5: ???
+           n0: 72704 0x1FFF0001C8: ???
+#-----------
+snapshot=79
+#-----------
+time=1402579016
+mem_heap_B=3978607
+mem_heap_extra_B=585793
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=80
+#-----------
+time=1414972280
+mem_heap_B=4443959
+mem_heap_extra_B=657553
+mem_stacks_B=0
+heap_tree=empty
