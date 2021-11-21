@@ -567,6 +567,7 @@ void Compiler::visit(AST::BinaryExpression& expr) {
                                        {IR::Operand::OpType::VIRT_REG, reg_cnt_ + 1},
                                        {IR::Operand::OpType::VIRT_REG, reg_cnt_}});
         ret_reg_ = reg_cnt_ + 1;
+        is_opr_ = false;
         reg_cnt_ += 2;
         return;
     }
