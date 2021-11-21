@@ -45,7 +45,7 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
     
-    // std::cout << *prog << std::endl;
+    std::cout << *prog << std::endl;
 
     DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
@@ -57,8 +57,7 @@ auto main(int argc, const char* argv[]) -> int {
         std::cout << "ERROR: " << e << std::endl;
     }
 
-
-    // std::cout << *prog << std::endl;
+    std::cout << *prog << std::endl;
     
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
