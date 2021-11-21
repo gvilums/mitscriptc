@@ -14,6 +14,8 @@
 
 namespace IR {
 
+const size_t MACHINE_REG_COUNT = 11;
+
 enum class MachineReg : size_t {
     RDI, // gp, first arg, volatile
     RSI, // gp, second arg, volatile
@@ -57,7 +59,7 @@ enum class Operation {
 
     ALLOC_REF,
     ALLOC_REC,
-    ALLOC_CLOSURE,		// (VIRT_REG id), FUNCTION IDX, #SET_CAPTUREs
+    ALLOC_CLOSURE,		// (VIRT_REG id), FUNCTION IDX, #args, #SET_CAPTUREs
     
     SET_CAPTURE,        // SET_CAPTURE NONE <- (LOGICAL index) (VIRT_REG id) (VIRT_REG id)
 
@@ -142,7 +144,7 @@ struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
     size_t num_globals{0};
-    runtime::Runtime* rt{nullptr};
+    runtime::ProgramContext* rt{nullptr};
 
     Program();
     ~Program();

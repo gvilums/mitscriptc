@@ -6,7 +6,7 @@
 
 namespace runtime {
     
-struct Runtime;
+struct ProgramContext;
 
 enum class ValueType : uint64_t {
     None,
@@ -78,7 +78,7 @@ auto value_get_std_string(Value val) -> std::string;
 auto value_eq_bool(Value lhs, Value rhs) -> bool;
 
 // checks types
-Value value_add(Runtime* rt, Value lhs, Value rhs);
+Value value_add(ProgramContext* rt, Value lhs, Value rhs);
 // below assume correct types
 Value value_add_int32(Value lhs, Value rhs);
 Value value_sub(Value lhs, Value rhs);
@@ -91,12 +91,12 @@ Value value_and(Value lhs, Value rhs);
 Value value_or(Value lhs, Value rhs);
 Value value_not(Value val);
 
-Value value_to_string(Value val);
+Value value_to_string(ProgramContext* rt, Value val);
 
 Value to_value(bool b);
 Value to_value(int32_t i);
-Value to_value(Runtime* rt, const std::string& str);
-Value to_value(Runtime* rt, const char* str);
+Value to_value(ProgramContext* rt, const std::string& str);
+Value to_value(ProgramContext* rt, const char* str);
 Value to_value(Value* ref);
 Value to_value(String* str);
 Value to_value(Record* rec);
@@ -114,7 +114,7 @@ struct HeapObject {
     std::uint64_t data[];
 };
 
-struct Runtime {
+struct ProgramContext {
     size_t total_alloc{0};
     HeapObject* heap_head{nullptr};
     
@@ -124,9 +124,9 @@ struct Runtime {
     Value function_string{0};
 
     Value* globals{nullptr};
-    
-    Runtime();
-    ~Runtime();
+
+    ProgramContext();
+    ~ProgramContext();
     
     auto alloc_ref() -> Value*;
     auto alloc_string(size_t length) -> String*;
@@ -141,18 +141,18 @@ struct Runtime {
     void collect();
 };
 
-void extern_print(Runtime* rt, Value val);
+void extern_print(Value val);
 auto extern_intcast(Value val) -> Value;
-auto extern_input(Runtime* rt) -> Value;
+auto extern_input(ProgramContext* rt) -> Value;
 
 auto extern_rec_load_name(Value rec, Value name) -> Value;
 void extern_rec_store_name(Value rec, Value name, Value val);
-auto extern_rec_load_index(Runtime* rt, Value rec, Value index_val) -> Value;
-void extern_rec_store_index(Runtime* rt, Value rec, Value index_val, Value val);
+auto extern_rec_load_index(ProgramContext* rt, Value rec, Value index_val) -> Value;
+void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Value val);
 
-Value extern_alloc_ref(Runtime* rt);
-Value extern_alloc_string(Runtime* rt, size_t length);
-Value extern_alloc_record(Runtime* rt);
-Value extern_alloc_closure(Runtime* rt, size_t num_free);
+Value extern_alloc_ref(ProgramContext* rt);
+Value extern_alloc_string(ProgramContext* rt, size_t length);
+Value extern_alloc_record(ProgramContext* rt);
+Value extern_alloc_closure(ProgramContext* rt, size_t num_free);
 
 };

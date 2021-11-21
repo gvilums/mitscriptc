@@ -25,7 +25,7 @@ bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_
     
     switch (ins.op) {
         case IR::Operation::ADD:
-            new_value = runtime::value_add(imm0, imm1);
+            new_value = runtime::value_add(prog_->rt, imm0, imm1);
             break;
         case IR::Operation::ADD_INT:
             new_value = runtime::value_add_int32(imm0, imm1);

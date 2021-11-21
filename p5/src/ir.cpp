@@ -1,9 +1,11 @@
+#include <memory>
+
 #include "ir.h"
 
 namespace IR {
 
 Program::Program() {
-    this->rt = new runtime::Runtime;
+    this->rt = new runtime::ProgramContext;
 }
 Program::~Program() {
     delete this->rt;

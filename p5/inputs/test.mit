@@ -1,7 +1,15 @@
-f = fun() {
-    this = print;
-    i = 1;
-    while(true){
-        i = print(i);
+f = fun(x) {
+    if (x == 10) {
+        return 42;
+    } else {
+        x = x + 2;
     }
+    return x + 1;
 };
+
+y = 11;
+
+while (y < 22) {
+    print(f(y));
+    y = y + 1;
+}

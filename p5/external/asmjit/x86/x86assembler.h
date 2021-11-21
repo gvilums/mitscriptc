@@ -59,10 +59,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef int (*SumFunc)(const int* arr, size_t count);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Create a runtime specialized for JIT.
+//!   JitRuntime context;                    // Create a runtime specialized for JIT.
 //!   CodeHolder code;                  // Create a CodeHolder.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Assembler a(&code);          // Create and attach x86::Assembler to code.
 //!
 //!   // Decide between 32-bit CDECL, WIN64, and SysV64 calling conventions:
@@ -107,7 +107,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // ----> x86::Assembler is no longer needed from here and can be destroyed <----
 //!
 //!   SumFunc fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!   // ----> CodeHolder is no longer needed from here and can be destroyed <----
@@ -117,7 +117,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   int result = fn(array, 6);        // Execute the generated code.
 //!   printf("%d\n", result);           // Print sum of array (108).
 //!
-//!   rt.release(fn);                   // Explicitly remove the function from the runtime
+//!   context.release(fn);                   // Explicitly remove the function from the runtime
 //!   return 0;                         // Everything successful...
 //! }
 //! ```
@@ -158,10 +158,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! using namespace asmjit;
 //!
 //! int main(int argc, char* argv[]) {
-//!   JitRuntime rt;                    // Create a runtime specialized for JIT.
+//!   JitRuntime context;                    // Create a runtime specialized for JIT.
 //!   CodeHolder code;                  // Create a CodeHolder.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Assembler a(&code);          // Create and attach x86::Assembler to code.
 //!
 //!   // Enable strict validation.
@@ -215,10 +215,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef int (*Func)(void);
 //!
 //! int main(int argc, char* argv[]) {
-//!   JitRuntime rt;                    // Create a runtime specialized for JIT.
+//!   JitRuntime context;                    // Create a runtime specialized for JIT.
 //!   CodeHolder code;                  // Create a CodeHolder.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Assembler a(&code);          // Create and attach x86::Assembler to code.
 //!
 //!   // Let's get these registers from x86::Assembler.
@@ -242,13 +242,13 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!
 //!   // To make the example complete let's call it.
 //!   Func fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!
 //!   int result = fn();                // Execute the generated code.
 //!   printf("%d\n", result);           // Print the resulting "0".
 //!
-//!   rt.release(fn);                   // Remove the function from the runtime.
+//!   context.release(fn);                   // Remove the function from the runtime.
 //!   return 0;
 //! }
 //! ```
@@ -381,10 +381,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef void (*SumIntsFunc)(int* dst, const int* a, const int* b);
 //!
 //! int main(int argc, char* argv[]) {
-//!   JitRuntime rt;                    // Create JIT Runtime.
+//!   JitRuntime context;                    // Create JIT ProgramContext.
 //!   CodeHolder code;                  // Create a CodeHolder.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Assembler a(&code);          // Create and attach x86::Assembler to code.
 //!
 //!   // Decide which registers will be mapped to function arguments. Try changing
@@ -425,7 +425,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   a.emitEpilog(frame);              // Emit function epilog and return.
 //!
 //!   SumIntsFunc fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error case.
 //!
 //!   // Execute the generated function.
@@ -437,7 +437,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // Prints {5 8 4 9}
 //!   printf("{%d %d %d %d}\n", out[0], out[1], out[2], out[3]);
 //!
-//!   rt.release(fn);
+//!   context.release(fn);
 //!   return 0;
 //! }
 //! ```
@@ -498,10 +498,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef int (*Func)(void);
 //!
 //! int main(int argc, char* argv[]) {
-//!   JitRuntime rt;                    // Create a runtime specialized for JIT.
+//!   JitRuntime context;                    // Create a runtime specialized for JIT.
 //!   CodeHolder code;                  // Create a CodeHolder.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Assembler a(&code);          // Create and attach x86::Assembler to code.
 //!
 //!   // Let's get these registers from x86::Assembler.
@@ -535,13 +535,13 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!
 //!   // Now the code is ready to be called
 //!   Func fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!
 //!   int result = fn();                // Execute the generated code.
 //!   printf("%d\n", result);           // Print the resulting "0".
 //!
-//!   rt.release(fn);                   // Remove the function from the runtime.
+//!   context.release(fn);                   // Remove the function from the runtime.
 //!   return 0;
 //! }
 //! ```

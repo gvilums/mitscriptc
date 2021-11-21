@@ -88,11 +88,11 @@ class BaseEmitter;
 //! };
 //!
 //! int main() {
-//!   JitRuntime rt;
+//!   JitRuntime context;
 //!   SimpleErrorHandler eh;
 //!
 //!   CodeHolder code;
-//!   code.init(rt.environment());
+//!   code.init(context.environment());
 //!   code.setErrorHandler(&eh);
 //!
 //!   // Try to emit instruction that doesn't exist.
@@ -146,11 +146,11 @@ class BaseEmitter;
 //! };
 //!
 //! int main() {
-//!   JitRuntime rt;
+//!   JitRuntime context;
 //!   ThrowableErrorHandler eh;
 //!
 //!   CodeHolder code;
-//!   code.init(rt.environment());
+//!   code.init(context.environment());
 //!   code.setErrorHandler(&eh);
 //!
 //!   x86::Assembler a(&code);
@@ -198,11 +198,11 @@ class BaseEmitter;
 //! int main(int argc, char* argv[]) {
 //!   using namespace asmjit;
 //!
-//!   JitRuntime rt;
+//!   JitRuntime context;
 //!   LongJmpErrorHandler eh;
 //!
 //!   CodeHolder code;
-//!   code.init(rt.rt.environment());
+//!   code.init(context.context.environment());
 //!   code.setErrorHandler(&eh);
 //!
 //!   x86::Assembler a(&code);

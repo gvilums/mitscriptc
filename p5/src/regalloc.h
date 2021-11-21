@@ -10,7 +10,6 @@ namespace IR {
     
 
 
-const size_t MACHINE_REG_COUNT = 11;
 
 struct LiveInterval {
     std::vector<std::pair<size_t, size_t>> ranges;

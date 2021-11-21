@@ -321,6 +321,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                     for (auto& builder : builders) {
                         builder.push_range({instr_id, instr_id});
                     }
+                    next_call = std::nullopt;
                     break;
                 default:
                     break;
@@ -684,11 +685,17 @@ void allocate_registers(Function& func) {
 
     auto intervals = compute_live_intervals(func, block_ranges);
 
-    // for (const auto& interval : intervals) {
-    //     std::cout << interval << std::endl;
-    // }
+     for (const auto& interval : intervals) {
+         std::cout << interval << std::endl;
+     }
 
     auto machine_reg_uses = compute_machine_assignments(func);
+
+    std::cout << "-------- machine regs ---------" << std::endl;
+    for (const auto& interval : machine_reg_uses) {
+        std::cout << interval << std::endl;
+    }
+
 
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>
         unhandled(std::make_move_iterator(intervals.begin()),
@@ -897,6 +904,7 @@ void allocate_registers(Function& func) {
     // }
 
     rewrite_instructions(func, interval_groups, resolve_moves);
+    func.stack_slots = stack_slot;
 }
 
 };  // namespace IR
