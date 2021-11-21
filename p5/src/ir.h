@@ -140,7 +140,10 @@ struct Function {
 struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
-    size_t num_globals;
+    size_t num_globals{0};
+    runtime::Runtime* rt{nullptr};
+
+    Program();
 };
 
 }; 

@@ -13,6 +13,11 @@ CodeGenerator::CodeGenerator(IR::Program program1, runtime::Runtime* ctx)
     for (auto& label : this->function_labels) {
         label = assembler.newLabel();
     }
+    this->function_address_label = assembler.newLabel();
+    assembler.bind(this->function_address_label);
+    for (const auto& label : this->function_labels) {
+        assembler.embedLabel(label);
+    }
 }
 
 void CodeGenerator::process_function(size_t func_index) {
@@ -96,19 +101,47 @@ void CodeGenerator::process_block(const IR::Function& func,
             assembler.call(Imm(runtime::value_eq));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::GT) {
-
+            load(x86::r10, instr.args[0]);
+            load(x86::r11, instr.args[1]);
+            assembler.cmp(x86::r10, x86::r11);
+            // TODO SETcc instructions
+            assembler.setg(x86::r10);
+            assembler.shr(x86::r10, 4);
+            assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::GEQ) {
-
+            load(x86::r10, instr.args[0]);
+            load(x86::r11, instr.args[1]);
+            assembler.cmp(x86::r10, x86::r11);
+            assembler.setge(x86::r10);
+            assembler.shr(x86::r10, 4);
+            assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::AND) {
-
+            load(x86::r10, instr.args[0]);
+            load(x86::r11, instr.args[1]);
+            assembler.and_(x86::r10, x86::r11);
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::OR) {
-
+            load(x86::r10, instr.args[0]);
+            load(x86::r11, instr.args[1]);
+            assembler.or_(x86::r10, x86::r11);
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::NOT) {
-
+            load(x86::r10, instr.args[0]);
+            assembler.shr(x86::r10, 4);
+            assembler.mov(x86::r11, Imm(1));
+            assembler.sub(x86::r11, x86::r10);
+            assembler.shl(x86::r11, 4);
+            assembler.or_(x86::r11, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
+            store(instr.out, x86::r11);
         } else if (instr.op == IR::Operation::LOAD_ARG) {
+            // TODO remember: last argument on stack is previous function pointer
 
         } else if (instr.op == IR::Operation::LOAD_FREE_REF) {
-
+            int32_t offset = 24 + 8 * instr.args[0].index;
+            assembler.mov(x86::r10, x86::Mem(x86::rbx, offset));
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_LOAD) {
             load(x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(~0b1111));
@@ -120,13 +153,27 @@ void CodeGenerator::process_block(const IR::Function& func,
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
-
+            load(x86::rdi, instr.args[0]);
+            load(x86::rsi, instr.args[1]);
+            assembler.call(Imm(runtime::extern_rec_load_name));
+            store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
-
+            assembler.mov(x86::rdi, Imm(this->program_context));
+            load(x86::rsi, instr.args[0]);
+            load(x86::rdx, instr.args[1]);
+            assembler.call(Imm(runtime::extern_rec_load_index));
+            store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
-
+            load(x86::rdi, instr.args[0]);
+            load(x86::rsi, instr.args[1]);
+            load(x86::rdx, instr.args[2]);
+            assembler.call(Imm(runtime::extern_rec_store_name));
         } else if (instr.op == IR::Operation::REC_STORE_INDX) {
-
+            assembler.mov(x86::rdi, Imm(this->program_context));
+            load(x86::rsi, instr.args[0]);
+            load(x86::rdx, instr.args[1]);
+            load(x86::rcx, instr.args[2]);
+            assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, Imm(this->program_context));
             assembler.call(Imm(runtime::extern_alloc_ref));
@@ -136,10 +183,15 @@ void CodeGenerator::process_block(const IR::Function& func,
             assembler.call(Imm(runtime::extern_alloc_record));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_CLOSURE) {
+            int32_t fn_id = instr.args[0].index;
             assembler.mov(x86::rdi, this->program_context);
             assembler.mov(x86::rsi, instr.args[1].index);
             assembler.call(Imm(runtime::extern_alloc_closure));
-
+            // load function address
+            assembler.mov(x86::r10, x86::Mem(this->function_address_label, 8 * fn_id));
+            assembler.mov(x86::Mem(x86::rax, 0), x86::r10);
+            assembler.mov(x86::Mem(x86::rax, 8), Imm(this->program.functions[fn_id].parameter_count));
+            store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::SET_CAPTURE) {
             int32_t offset = 24 + 8 * instr.args[0].index;
             load(x86::r10, instr.args[1]);
@@ -147,11 +199,34 @@ void CodeGenerator::process_block(const IR::Function& func,
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::SET_ARG) {
-
+            size_t arg_index = instr.args[0].index;
+            // passed in register
+            if (arg_index < 6) {
+                load(to_reg(arg_index), instr.args[1]);
+            } else { // passed on stack
+                assert(false && "unimplemented");
+            }
         } else if (instr.op == IR::Operation::CALL) {
+            load(x86::r10, instr.)
+            assembler.push(x86::rbx);
+            // TODO function argument count validation
 
+            // TODO think about stack alignment in general (although its not relevant here)
+            assembler.call()
+
+            // restore current closure pointer
+            assembler.pop(x86::rbx);
         } else if (instr.op == IR::Operation::MOV) {
-
+            x86::Gp target;
+            if (instr.out.type == IR::Operand::MACHINE_REG) {
+                target = to_reg(instr.out.index);
+            } else {
+                target = x86::r10;
+            }
+            load(target, instr.args[0]);
+            if (instr.out.type == IR::Operand::MACHINE_REG) {
+                store(instr.out, target);
+            }
         } else if (instr.op == IR::Operation::LOAD_GLOBAL) {
             // TODO check for uninit and terminate
             int32_t offset = 8 * instr.args[0].index;
@@ -174,11 +249,16 @@ void CodeGenerator::process_block(const IR::Function& func,
         } else if (instr.op == IR::Operation::ASSERT_NONZERO) {
 
         } else if (instr.op == IR::Operation::PRINT) {
-
+            assembler.mov(x86::rdi, Imm(this->program_context));
+            load(x86::rsi, instr.args[0]);
+            assembler.call(Imm(runtime::extern_print));
         } else if (instr.op == IR::Operation::INPUT) {
 
         } else if (instr.op == IR::Operation::INTCAST) {
-
+            load(x86::rdi, instr.args[0]);
+            assembler.call(Imm(runtime::extern_intcast));
+            // TODO check for invalid
+            store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::SWAP) {
             if (instr.args[0].type != IR::Operand::MACHINE_REG
                 || instr.args[1].type != IR::Operand::MACHINE_REG) {

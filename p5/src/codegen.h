@@ -23,8 +23,7 @@ struct Executable {
     void run();
 };
 
-struct CodeGenerator {
-    CodeGenerator(IR::Program program1, runtime::Runtime* ctx);
+class CodeGenerator {
     IR::Program program;
     asmjit::CodeHolder code;
     asmjit::JitRuntime jit_rt;
@@ -35,7 +34,10 @@ struct CodeGenerator {
     asmjit::Label globals_label;
     asmjit::Label function_address_label;
 
-    CodeGenerator(IR::Program program1, std::unique_ptr<runtime::Runtime> ctx);
+
+   public:
+
+    CodeGenerator(IR::Program program1, runtime::Runtime* ctx);
 
     void process_block(const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
     void process_function(size_t func_index);

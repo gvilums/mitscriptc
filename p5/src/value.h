@@ -137,12 +137,12 @@ struct Runtime {
 };
 
 void extern_print(Runtime* rt, Value val);
-void extern_intcast(Runtime* rt, Value val);
-void extern_input(Runtime* rt, Value val);
+auto extern_intcast(Value val) -> Value;
+auto extern_input(Runtime* rt) -> Value;
 
-auto extern_rec_load_name(Runtime* rt, Value rec, Value name) -> Value;
+auto extern_rec_load_name(Value rec, Value name) -> Value;
+void extern_rec_store_name(Value rec, Value name, Value val);
 auto extern_rec_load_index(Runtime* rt, Value rec, Value index_val) -> Value;
-void extern_rec_store_name(Runtime* rt, Value rec, Value name, Value val);
 void extern_rec_store_index(Runtime* rt, Value rec, Value index_val, Value val);
 
 Value extern_alloc_ref(Runtime* rt);

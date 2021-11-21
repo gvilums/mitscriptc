@@ -2,6 +2,10 @@
 
 namespace IR {
 
+Program::Program() {
+    this->rt = new runtime::Runtime;
+}
+
 auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {
     size_t new_block_index = this->blocks.size();
     this->blocks.push_back({{}, {}, {from}, {to}});
