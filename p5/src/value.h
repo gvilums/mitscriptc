@@ -78,7 +78,7 @@ auto value_get_std_string(Value val) -> std::string;
 auto value_eq_bool(Value lhs, Value rhs) -> bool;
 
 // checks types
-Value value_add(Value lhs, Value rhs);
+Value value_add(Runtime* rt, Value lhs, Value rhs);
 // below assume correct types
 Value value_add_int32(Value lhs, Value rhs);
 Value value_sub(Value lhs, Value rhs);
@@ -95,9 +95,8 @@ Value value_to_string(Value val);
 
 Value to_value(bool b);
 Value to_value(int32_t i);
-Value to_value(const std::string& str, Runtime& alloc);
-Value to_value(const std::string& str);
-Value to_value(const char* str);
+Value to_value(Runtime* rt, const std::string& str);
+Value to_value(Runtime* rt, const char* str);
 Value to_value(Value* ref);
 Value to_value(String* str);
 Value to_value(Record* rec);
@@ -137,6 +136,18 @@ struct Runtime {
     void collect();
 };
 
-auto global_runtime() -> Runtime&;
+void extern_print(Runtime* rt, Value val);
+auto extern_intcast(Value val) -> Value;
+auto extern_input(Runtime* rt) -> Value;
+
+auto extern_rec_load_name(Value rec, Value name) -> Value;
+void extern_rec_store_name(Value rec, Value name, Value val);
+auto extern_rec_load_index(Runtime* rt, Value rec, Value index_val) -> Value;
+void extern_rec_store_index(Runtime* rt, Value rec, Value index_val, Value val);
+
+Value extern_alloc_ref(Runtime* rt);
+Value extern_alloc_string(Runtime* rt, size_t length);
+Value extern_alloc_record(Runtime* rt);
+Value extern_alloc_closure(Runtime* rt, size_t num_free);
 
 };

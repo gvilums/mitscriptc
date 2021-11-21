@@ -2,6 +2,6 @@ f = fun() {
     this = print;
     i = 1;
     while(true){
-        i = this.print(i);
+        i = print(i);
     }
 };

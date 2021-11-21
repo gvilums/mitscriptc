@@ -999,7 +999,7 @@ Error CodeHolder::relocateToBase(uint64_t baseAddress) noexcept {
           uint32_t byte1 = buffer[valueOffset - 1];
 
           if (byte1 == 0xE8) {
-            // Patch CALL/MOD byte to FF /2 (-> 0x15).
+            // Patch EXEC_CALL/MOD byte to FF /2 (-> 0x15).
             byte1 = x86EncodeMod(0, 2, 5);
           }
           else if (byte1 == 0xE9) {

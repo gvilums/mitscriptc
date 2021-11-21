@@ -193,7 +193,7 @@ void Compiler::visit(AST::Assignment& expr) {
 
         size_t idx;
         if (!str_const_.count(exp->field)) {
-            program_->immediates.push_back(runtime::to_value(exp->field));
+            program_->immediates.push_back(runtime::to_value(program_->rt, exp->field));
             str_const_[exp->field] = imm_cnt_++;
         }
         idx = str_const_[exp->field];
@@ -246,6 +246,7 @@ void Compiler::visit(AST::IfStatement& expr) {
     if (!is_opr_)
         opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
     block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr_});
+    block_.instructions.push_back({IR::Operation::BRANCH, IR::Operand(), opr_});
 
     fun_->blocks.push_back(block_);
 
@@ -318,6 +319,7 @@ void Compiler::visit(AST::WhileLoop& expr) {  // could contain empty blocks
     if (!is_opr_)
         opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
     block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr_});
+    block_.instructions.push_back({IR::Operation::BRANCH, IR::Operand(), opr_});
     fun_->blocks.push_back(block_);
 
     std::map<std::string, size_t> tlocal_vars = local_vars_;
@@ -634,26 +636,35 @@ void Compiler::visit(AST::Call& expr) {
     size_t fun_reg = ret_reg_;
 
     size_t arg_cnt = 0;
+    std::vector<IR::Instruction> args;
     for (auto c : expr.arguments) {
         c->accept(*((Visitor*)this));
         if (!is_opr_)
             opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
-
+        
         IR::Instruction set_arg;
         set_arg.op = IR::Operation::SET_ARG;
         set_arg.args[0] = {IR::Operand::OpType::LOGICAL, arg_cnt++};
         set_arg.args[1] = opr_;
 
-        block_.instructions.push_back(set_arg);
+        args.push_back(set_arg);
+        // block_.instructions.push_back(set_arg);
     }
 
-    IR::Instruction call;
-    call.op = IR::Operation::CALL;
-    call.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
-    call.args[0] = {IR::Operand::OpType::LOGICAL, arg_cnt};
-    call.args[1] = {IR::Operand::OpType::VIRT_REG, fun_reg};
+    IR::Instruction icall;
+    icall.op = IR::Operation::INIT_CALL;
+    icall.args[0] = {IR::Operand::OpType::LOGICAL, arg_cnt};
+    block_.instructions.push_back(icall);
 
+    for (auto a : args)
+        block_.instructions.push_back(a);
+
+    IR::Instruction call;
+    call.op = IR::Operation::EXEC_CALL;
+    call.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
+    call.args[0] = {IR::Operand::OpType::VIRT_REG, fun_reg};
     block_.instructions.push_back(call);
+
     is_opr_ = false;
     ret_reg_ = reg_cnt_;
     reg_cnt_++;
@@ -667,7 +678,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 
     size_t idx;
     if (!str_const_.count(expr.field)) {
-        program_->immediates.push_back(runtime::to_value(expr.field));
+        program_->immediates.push_back(runtime::to_value(program_->rt, expr.field));
         str_const_[expr.field] = imm_cnt_++;
     }
     idx = str_const_[expr.field];
@@ -718,7 +729,7 @@ void Compiler::visit(AST::Record& expr) {
 
         size_t idx;
         if (!str_const_.count(p.first)) {
-            program_->immediates.push_back(runtime::to_value(p.first));
+            program_->immediates.push_back(runtime::to_value(program_->rt, p.first));
             str_const_[p.first] = imm_cnt_++;
         }
         idx = str_const_[p.first];
@@ -757,7 +768,7 @@ void Compiler::visit(AST::StringConstant& expr) {
 
         size_t idx;
         if (!str_const_.count(str)) {
-            program_->immediates.push_back(runtime::to_value(str));  // str
+            program_->immediates.push_back(runtime::to_value(program_->rt, str));  // str
             str_const_[str] = imm_cnt_++;
         }
         idx = str_const_[str];

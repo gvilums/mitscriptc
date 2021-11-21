@@ -47,10 +47,10 @@ Value to_value(int32_t i) {
     return (static_cast<uint64_t>(i) << 4) | static_cast<uint64_t>(ValueType::Int);
 }
 
-Value to_value(const std::string& str, Runtime& alloc) {
+Value to_value(Runtime* rt, const std::string& str) {
     // heap allocated
     if (str.size() > 7) {
-        String* str_ptr = alloc.alloc_string(str.size());
+        String* str_ptr = rt->alloc_string(str.size());
         std::memcpy(&str_ptr->data, str.data(), str.size());
         return to_value(str_ptr);
     } else {
@@ -64,12 +64,8 @@ Value to_value(const std::string& str, Runtime& alloc) {
 }
 
 // null terminated string
-Value to_value(const char* str) {
-    return to_value(std::string{str});
-}
-
-Value to_value(const std::string& str) {
-    return to_value(str, global_runtime());
+Value to_value(Runtime* rt, const char* str) {
+    return to_value(rt, std::string{str});
 }
 
 Value to_value(Value* ref) {
@@ -88,7 +84,7 @@ Value to_value(Closure* closure) {
     return reinterpret_cast<uint64_t>(closure) | static_cast<uint64_t>(ValueType::Closure);
 }
 
-Value value_add(Value lhs, Value rhs) {
+Value value_add(Runtime* rt, Value lhs, Value rhs) {
     auto lhs_kind = value_get_type(lhs);
     auto rhs_kind = value_get_type(rhs);
     if (lhs_kind == ValueType::Int && rhs_kind == ValueType::Int) {
@@ -135,7 +131,7 @@ Value value_add(Value lhs, Value rhs) {
 
         return out;
     } else {
-        String* str = global_runtime().alloc_string(total_size);
+        String* str = rt->alloc_string(total_size);
         if (lhs_kind == ValueType::InlineString) {
             Value src = lhs;
             std::memcpy(&str->data, reinterpret_cast<char*>(&src) + 1, lhs_size);
@@ -227,30 +223,30 @@ Value value_not(Value val) {
     return to_value(!value_get_bool(val));
 }
 
-Value value_to_string(Value val) {
+Value value_to_string(Runtime* rt, Value val) {
     auto type = value_get_type(val);
     if (type == ValueType::None) {
-        return global_runtime().none_string;
+        return rt->none_string;
     }
     if (type == ValueType::InlineString || type == ValueType::HeapString) {
         return val;
     }
     if (type == ValueType::Bool) {
         if (value_get_bool(val)) {
-            return global_runtime().true_string;
+            return rt->true_string;
         } else {
-            return global_runtime().false_string;
+            return rt->false_string;
         }
     }
     if (type == ValueType::Int) {
         // TODO make more efficient
-        return to_value(std::to_string(value_get_int32(val)));
+        return to_value(rt, std::to_string(value_get_int32(val)));
     }
     if (type == ValueType::Record) {
-        return to_value(value_get_std_string(val));
+        return to_value(rt, value_get_std_string(val));
     }
     if (type == ValueType::Closure) {
-        return global_runtime().function_string;
+        return rt->function_string;
     }
     return 0;
 }
@@ -303,6 +299,24 @@ auto value_get_std_string(Value val) -> std::string {
     }
     return "<<INVALID>>";
 }
+
+Value extern_alloc_ref(Runtime* rt) {
+    return to_value(rt->alloc_ref());
+}
+
+Value extern_alloc_string(Runtime* rt, size_t length) {
+    return to_value(rt->alloc_string(length));
+}
+
+Value extern_alloc_record(Runtime* rt) {
+    return to_value(rt->alloc_record());
+}
+
+Value extern_alloc_closure(Runtime* rt, size_t num_free) {
+    return to_value(rt->alloc_closure(num_free));
+}
+
+void extern_intcast(Runtime* rt, Value val) {}
 
 Runtime::Runtime() {
     this->none_string = to_value("None", *this);

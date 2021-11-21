@@ -2,6 +2,10 @@
 
 namespace IR {
 
+Program::Program() {
+    this->rt = new runtime::Runtime;
+}
+
 auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {
     size_t new_block_index = this->blocks.size();
     this->blocks.push_back({{}, {}, {from}, {to}});
@@ -25,4 +29,10 @@ auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {
     return this->blocks.back();
 }
 
+auto Operand::get_machine() const -> std::optional<MachineReg> {
+    if (this->type == MACHINE_REG) {
+        return static_cast<MachineReg>(this->index);
+    }
+    return std::nullopt;
+}
 };

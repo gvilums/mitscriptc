@@ -14,6 +14,23 @@
 
 namespace IR {
 
+enum class MachineReg : size_t {
+    RDI, // gp, first arg, volatile
+    RSI, // gp, second arg, volatile
+    RDX, // gp, third arg, volatile
+    RCX, // gp, fourth arg, volatile
+    R8,  // gp, fifth arg, volatile
+    R9,  // gp, sixth arg, volatile
+    RAX, // gp, seventh arg, volatile
+    R12, // gp, nonvolatile
+    R13, // gp, nonvolatile
+    R14, // gp, nonvolatile
+    R15, // gp, nonvolatile
+    RBX, // current function, nonvolatile
+    R10, // temporary, volatile
+    R11, // temporary, volatile
+};
+
 enum class Operation {
     ADD,
     ADD_INT,
@@ -32,7 +49,7 @@ enum class Operation {
     LOAD_FREE_REF,  // LOAD_FREE_REF (VIRT_REG id) <- (LOGICAL index)
 
     REF_LOAD,   // REF_LOAD (VIRT_REG id) <- (VIRT_REG id)
-    REF_STORE,  // REF_STORE (VIRT_REG id) <- (VIRT_REG id)
+    REF_STORE,  // REF_STORE NONE <- (VIRT_REG id) (VIRT_REG id)
     REC_LOAD_NAME,
     REC_LOAD_INDX,
     REC_STORE_NAME,
@@ -45,7 +62,7 @@ enum class Operation {
     SET_CAPTURE,        // SET_CAPTURE NONE <- (LOGICAL index) (VIRT_REG id) (VIRT_REG id)
 
     SET_ARG,            // SET_ARG NONE <- (LOGICAL index) (VIRT_REG id)
-    CALL,               // CALL (VIRT_REG id) <- (LOGICAL num_args) (VIRT_REG id)
+    EXEC_CALL,               // EXEC_CALL (VIRT_REG id) <- (VIRT_REG id)
     RETURN,
 
     MOV,
@@ -63,6 +80,8 @@ enum class Operation {
     INTCAST,
     
     SWAP,
+    BRANCH,         // BRANCH NONE <- (PARAM) (if true branch to block 0, else block 1)
+    INIT_CALL,      // INIT_CALL NONE <- (LOGICAL num_params)
 };
 
 struct Operand {
@@ -83,6 +102,9 @@ struct Operand {
     bool operator!=(const Operand& other) const {
         return this->type != other.type || this->index != other.index;
     }
+
+    auto get_machine() const -> std::optional<MachineReg>;
+
 };
 
 struct Instruction {
@@ -110,6 +132,8 @@ struct Function {
     std::vector<BasicBlock> blocks;
     size_t virt_reg_count;
     size_t parameter_count;
+
+    size_t stack_slots;
     
     auto split_edge(size_t from, size_t to) -> BasicBlock&;
 };
@@ -117,7 +141,10 @@ struct Function {
 struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
-    size_t num_globals;
+    size_t num_globals{0};
+    runtime::Runtime* rt{nullptr};
+
+    Program();
 };
 
 }; 

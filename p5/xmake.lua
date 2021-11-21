@@ -1,23 +1,36 @@
 add_rules("mode.debug", "mode.release")
 
 set_languages("c++20")
--- add_rules("c++.unity_build")
 
-rule("antlr_generate")
-    set_extensions(".g4", ".g")
-    before_build_file(function (target, sourcefile, opt)
-        import("core.project.depend")
-        -- os.mkdir(target:())
-        -- os.vrunv("java", {"-jar", "external/antlr.jar", "-package", "lexer", "-Dlanguage=Cpp", sourcefile})
-        -- local gendir = target:autogendir();
-        -- local targetfile = path.join(gendir, path.basename(sourcefile) .. ".cpp")
-        depend.on_changed(function()
-            os.vrunv("java", {"-jar", "external/antlr.jar", "-package", "lexer", "-Dlanguage=Cpp", sourcefile})
-        end, {files = sourcefile})
-        -- print(target:add_includedirs())
-        -- target:add_includedirs(gendir)
-        -- target:add_files(targetfile)
-    end)
+-- rule("antlr_generate")
+--     set_extensions(".g4", ".g")
+--     on_buildcmd_file(function (target, cmds, sourcefile_grammar, opt)
+--         import("lib.detect.find_tool")
+--         local java = assert(find_tool("java"), "java not found!")
+        
+--         -- depend.on_changed(function()
+--         --     os.vrunv("java", {"-jar", "external/antlr.jar", "-package", "lexer", "-Dlanguage=Cpp", sourcefile})
+--         -- end, {files = sourcefile})
+--         local sourcefile_cx = path.join(target:autogendir(), "grammar", path.basename(sourcefile_grammar) .. ".cpp")
+--         local headerfile = path.join(target:autogendir(), "grammar", path.basename(sourcefile_grammar) .. ".h")
+
+--         -- add objectfile
+--         local objectfile = target:objectfile(sourcefile_cx)
+--         table.insert(target:objectfiles(), objectfile)
+
+--         -- add commands
+--         cmds:show_progress(opt.progress, "${color.build.object}compiling.antlr_generate %s", sourcefile_grammar)
+--         cmds:mkdir(path.directory(sourcefile_cx))
+--         cmds:vrunv(java.program, {"-jar", "external/antlr.jar", "-package", "lexer", "-Dlanguage=Cpp", "-o", target:autogendir(), sourcefile_grammar} )
+--         cmds:compile(sourcefile_cx, objectfile)
+--         cmds:cp(headerfile, path.join(path.directory(sourcefile_grammar), path.basename(sourcefile_grammar) .. ".h"))
+--         print(path.join(path.directory(sourcefile_grammar), path.basename(sourcefile_grammar) .. ".h"))
+
+--         -- add deps
+--         cmds:add_depfiles(sourcefile_grammar)
+--         cmds:set_depmtime(os.mtime(objectfile))
+--         cmds:set_depcache(target:dependfile(objectfile))
+--     end)
 
 target("antlr_rt")
     set_kind("static")
@@ -26,12 +39,13 @@ target("antlr_rt")
 
 target("asmjit")
     set_kind("static")
+    add_rules("c++.unity_build")
     add_files("external/asmjit/**.cpp")
     
 target("mitscriptc")
     set_kind("binary")
-    add_files("grammar/MITScript.g", {rule = "antlr_generate"})
-    add_files("grammar/*.cpp")
+    -- add_rules("c++.unity_build")
+    add_files("grammar/MITScript.cpp")
     add_includedirs("grammar")
 
     add_files("src/*.cpp")

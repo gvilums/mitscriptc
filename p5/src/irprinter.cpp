@@ -31,7 +31,7 @@ std::string op_str[] = {
     "ALLOC_CLOSURE",
     "SET_CAPTURE",       
     "SET_ARG",           
-    "CALL",              
+    "EXEC_CALL",
     "RETURN",
     "MOV",
     "LOAD_GLOBAL",
@@ -45,7 +45,9 @@ std::string op_str[] = {
     "PRINT",
     "INPUT",
     "INTCAST",
-	"SWAP"
+	"SWAP",
+    "BRANCH",
+    "INIT_CALL",
 };
 
 std::string opr_str[] = {

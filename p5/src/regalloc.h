@@ -8,24 +8,9 @@
 
 namespace IR {
     
-const size_t MACHINE_REG_COUNT = 14;
 
-enum class MachineReg : size_t {
-    RAX,
-    RCX,
-    RDX,
-    RSI,
-    RDI,
-    R8,
-    R9,
-    R10,
-    R11,
-    R12,
-    R13,
-    R14,
-    R15,
-    RBX,
-};
+
+const size_t MACHINE_REG_COUNT = 11;
 
 struct LiveInterval {
     std::vector<std::pair<size_t, size_t>> ranges;
