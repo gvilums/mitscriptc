@@ -287,7 +287,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                     if (!next_call.has_value()) {
                         size_t temp_instr_id = instr_id;
                         size_t k = j;
-                        while (func.blocks[i].instructions[k].op != Operation::CALL) {
+                        while (func.blocks[i].instructions[k].op != Operation::EXEC_CALL) {
                             ++k;
                             temp_instr_id += 2;
                         }
@@ -299,7 +299,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                             {instr_id, *next_call - 1});
                     }
                     break;
-                case Operation::CALL:
+                case Operation::EXEC_CALL:
                     // call invalidates all registers (no callee saved registers in this model)
                     for (auto& builder : builders) {
                         builder.push_range({instr_id, instr_id});

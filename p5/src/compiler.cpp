@@ -648,7 +648,7 @@ void Compiler::visit(AST::Call& expr) {
     }
 
     IR::Instruction call;
-    call.op = IR::Operation::CALL;
+    call.op = IR::Operation::EXEC_CALL;
     call.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
     call.args[0] = {IR::Operand::OpType::LOGICAL, arg_cnt};
     call.args[1] = {IR::Operand::OpType::VIRT_REG, fun_reg};

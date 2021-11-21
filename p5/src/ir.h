@@ -62,7 +62,7 @@ enum class Operation {
     SET_CAPTURE,        // SET_CAPTURE NONE <- (LOGICAL index) (VIRT_REG id) (VIRT_REG id)
 
     SET_ARG,            // SET_ARG NONE <- (LOGICAL index) (VIRT_REG id)
-    CALL,               // CALL (VIRT_REG id) <- (LOGICAL num_args) (VIRT_REG id)
+    EXEC_CALL,               // EXEC_CALL (VIRT_REG id) <- (VIRT_REG id)
     RETURN,
 
     MOV,
@@ -80,7 +80,8 @@ enum class Operation {
     INTCAST,
     
     SWAP,
-    BRANCH,
+    BRANCH,         // BRANCH NONE <- (PARAM) (if true branch to block 0, else block 1)
+    INIT_CALL,      // INIT_CALL NONE <- (LOGICAL num_params)
 };
 
 struct Operand {

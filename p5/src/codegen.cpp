@@ -206,7 +206,7 @@ void CodeGenerator::process_block(const IR::Function& func,
             } else { // passed on stack
                 assert(false && "unimplemented");
             }
-        } else if (instr.op == IR::Operation::CALL) {
+        } else if (instr.op == IR::Operation::EXEC_CALL) {
             load(x86::r10, instr.)
             assembler.push(x86::rbx);
             // TODO function argument count validation

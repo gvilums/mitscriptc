@@ -269,7 +269,7 @@ ASMJIT_FAVOR_SIZE Error FuncFrame::finalize() noexcept {
   _finalStackSize = v;                       // Store 'finalStackSize'     <- Final stack used by the function.
 
   if (!archTraits.hasLinkReg())
-    v += registerSize;                       // Count 'ReturnAddress'      <- As CALL pushes onto stack.
+    v += registerSize;                       // Count 'ReturnAddress'      <- As EXEC_CALL pushes onto stack.
 
   // If the function performs dynamic stack alignment then the stack-adjustment must be aligned.
   if (hasDA)
