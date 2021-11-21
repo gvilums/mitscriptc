@@ -427,8 +427,8 @@ namespace asmjit {
 //! // The basic setup of JitRuntime and CodeHolder changed, use environment()
 //! // instead of codeInfo().
 //! void basicSetup() {
-//!   JitRuntime rt;
-//!   CodeHolder code(rt.environment());
+//!   JitRuntime context;
+//!   CodeHolder code(context.environment());
 //! }
 //!
 //! // Calling a function (Compiler) changed - use invoke() instead of call().
@@ -502,10 +502,10 @@ namespace asmjit {
 //! typedef int (*Func)(void);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Runtime specialized for JIT code execution.
+//!   JitRuntime context;                    // ProgramContext specialized for JIT code execution.
 //!
 //!   CodeHolder code;                  // Holds code and relocation information.
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!
 //!   x86::Assembler a(&code);          // Create and attach x86::Assembler to code.
 //!   a.mov(x86::eax, 1);               // Move one to eax register.
@@ -513,7 +513,7 @@ namespace asmjit {
 //!   // ===== x86::Assembler is no longer needed from here and can be destroyed =====
 //!
 //!   Func fn;                          // Holds address to the generated function.
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!   // ===== CodeHolder is no longer needed from here and can be destroyed =====
 //!
@@ -523,7 +523,7 @@ namespace asmjit {
 //!   // All classes use RAII, all resources will be released before `main()` returns,
 //!   // the generated function can be, however, released explicitly if you intend to
 //!   // reuse or keep the runtime alive, which you should in a production-ready code.
-//!   rt.release(fn);
+//!   context.release(fn);
 //!
 //!   return 0;
 //! }
@@ -593,7 +593,7 @@ namespace asmjit {
 //!   a.movups(ptr(eax), xmm0);         // Store the result to [eax].
 //!   a.ret();                          // Return from function.
 //!
-//!   // We have no Runtime this time, it's on us what we do with the code.
+//!   // We have no ProgramContext this time, it's on us what we do with the code.
 //!   // CodeHolder stores code in Section, which provides some basic properties
 //!   // and CodeBuffer structure. We are interested in section's CodeBuffer.
 //!   //
@@ -1474,11 +1474,11 @@ namespace asmjit {
 //! using namespace asmjit;
 //!
 //! int main() {
-//!   JitRuntime rt;               // Runtime specialized for JIT code execution.
+//!   JitRuntime context;               // ProgramContext specialized for JIT code execution.
 //!   FileLogger logger(stdout);   // Logger should always survive CodeHolder.
 //!
 //!   CodeHolder code;             // Holds code and relocation information.
-//!   code.init(rt.environment()); // Initialize to the same arch as JIT runtime.
+//!   code.init(context.environment()); // Initialize to the same arch as JIT runtime.
 //!   code.setLogger(&logger);     // Attach the `logger` to `code` holder.
 //!
 //!   // ... code as usual, everything emitted will be logged to `stdout` ...
@@ -1497,11 +1497,11 @@ namespace asmjit {
 //! using namespace asmjit;
 //!
 //! int main() {
-//!   JitRuntime rt;               // Runtime specialized for JIT code execution.
+//!   JitRuntime context;               // ProgramContext specialized for JIT code execution.
 //!   StringLogger logger;         // Logger should always survive CodeHolder.
 //!
 //!   CodeHolder code;             // Holds code and relocation information.
-//!   code.init(rt.environment()); // Initialize to the same arch as JIT runtime.
+//!   code.init(context.environment()); // Initialize to the same arch as JIT runtime.
 //!   code.setLogger(&logger);     // Attach the `logger` to `code` holder.
 //!
 //!   // ... code as usual, logging will be concatenated to logger string  ...
@@ -1698,12 +1698,12 @@ namespace asmjit {
 //! };
 //!
 //! int main() {
-//!   JitRuntime rt;
+//!   JitRuntime context;
 //!
 //!   MyErrorHandler myErrorHandler;
 //!   CodeHolder code;
 //!
-//!   code.init(rt.environment());
+//!   code.init(context.environment());
 //!   code.setErrorHandler(&myErrorHandler);
 //!
 //!   x86::Assembler a(&code);

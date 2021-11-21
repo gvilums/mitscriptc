@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 #include "value.h"
 
@@ -47,7 +48,7 @@ Value to_value(int32_t i) {
     return (static_cast<uint64_t>(i) << 4) | static_cast<uint64_t>(ValueType::Int);
 }
 
-Value to_value(Runtime* rt, const std::string& str) {
+Value to_value(ProgramContext* rt, const std::string& str) {
     // heap allocated
     if (str.size() > 7) {
         String* str_ptr = rt->alloc_string(str.size());
@@ -64,7 +65,7 @@ Value to_value(Runtime* rt, const std::string& str) {
 }
 
 // null terminated string
-Value to_value(Runtime* rt, const char* str) {
+Value to_value(ProgramContext* rt, const char* str) {
     return to_value(rt, std::string{str});
 }
 
@@ -84,17 +85,17 @@ Value to_value(Closure* closure) {
     return reinterpret_cast<uint64_t>(closure) | static_cast<uint64_t>(ValueType::Closure);
 }
 
-Value value_add(Runtime* rt, Value lhs, Value rhs) {
+Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
     auto lhs_kind = value_get_type(lhs);
     auto rhs_kind = value_get_type(rhs);
     if (lhs_kind == ValueType::Int && rhs_kind == ValueType::Int) {
         return value_add_int32(lhs, rhs);
     }
     if (lhs_kind != ValueType::InlineString || lhs_kind != ValueType::HeapString) {
-        lhs = value_to_string(lhs);
+        lhs = value_to_string(rt, lhs);
     }
     if (rhs_kind != ValueType::InlineString || rhs_kind != ValueType::HeapString) {
-        rhs = value_to_string(rhs);
+        rhs = value_to_string(rt, rhs);
     }
     // update types
     lhs_kind = value_get_type(lhs);
@@ -223,7 +224,7 @@ Value value_not(Value val) {
     return to_value(!value_get_bool(val));
 }
 
-Value value_to_string(Runtime* rt, Value val) {
+Value value_to_string(ProgramContext* rt, Value val) {
     auto type = value_get_type(val);
     if (type == ValueType::None) {
         return rt->none_string;
@@ -300,38 +301,78 @@ auto value_get_std_string(Value val) -> std::string {
     return "<<INVALID>>";
 }
 
-Value extern_alloc_ref(Runtime* rt) {
+Value extern_alloc_ref(ProgramContext* rt) {
     return to_value(rt->alloc_ref());
 }
 
-Value extern_alloc_string(Runtime* rt, size_t length) {
+Value extern_alloc_string(ProgramContext* rt, size_t length) {
     return to_value(rt->alloc_string(length));
 }
 
-Value extern_alloc_record(Runtime* rt) {
+Value extern_alloc_record(ProgramContext* rt) {
     return to_value(rt->alloc_record());
 }
 
-Value extern_alloc_closure(Runtime* rt, size_t num_free) {
+Value extern_alloc_closure(ProgramContext* rt, size_t num_free) {
     return to_value(rt->alloc_closure(num_free));
 }
 
-void extern_intcast(Runtime* rt, Value val) {}
+void extern_print(Value val) {
+    std::cout << value_get_std_string(val) << '\n';
+};
 
-Runtime::Runtime() {
-    this->none_string = to_value("None", *this);
-    this->true_string = to_value("true", *this);
-    this->false_string = to_value("false", *this);
-    this->function_string = to_value("FUNCTION", *this);
+auto extern_intcast(Value val) -> Value {
+    // TODO implement
+    return 0b10000;
 }
 
-auto Runtime::alloc_ref() -> Value* {
+auto extern_input(ProgramContext* rt) -> Value {
+    // TODO implement
+    return 0b10000;
+}
+
+auto extern_rec_load_name(Value rec, Value name) -> Value {
+    Record* rec_ptr = value_get_record(rec);
+    if (rec_ptr->fields.contains(name)) {
+        return rec_ptr->fields[name];
+    }
+    return 0;
+}
+
+void extern_rec_store_name(Value rec, Value name, Value val) {
+    Record* rec_ptr = value_get_record(rec);
+    rec_ptr->fields[name] = val;
+}
+
+auto extern_rec_load_index(ProgramContext* rt, Value rec, Value index_val) -> Value {
+    Record* rec_ptr = value_get_record(rec);
+    Value name = value_to_string(rt, index_val);
+    if (rec_ptr->fields.contains(name)) {
+        return rec_ptr->fields[name];
+    }
+    return 0;
+}
+
+void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Value val) {
+    Record* rec_ptr = value_get_record(rec);
+    Value name = value_to_string(rt, val);
+    rec_ptr->fields[name] = val;
+}
+
+ProgramContext::ProgramContext() {
+    this->none_string = to_value(this, "None");
+    this->true_string = to_value(this, "true");
+    this->false_string = to_value(this, "false");
+    this->function_string = to_value(this, "FUNCTION");
+}
+
+auto ProgramContext::alloc_ref() -> Value* {
     HeapObject* obj = this->alloc_tracked(sizeof(Value));
     obj->type = HeapObject::REF;
     return reinterpret_cast<Value*>(&obj->data);
 }
 
-auto Runtime::alloc_string(size_t length) -> String* {
+auto ProgramContext::alloc_string(size_t length) -> String* {
     HeapObject* obj = this->alloc_tracked(sizeof(String) + length);
     obj->type = HeapObject::STR;
     String* str = reinterpret_cast<String*>(&obj->data);
@@ -339,7 +380,7 @@ auto Runtime::alloc_string(size_t length) -> String* {
     return str;
 }
 
-auto Runtime::alloc_record() -> Record* {
+auto ProgramContext::alloc_record() -> Record* {
     HeapObject* obj = this->alloc_tracked(sizeof(Record));
     obj->type = HeapObject::REC;
     Record* rec = reinterpret_cast<Record*>(&obj->data);
@@ -347,7 +388,7 @@ auto Runtime::alloc_record() -> Record* {
     return rec;
 }
 
-auto Runtime::alloc_closure(size_t num_free) -> Closure* {
+auto ProgramContext::alloc_closure(size_t num_free) -> Closure* {
     HeapObject* obj = this->alloc_tracked(sizeof(Closure) + sizeof(Value) * num_free);
     obj->type = HeapObject::CLOSURE;
     Closure* closure = reinterpret_cast<Closure*>(&obj->data);
@@ -355,7 +396,7 @@ auto Runtime::alloc_closure(size_t num_free) -> Closure* {
     return closure;
 }
 
-auto Runtime::alloc_tracked(size_t data_size) -> HeapObject* {
+auto ProgramContext::alloc_tracked(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
     this->total_alloc += allocation_size;
     HeapObject* ptr = static_cast<HeapObject*>(malloc(allocation_size));
@@ -368,7 +409,7 @@ auto Runtime::alloc_tracked(size_t data_size) -> HeapObject* {
     return ptr;
 }
 
-void Runtime::dealloc_tracked(HeapObject* obj) {
+void ProgramContext::dealloc_tracked(HeapObject* obj) {
     if (obj->type == HeapObject::REF) {
         this->total_alloc -= sizeof(HeapObject) + sizeof(Value);
     } else if (obj->type == HeapObject::STR) {
@@ -382,7 +423,7 @@ void Runtime::dealloc_tracked(HeapObject* obj) {
     free(obj);
 }
 
-void Runtime::collect() {
+void ProgramContext::collect() {
     // no current allocations
     if (this->heap_head == nullptr) {
         return;
@@ -419,9 +460,19 @@ void Runtime::collect() {
     }
 }
 
-auto global_runtime() -> Runtime& {
-    static Runtime ctx;
-    return ctx;
+ProgramContext::~ProgramContext() {
+    this->collect();
+    std::free(this->globals);
+}
+
+void ProgramContext::init_globals(size_t num_globals) {
+    if (this->globals != nullptr) {
+        std::free(this->globals);
+    }
+    this->globals = static_cast<Value*>(malloc(8 * num_globals));
+    for (size_t i = 0; i < num_globals; ++i) {
+        this->globals[i] = 0b10000;
+    }
 }
 
 std::size_t ValueHash::operator()(const Value& val) const noexcept {

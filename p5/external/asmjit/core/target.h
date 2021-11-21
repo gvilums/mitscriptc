@@ -149,7 +149,7 @@ public:
   //! Returns CodeInfo of this target.
   //!
   //! CodeInfo can be used to setup a CodeHolder in case you plan to generate a
-  //! code compatible and executable by this Runtime.
+  //! code compatible and executable by this ProgramContext.
   inline const Environment& environment() const noexcept { return _environment; }
 
   //! Returns the target architecture, see \ref Environment::Arch.

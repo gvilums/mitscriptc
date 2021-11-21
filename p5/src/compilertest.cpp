@@ -13,16 +13,19 @@
 #include "regalloc.h"
 #include "dead_code_remover.h"
 #include "const_propagator.h"
+#include "codegen.h"
 
 
 auto main(int argc, const char* argv[]) -> int {
-    if (argc != 2) {
+    std::ifstream file;
+    if (argc == 1) {
+        file.open("../inputs/test.mit");
+    } else if (argc == 2) {
+        file.open(argv[1]);
+    } else {
         std::cout << "Usage: mitscript <filename>\n";
         return 1;
     }
-
-    std::ifstream file;
-    file.open(argv[1]);
 
     if (!file.is_open()) {
         std::cout << "Failed to open file: " << argv[1] << "\n";
@@ -45,7 +48,7 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
     
-    std::cout << *prog << std::endl;
+//    std::cout << *prog << std::endl;
 
     DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
@@ -53,16 +56,23 @@ auto main(int argc, const char* argv[]) -> int {
     try {
         ConstPropagator c_prop(prog);
         prog = c_prop.optimize();
-    } catch (std::string e) {
+    } catch (const std::string& e) {
         std::cout << "ERROR: " << e << std::endl;
     }
 
     std::cout << *prog << std::endl;
-    
+
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
-    
+//    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
+//    IR::allocate_registers(prog->functions.back());
+
+    std::cout << *prog << std::endl;
+
+    codegen::Executable compiled(std::move(*prog));
+    compiled.run();
+
     // std::cout << *prog << std::endl;
     
     // IR::Function& func = prog->functions[prog->functions.size() - 2];

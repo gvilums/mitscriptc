@@ -58,10 +58,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef int (*Func)(void);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Runtime specialized for JIT code execution.
+//!   JitRuntime context;                    // ProgramContext specialized for JIT code execution.
 //!   CodeHolder code;                  // Holds code and relocation information.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Compiler cc(&code);          // Create and attach x86::Compiler to code.
 //!
 //!   cc.addFunc(FuncSignatureT<int>());// Begin a function of `int fn(void)` signature.
@@ -75,14 +75,14 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // ----> x86::Compiler is no longer needed from here and can be destroyed <----
 //!
 //!   Func fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!   // ----> CodeHolder is no longer needed from here and can be destroyed <----
 //!
 //!   int result = fn();                // Execute the generated code.
 //!   printf("%d\n", result);           // Print the resulting "1".
 //!
-//!   rt.release(fn);                   // Explicitly remove the function from the runtime.
+//!   context.release(fn);                   // Explicitly remove the function from the runtime.
 //!   return 0;
 //! }
 //! ```
@@ -104,10 +104,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef void (*MemCpy32)(uint32_t* dst, const uint32_t* src, size_t count);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Runtime specialized for JIT code execution.
+//!   JitRuntime context;                    // ProgramContext specialized for JIT code execution.
 //!   CodeHolder code;                  // Holds code and relocation information.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Compiler cc(&code);          // Create and attach x86::Compiler to code.
 //!
 //!   cc.addFunc(                       // Begin the function of the following signature:
@@ -150,7 +150,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!
 //!   // Add the generated code to the runtime.
 //!   MemCpy32 memcpy32;
-//!   Error err = rt.add(&memcpy32, &code);
+//!   Error err = context.add(&memcpy32, &code);
 //!
 //!   // Handle a possible error returned by AsmJit.
 //!   if (err)
@@ -165,7 +165,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   for (uint32_t i = 0; i < 6; i++)
 //!     printf("%d\n", output[i]);
 //!
-//!   rt.release(memcpy32);
+//!   context.release(memcpy32);
 //!   return 0;
 //! }
 //! ```
@@ -188,10 +188,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef void (*Func)(void*);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Runtime specialized for JIT code execution.
+//!   JitRuntime context;                    // ProgramContext specialized for JIT code execution.
 //!   CodeHolder code;                  // Holds code and relocation information.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Compiler cc(&code);          // Create and attach x86::Compiler to code.
 //!
 //!   cc.addFunc(FuncSignatureT<void, void*>());
@@ -215,7 +215,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // ----> x86::Compiler is no longer needed from here and can be destroyed <----
 //!
 //!   Func fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!   // ----> CodeHolder is no longer needed from here and can be destroyed <----
 //!
@@ -224,7 +224,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   fn(data);
 //!   printf("%llu\n", (unsigned long long)data[0]);
 //!
-//!   rt.release(fn);                   // Explicitly remove the function from the runtime.
+//!   context.release(fn);                   // Explicitly remove the function from the runtime.
 //!   return 0;
 //! }
 //! ```
@@ -247,10 +247,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef uint32_t (*Fibonacci)(uint32_t x);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Runtime specialized for JIT code execution.
+//!   JitRuntime context;                    // ProgramContext specialized for JIT code execution.
 //!   CodeHolder code;                  // Holds code and relocation information.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Compiler cc(&code);          // Create and attach x86::Compiler to code.
 //!
 //!   FuncNode* func = cc.addFunc(      // Begin of the Fibonacci function, addFunc()
@@ -286,14 +286,14 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // ----> x86::Compiler is no longer needed from here and can be destroyed <----
 //!
 //!   Fibonacci fib;
-//!   Error err = rt.add(&fib, &code);  // Add the generated code to the runtime.
+//!   Error err = context.add(&fib, &code);  // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!   // ----> CodeHolder is no longer needed from here and can be destroyed <----
 //!
 //!   // Test the generated code.
 //!   printf("Fib(%u) -> %u\n", 8, fib(8));
 //!
-//!   rt.release(fib);
+//!   context.release(fib);
 //!   return 0;
 //! }
 //! ```
@@ -312,10 +312,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! typedef int (*Func)(void);
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Runtime specialized for JIT code execution.
+//!   JitRuntime context;                    // ProgramContext specialized for JIT code execution.
 //!   CodeHolder code;                  // Holds code and relocation information.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Compiler cc(&code);          // Create and attach x86::Compiler to code.
 //!
 //!   cc.addFunc(FuncSignatureT<int>());// Create a function that returns int.
@@ -371,13 +371,13 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // ----> x86::Compiler is no longer needed from here and can be destroyed <----
 //!
 //!   Func func;
-//!   Error err = rt.add(&func, &code); // Add the generated code to the runtime.
+//!   Error err = context.add(&func, &code); // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error returned by AsmJit.
 //!   // ----> CodeHolder is no longer needed from here and can be destroyed <----
 //!
 //!   printf("Func() -> %d\n", func()); // Test the generated code.
 //!
-//!   rt.release(func);
+//!   context.release(func);
 //!   return 0;
 //! }
 //! ```

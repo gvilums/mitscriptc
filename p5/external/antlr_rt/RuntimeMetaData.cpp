@@ -31,7 +31,7 @@ void RuntimeMetaData::checkVersion(const std::string &generatingToolVersion, con
       "the current runtime version " << runtimeVersion << std::endl;
   }
   if (runtimeConflictsWithCompileTimeTool) {
-    std::cerr << "ANTLR Runtime version " << compileTimeVersion << " used for parser compilation does not match "
+    std::cerr << "ANTLR ProgramContext version " << compileTimeVersion << " used for parser compilation does not match "
       "the current runtime version " << runtimeVersion << std::endl;
   }
 }

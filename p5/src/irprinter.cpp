@@ -60,20 +60,20 @@ std::string opr_str[] = {
 };
 
 std::string machine_reg_str[] = {
+    "RDI",
+    "RSI",
+    "RDX",
+    "RCX",
+    "R08",
+    "R09",
 	"RAX",
-	"RCX",
-	"RDX",
-	"RSI",
-	"RDI",
-	"R08",
-	"R09",
+    "R12",
+    "R13",
+    "R14",
+    "R15",
+    "RBX",
 	"R10",
 	"R11",
-	"R12",
-	"R13",
-	"R14",
-	"R15",
-	"RBX",
 };
 
 std::ostream& operator<<(std::ostream& os, const IR::Operand& opr){

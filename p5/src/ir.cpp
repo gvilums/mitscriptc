@@ -1,9 +1,21 @@
+#include <memory>
+
 #include "ir.h"
 
 namespace IR {
 
 Program::Program() {
-    this->rt = new runtime::Runtime;
+    this->rt = new runtime::ProgramContext;
+}
+Program::~Program() {
+    delete this->rt;
+}
+Program::Program(Program&& other) noexcept {
+    this->rt = other.rt;
+    other.rt = nullptr;
+    this->num_globals = other.num_globals;
+    this->functions = std::move(other.functions);
+    this->immediates = std::move(other.immediates);
 }
 
 auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {

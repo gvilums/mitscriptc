@@ -66,10 +66,10 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //! }
 //!
 //! int main() {
-//!   JitRuntime rt;                    // Create JIT Runtime.
+//!   JitRuntime context;                    // Create JIT ProgramContext.
 //!   CodeHolder code;                  // Create a CodeHolder.
 //!
-//!   code.init(rt.environment());      // Initialize code to match the JIT environment.
+//!   code.init(context.environment());      // Initialize code to match the JIT environment.
 //!   x86::Builder cb(&code);           // Create and attach x86::Builder to `code`.
 //!
 //!   // Decide which registers will be mapped to function arguments. Try changing
@@ -131,7 +131,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   cb.finalize();
 //!
 //!   SumIntsFunc fn;
-//!   Error err = rt.add(&fn, &code);   // Add the generated code to the runtime.
+//!   Error err = context.add(&fn, &code);   // Add the generated code to the runtime.
 //!   if (err) return 1;                // Handle a possible error case.
 //!
 //!   // Execute the generated function.
@@ -143,7 +143,7 @@ ASMJIT_BEGIN_SUB_NAMESPACE(x86)
 //!   // Prints {5 8 4 9}
 //!   printf("{%d %d %d %d}\n", out[0], out[1], out[2], out[3]);
 //!
-//!   rt.release(fn);                   // Explicitly remove the function from the runtime.
+//!   context.release(fn);                   // Explicitly remove the function from the runtime.
 //!   return 0;
 //! }
 //! ```
