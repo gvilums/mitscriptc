@@ -25,15 +25,22 @@ bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_
     
     switch (ins.op) {
         case IR::Operation::ADD:
+            new_value = runtime::value_add(imm0, imm1);
             break;
         case IR::Operation::ADD_INT:
             new_value = runtime::value_add_int32(imm0, imm1);
+            break;
+        case IR::Operation::SUB:  
+            new_value = runtime::value_sub(imm0, imm1);
+            break;
+         case IR::Operation::DIV:  
+            new_value = runtime::value_div(imm0, imm1); // check if we are dividing by zero
             break;
         case IR::Operation::MUL:  
             new_value = runtime::value_mul(imm0, imm1);
             break;
         case IR::Operation::EQ:
-            new_value = runtime::value_add(imm0, imm1);
+            new_value = runtime::value_eq(imm0, imm1);
             break;
         case IR::Operation::GT:
             new_value = runtime::value_gt(imm0, imm1);
@@ -115,7 +122,7 @@ IR::Program* ConstPropagator::optimize() {
 void ConstPropagator::propagate_const() {
     for (auto& fun : prog_->functions) {
         std::unordered_map<size_t, runtime::Value> const_var;
-        for (int idx = fun.blocks.size() - 1; idx >= 0; idx--) {
+        for (size_t idx = 0; idx < fun.blocks.size() - 1; idx++) {
             IR::BasicBlock new_block;
 
             for (int i = 0; i < fun.blocks[idx].instructions.size(); i++) {
