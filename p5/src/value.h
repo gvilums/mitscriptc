@@ -118,12 +118,15 @@ struct Runtime {
     size_t total_alloc{0};
     HeapObject* heap_head{nullptr};
     
-    Value none_string;
-    Value false_string;
-    Value true_string;
-    Value function_string;
+    Value none_string{0};
+    Value false_string{0};
+    Value true_string{0};
+    Value function_string{0};
+
+    Value* globals{nullptr};
     
     Runtime();
+    ~Runtime();
     
     auto alloc_ref() -> Value*;
     auto alloc_string(size_t length) -> String*;
@@ -132,6 +135,8 @@ struct Runtime {
     
     auto alloc_tracked(size_t data_size) -> HeapObject*;
     void dealloc_tracked(HeapObject* obj);
+
+    void init_globals(size_t num_globals);
     
     void collect();
 };

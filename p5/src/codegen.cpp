@@ -4,10 +4,9 @@
 
 namespace codegen {
 
-Executable::Executable(asmjit::JitRuntime rt, std::unique_ptr<runtime::Runtime> ctx) {}
-
-CodeGenerator::CodeGenerator(IR::Program program1, runtime::Runtime* ctx)
-    : program{std::move(program1)}, assembler(&this->code), program_context{ctx} {
+CodeGenerator::CodeGenerator(IR::Program&& program1)
+    : program{std::move(program1)}, assembler(&this->code), rt{program1.rt} {
+    assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
     this->code.init(this->jit_rt.environment());
     this->function_labels.resize(this->program.functions.size());
     for (auto& label : this->function_labels) {
@@ -18,6 +17,12 @@ CodeGenerator::CodeGenerator(IR::Program program1, runtime::Runtime* ctx)
     for (const auto& label : this->function_labels) {
         assembler.embedLabel(label);
     }
+
+    for (size_t i = 0; i < program.functions.size(); ++i) {
+        process_function(i);
+    }
+
+    this->jit_rt.add(&this->function, &this->code);
 }
 
 void CodeGenerator::process_function(size_t func_index) {
@@ -38,11 +43,33 @@ void CodeGenerator::process_function(size_t func_index) {
         label = assembler.newLabel();
     }
 
+    for (size_t block_index = 0; block_index < func.blocks.size(); ++block_index) {
+        const IR::BasicBlock& block = func.blocks[block_index];
+        process_block(func, block_index, block_labels);
+        // process branch instruction if block has multiple successors
+        size_t num_successors = block.successors.size();
+        if (num_successors == 2) {
+            const IR::Instruction& instr = block.instructions.back();
+            load(x86::r10, instr.args[0]);
+            assembler.shr(x86::r10, 4);
+            assembler.test(x86::r10, x86::r10);
+            assembler.jz(block_labels[block.successors.back()]);
+            if (block.successors.front() != block_index + 1) {
+                assembler.jmp(block_labels[block.successors.front()]);
+            }
+        } else if (num_successors == 1) {
+            // jump to successor needed
+            size_t successor_index = block.successors.back();
+            if (block_index + 1 != successor_index) {
+                assembler.jmp(block_labels[successor_index]);
+            }
+        } else if (num_successors == 0) {
+            // do nothing, we will have returned by now
+        } else {
+            assert(false);
+        }
+    }
 
-}
-
-auto CodeGenerator::generate() -> Executable {
-    using namespace asmjit;
 }
 
 void CodeGenerator::process_block(const IR::Function& func,
@@ -53,7 +80,7 @@ void CodeGenerator::process_block(const IR::Function& func,
     this->assembler.bind(block_labels[block_index]);
     for (const auto& instr : block.instructions) {
         if (instr.op == IR::Operation::ADD) {
-            assembler.mov(x86::rdi, Imm(this->program_context));
+            assembler.mov(x86::rdi, Imm(this->rt));
             load(x86::rsi, instr.args[0]);
             load(x86::rdx, instr.args[1]);
             assembler.call(Imm(runtime::value_add));
@@ -136,8 +163,10 @@ void CodeGenerator::process_block(const IR::Function& func,
             assembler.or_(x86::r11, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
             store(instr.out, x86::r11);
         } else if (instr.op == IR::Operation::LOAD_ARG) {
-            // TODO remember: last argument on stack is previous function pointer
-
+            // +2 because saved rbp and rip are at rbp
+            int32_t offset = 8 * (instr.args[0].index + 2);
+            assembler.mov(x86::r10, x86::Mem(x86::rbp, offset));
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::LOAD_FREE_REF) {
             int32_t offset = 24 + 8 * instr.args[0].index;
             assembler.mov(x86::r10, x86::Mem(x86::rbx, offset));
@@ -158,7 +187,7 @@ void CodeGenerator::process_block(const IR::Function& func,
             assembler.call(Imm(runtime::extern_rec_load_name));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
-            assembler.mov(x86::rdi, Imm(this->program_context));
+            assembler.mov(x86::rdi, Imm(this->rt));
             load(x86::rsi, instr.args[0]);
             load(x86::rdx, instr.args[1]);
             assembler.call(Imm(runtime::extern_rec_load_index));
@@ -169,22 +198,22 @@ void CodeGenerator::process_block(const IR::Function& func,
             load(x86::rdx, instr.args[2]);
             assembler.call(Imm(runtime::extern_rec_store_name));
         } else if (instr.op == IR::Operation::REC_STORE_INDX) {
-            assembler.mov(x86::rdi, Imm(this->program_context));
+            assembler.mov(x86::rdi, Imm(this->rt));
             load(x86::rsi, instr.args[0]);
             load(x86::rdx, instr.args[1]);
             load(x86::rcx, instr.args[2]);
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
-            assembler.mov(x86::rdi, Imm(this->program_context));
+            assembler.mov(x86::rdi, Imm(this->rt));
             assembler.call(Imm(runtime::extern_alloc_ref));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_REC) {
-            assembler.mov(x86::rdi, Imm(this->program_context));
+            assembler.mov(x86::rdi, Imm(this->rt));
             assembler.call(Imm(runtime::extern_alloc_record));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_CLOSURE) {
             int32_t fn_id = instr.args[0].index;
-            assembler.mov(x86::rdi, this->program_context);
+            assembler.mov(x86::rdi, this->rt);
             assembler.mov(x86::rsi, instr.args[1].index);
             assembler.call(Imm(runtime::extern_alloc_closure));
             // load function address
@@ -198,23 +227,40 @@ void CodeGenerator::process_block(const IR::Function& func,
             load(x86::r11, instr.args[2]);
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
+        } else if (instr.op == IR::Operation::INIT_CALL) {
+            size_t num_args = instr.args[0].index;
+            this->current_call_args = num_args;
+            // save current function
+            assembler.push(x86::rbx);
+            // if number of arguments is odd, stack has to be pushed to preserve alignment:
+            // (even) [rbx] [NULL] (odd) [rip]
+            if (num_args % 2 == 1) {
+                assembler.push(Imm(0));
+            }
+            assembler.sub(x86::rsp, Imm(8 * num_args));
         } else if (instr.op == IR::Operation::SET_ARG) {
-            size_t arg_index = instr.args[0].index;
+            int32_t arg_index = instr.args[0].index;
             // passed in register
             if (arg_index < 6) {
                 load(to_reg(arg_index), instr.args[1]);
             } else { // passed on stack
-                assert(false && "unimplemented");
+                load(x86::r10, instr.args[1]);
+                assembler.mov(x86::Mem(x86::rsp, 8 * arg_index), x86::r10);
             }
         } else if (instr.op == IR::Operation::EXEC_CALL) {
-            load(x86::r10, instr.)
-            assembler.push(x86::rbx);
             // TODO function argument count validation
 
-            // TODO think about stack alignment in general (although its not relevant here)
-            assembler.call()
+            load(x86::r10, instr.args[0]);
+            assembler.mov(x86::rbx, x86::Mem(x86::r10, 0));
+            assembler.call(x86::Mem(x86::r10, 0));
+            store(instr.out, x86::rax);
 
             // restore current closure pointer
+            if (this->current_call_args % 2 == 1) {
+                assembler.sub(x86::rsp, Imm(8 * (this->current_call_args + 1)));
+            } else {
+                assembler.sub(x86::rsp, Imm(8 * this->current_call_args));
+            }
             assembler.pop(x86::rbx);
         } else if (instr.op == IR::Operation::MOV) {
             x86::Gp target;
@@ -230,12 +276,12 @@ void CodeGenerator::process_block(const IR::Function& func,
         } else if (instr.op == IR::Operation::LOAD_GLOBAL) {
             // TODO check for uninit and terminate
             int32_t offset = 8 * instr.args[0].index;
-            assembler.mov(x86::r10, x86::Mem(globals_label, offset));
+            assembler.mov(x86::r10, x86::Mem(reinterpret_cast<uint64_t>(this->rt->globals), offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::STORE_GLOBAL) {
             int32_t offset = 8 * instr.args[0].index;
             load(x86::r10, instr.args[1]);
-            assembler.mov(x86::Mem(globals_label, offset), x86::r10);
+            assembler.mov(x86::Mem(reinterpret_cast<uint64_t>(this->rt->globals), offset), x86::r10);
         } else if (instr.op == IR::Operation::ASSERT_BOOL) {
 
         } else if (instr.op == IR::Operation::ASSERT_INT) {
@@ -249,11 +295,13 @@ void CodeGenerator::process_block(const IR::Function& func,
         } else if (instr.op == IR::Operation::ASSERT_NONZERO) {
 
         } else if (instr.op == IR::Operation::PRINT) {
-            assembler.mov(x86::rdi, Imm(this->program_context));
+            assembler.mov(x86::rdi, Imm(this->rt));
             load(x86::rsi, instr.args[0]);
             assembler.call(Imm(runtime::extern_print));
         } else if (instr.op == IR::Operation::INPUT) {
-
+            assembler.mov(x86::rdi, Imm(this->rt));
+            assembler.call(Imm(runtime::extern_input));
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::INTCAST) {
             load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_intcast));
@@ -266,14 +314,15 @@ void CodeGenerator::process_block(const IR::Function& func,
             }
             assembler.xchg(to_reg(instr.args[0].index), to_reg(instr.args[1].index));
         } else if (instr.op == IR::Operation::BRANCH) {
-
+            break;
+        } else if (instr.op == IR::Operation::RETURN) {
+            load(x86::rax, instr.args[0]);
+            assembler.mov(x86::rsp, x86::rbp);
+            assembler.pop(x86::rbp);
+            assembler.ret();
         } else {
             assert(false);
         }
-    }
-    // handle jumping back to loop header
-    if (block.successors.size() == 1 && block.successors.back() != block_index + 1) {
-        assembler.jmp(block_labels[block.successors.back()]);
     }
 }
 
@@ -305,6 +354,16 @@ void CodeGenerator::store(const IR::Operand& op, const asmjit::x86::Gp& reg) {
             break;
         default:
             assert(false && "invalid operand");
+    }
+}
+
+void CodeGenerator::run() {
+    int exit_code = this->function();
+    switch(exit_code) {
+        case 0:
+            return;
+        default:
+            assert(false && "error handling not yet implemented");
     }
 }
 

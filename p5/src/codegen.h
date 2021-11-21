@@ -6,45 +6,36 @@
 
 namespace codegen {
 
+class CodeGenerator;
+
 /*
  * calling conventions:
  * pointer to current function resides in rdi (this is fixed, although this could be made dynamic in theory)
  * -> should be removed from register allocator consideration
  */
 
-struct Executable {
-    asmjit::JitRuntime jit_rt;
-    runtime::Runtime* program_context;
-    int (*code)(){nullptr};
-
-    Executable(asmjit::JitRuntime rt, std::unique_ptr<runtime::Runtime> ctx)
-        : jit_rt{std::move(rt)}, program_context{std::move(ctx)};
-
-    void run();
-};
-
 class CodeGenerator {
     IR::Program program;
     asmjit::CodeHolder code;
     asmjit::JitRuntime jit_rt;
     asmjit::x86::Assembler assembler;
-    runtime::Runtime* program_context;
+    runtime::Runtime* rt;
 
     std::vector<asmjit::Label> function_labels;
-    asmjit::Label globals_label;
     asmjit::Label function_address_label;
+    size_t current_call_args{0};
 
-
-   public:
-
-    CodeGenerator(IR::Program program1, runtime::Runtime* ctx);
+    int (*function)();
 
     void process_block(const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
     void process_function(size_t func_index);
-    auto generate() -> Executable;
 
     void load(const asmjit::x86::Gp& reg, const IR::Operand& op);
     void store(const IR::Operand& op, const asmjit::x86::Gp& reg);
+
+   public:
+    CodeGenerator(IR::Program&& program1);
+    void run();
 
 };
 

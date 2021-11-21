@@ -419,6 +419,21 @@ void Runtime::collect() {
     }
 }
 
+Runtime::~Runtime() {
+    this->collect();
+    std::free(this->globals);
+}
+
+void Runtime::init_globals(size_t num_globals) {
+    if (this->globals != nullptr) {
+        std::free(this->globals);
+    }
+    this->globals = static_cast<Value*>(malloc(8 * num_globals));
+    for (size_t i = 0; i < num_globals; ++i) {
+        this->globals[i] = 0b10000;
+    }
+}
+
 auto global_runtime() -> Runtime& {
     static Runtime ctx;
     return ctx;

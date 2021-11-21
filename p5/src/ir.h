@@ -145,6 +145,10 @@ struct Program {
     runtime::Runtime* rt{nullptr};
 
     Program();
+    ~Program();
+
+    Program(const Program& other) = delete;
+    Program(Program&& other) noexcept;
 };
 
 }; 
