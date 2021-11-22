@@ -179,16 +179,18 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             load(assembler, x86::r11, instr.args[1]);
             assembler.cmp(x86::r10, x86::r11);
             // TODO SETcc instructions
-            assembler.setg(x86::r10);
-            assembler.shr(x86::r10, 4);
+            assembler.setg(x86::r10b);
+            assembler.and_(x86::r10, Imm(~0b1));
+            assembler.shl(x86::r10, 4);
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
             store(assembler, instr.out, x86::r10);
         } else if (instr.op == IR::Operation::GEQ) {
             load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::r11, instr.args[1]);
             assembler.cmp(x86::r10, x86::r11);
-            assembler.setge(x86::r10);
-            assembler.shr(x86::r10, 4);
+            assembler.setge(x86::r10b);
+            assembler.and_(x86::r10, Imm(0b1));
+            assembler.shl(x86::r10, 4);
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
             store(assembler, instr.out, x86::r10);
         } else if (instr.op == IR::Operation::AND) {
@@ -239,21 +241,22 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             assembler.call(Imm(runtime::extern_rec_load_name));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
+            load(assembler, x86::rdx, instr.args[1]);
             assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
             load(assembler, x86::rsi, instr.args[0]);
-            load(assembler, x86::rdx, instr.args[1]);
             assembler.call(Imm(runtime::extern_rec_load_index));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
+            load(assembler, x86::rdx, instr.args[2]);
             load(assembler, x86::rdi, instr.args[0]);
             load(assembler, x86::rsi, instr.args[1]);
-            load(assembler, x86::rdx, instr.args[2]);
             assembler.call(Imm(runtime::extern_rec_store_name));
         } else if (instr.op == IR::Operation::REC_STORE_INDX) {
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
-            load(assembler, x86::rsi, instr.args[0]);
+            // TODO what if rdx and rcx need to be swapped?
             load(assembler, x86::rdx, instr.args[1]);
             load(assembler, x86::rcx, instr.args[2]);
+            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            load(assembler, x86::rsi, instr.args[0]);
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
@@ -402,6 +405,9 @@ void Executable::load(asmjit::x86::Assembler& assembler,
         case IR::Operand::STACK_SLOT:
             assembler.mov(reg, to_mem(op.index));
             break;
+        case IR::Operand::NONE:
+            std::cerr << "loading from none, no instruction emitted" << std::endl;
+            break;
         default:
             assert(false && "invalid operand");
     }
@@ -417,6 +423,9 @@ void Executable::store(asmjit::x86::Assembler& assembler,
             break;
         case IR::Operand::STACK_SLOT:
             assembler.mov(to_mem(op.index), reg);
+            break;
+        case IR::Operand::NONE:
+            std::cerr << "storing to none, no instruction emitted" << std::endl;
             break;
         default:
             assert(false && "invalid operand");

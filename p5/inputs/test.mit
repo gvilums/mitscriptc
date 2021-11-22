@@ -1,15 +1,6 @@
-f = fun(x) {
-    if (x == 10) {
-        return 42;
-    } else {
-        x = x + 2;
-    }
-    return x + 1;
-};
+state = { n: 0; };
 
-y = 11;
-
-while (y < 22) {
-    print(f(y));
-    y = y + 1;
+while (state.n < 10) {
+    print(state.n);
+    state.n = state.n + 1;
 }
