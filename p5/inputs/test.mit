@@ -1,6 +1,11 @@
-state = { n: 0; };
-
-while (state.n < 10) {
-    print(state.n);
-    state.n = state.n + 1;
-}
+x = 0;
+f = fun() {
+    i = 0;
+    while(i < 100000000) {
+        i = i + 1;
+    }
+    global x;
+    x = i;
+};
+f();
+print(x);

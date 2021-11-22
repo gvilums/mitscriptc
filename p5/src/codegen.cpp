@@ -316,7 +316,7 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             // TODO function argument count validation
             load(assembler, x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(~0b1111));
-            assembler.mov(x86::rbx, x86::Mem(x86::r10, 0));
+            assembler.mov(x86::rbx, x86::r10);
             assembler.call(x86::Mem(x86::r10, 0));
             if (instr.out.type != IR::Operand::NONE) {
                 store(assembler, instr.out, x86::rax);
