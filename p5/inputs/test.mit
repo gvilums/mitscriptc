@@ -1,6 +1,6 @@
 Vector = fun(x, y){
   this = {
-    // getx : fun(){ return x; };
+    getx : fun(){ return x; };
     gety : fun(){ return y; };
     // print : fun(){ print(x + ", " + y); };
   };
@@ -11,3 +11,6 @@ v1 = Vector(2,1);
 // print(v1.getx());
 print(v1.gety());
 //v1.print();
+
+x = 2;
+print(x + "hello");

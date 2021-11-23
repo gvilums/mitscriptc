@@ -397,6 +397,7 @@ void Executable::load(asmjit::x86::Assembler& assembler,
     using namespace asmjit;
     switch (op.type) {
         case IR::Operand::IMMEDIATE: {
+//            assembler.mov(reg, Imm(program.immediates[op.index]));
             int32_t offset = 8 * op.index;
             assembler.mov(reg, x86::ptr_64(this->state->const_pool_label, offset));
         } break;
