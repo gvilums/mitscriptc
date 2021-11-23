@@ -121,6 +121,7 @@ void Compiler::visit(AST::Program& expr) {
     for (auto c : expr.children)
         c->accept(*((Visitor*)this));
 
+    block_.instructions.push_back({IR::Operation::RETURN, {}, {IR::Operand::IMMEDIATE, 0}});
     fun_->blocks.push_back(block_);
     fun_->virt_reg_count = reg_cnt_;
     program_->functions.push_back(*fun_);
@@ -461,13 +462,30 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     treg_cnt++;
 
     size_t args_idx = 0;
-    for (const auto& s : expr.arguments)
+    for (const auto& s: expr.arguments) {
         block_.instructions.push_back({IR::Operation::LOAD_ARG,
-                                       {IR::Operand::OpType::VIRT_REG, local_vars_[s]},
-                                       {IR::Operand::OpType::LOGICAL, args_idx++}});
+                                    {IR::Operand::OpType::VIRT_REG, local_vars_[s]},
+                                    {IR::Operand::OpType::LOGICAL, args_idx++}});
+
+        if (local_reference_vars_.count(s)) {
+            size_t new_reg = reg_cnt_++;
+            block_.instructions.push_back(
+                {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, new_reg}});
+            IR::Instruction s_ref;
+            s_ref.op = IR::Operation::REF_STORE;
+            s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, new_reg};
+            s_ref.args[1] = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
+            local_vars_[s] = new_reg;
+            block_.instructions.push_back(s_ref);
+        }
+    }
 
     size_t idx = 0;
     vector<IR::Instruction> instr;
+    for (const auto& s : local_reference_vars_) {
+        std::cout << s << std::endl;
+    }
+
     for (const auto& s : free_vars_) {
         block_.instructions.push_back({IR::Operation::LOAD_FREE_REF,
                                        {IR::Operand::OpType::VIRT_REG, reg_cnt_},
