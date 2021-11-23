@@ -463,9 +463,11 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 
     size_t args_idx = 0;
     for (const auto& s: expr.arguments) {
-        block_.instructions.push_back({IR::Operation::LOAD_ARG,
-                                    {IR::Operand::OpType::VIRT_REG, local_vars_[s]},
-                                    {IR::Operand::OpType::LOGICAL, args_idx++}});
+        IR::Instruction l_arg;
+        l_arg.op = IR::Operation::LOAD_ARG;
+        l_arg.out = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
+        l_arg.args[0] = {IR::Operand::OpType::LOGICAL, args_idx++};
+        block_.instructions.push_back(l_arg);
 
         if (local_reference_vars_.count(s)) {
             size_t new_reg = reg_cnt_++;
