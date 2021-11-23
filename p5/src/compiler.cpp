@@ -462,6 +462,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     treg_cnt++;
 
     size_t args_idx = 0;
+    std::vector<IR::Instruction> a_refs;
     for (const auto& s: expr.arguments) {
         IR::Instruction l_arg;
         l_arg.op = IR::Operation::LOAD_ARG;
@@ -471,16 +472,19 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 
         if (local_reference_vars_.count(s)) {
             size_t new_reg = reg_cnt_++;
-            block_.instructions.push_back(
+            a_refs.push_back(
                 {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, new_reg}});
             IR::Instruction s_ref;
             s_ref.op = IR::Operation::REF_STORE;
             s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, new_reg};
             s_ref.args[1] = {IR::Operand::OpType::VIRT_REG, local_vars_[s]};
             local_vars_[s] = new_reg;
-            block_.instructions.push_back(s_ref);
+            a_refs.push_back(s_ref);
         }
     }
+
+    for (const auto &s : a_refs)
+        block_.instructions.push_back(s);
 
     size_t idx = 0;
     vector<IR::Instruction> instr;
