@@ -53,12 +53,12 @@ auto main(int argc, const char* argv[]) -> int {
     DeadCodeRemover dc_opt(prog);
     prog = dc_opt.optimize();
 
-    try {
-        ConstPropagator c_prop(prog);
-        prog = c_prop.optimize();
-    } catch (const std::string& e) {
-        std::cout << "ERROR: " << e << std::endl;
-    }
+//    try {
+//        ConstPropagator c_prop(prog);
+//        prog = c_prop.optimize();
+//    } catch (const std::string& e) {
+//        std::cout << "ERROR: " << e << std::endl;
+//    }
 
     std::cout << *prog << std::endl;
 
