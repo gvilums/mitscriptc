@@ -18,19 +18,25 @@ set(sources ${sources}
     grammar/MITScript.cpp
 )
 
-set(test_sources ${test_sources}
-    test/doctest.cpp
-    test/regalloc_test.cpp
-    test/value_test.cpp
-)
+# set(test_sources ${test_sources}
+    # test/doctest.cpp
+    # test/regalloc_test.cpp
+    # test/value_test.cpp
+# )
 
 add_executable(mitscriptc ${sources} src/compilertest.cpp)
 target_link_libraries(mitscriptc PUBLIC antlr)
 target_link_libraries(mitscriptc PUBLIC asmjit)
 target_include_directories(mitscriptc PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/grammar")
 
-add_executable(test ${sources} ${test_sources})
-target_link_libraries(test PUBLIC antlr)
-target_link_libraries(test PUBLIC asmjit)
-target_include_directories(test PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/grammar")
-target_include_directories(test PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/src")
+# add_executable(test ${sources} ${test_sources})
+# target_link_libraries(test PUBLIC antlr)
+# target_link_libraries(test PUBLIC asmjit)
+# target_include_directories(test PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/grammar")
+# target_include_directories(test PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/src")
+
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_library(LIB_RT rt)
+    target_link_libraries(mitscriptc PUBLIC ${LIB_RT})
+endif()

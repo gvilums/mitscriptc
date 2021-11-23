@@ -1,6 +1,7 @@
 #include "codegen.h"
 #include <stack>
 #include "value.h"
+#include <cassert>
 
 namespace codegen {
 
