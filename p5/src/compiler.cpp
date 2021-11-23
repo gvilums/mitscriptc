@@ -215,6 +215,8 @@ void Compiler::visit(AST::Assignment& expr) {
                                        {IR::Operand::OpType::VIRT_REG, rec_reg}});
 
         exp->index->accept(*((Visitor*)this));
+        if (!is_opr_)
+            opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
         IR::Operand idx_opr = opr_;
 
         expr.Expr->accept(*((Visitor*)this));
