@@ -355,7 +355,7 @@ auto extern_rec_load_index(ProgramContext* rt, Value rec, Value index_val) -> Va
 
 void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Value val) {
     Record* rec_ptr = value_get_record(rec);
-    Value name = value_to_string(rt, val);
+    Value name = value_to_string(rt, index_val);
     rec_ptr->fields[name] = val;
 }
 

@@ -1,16 +1,13 @@
-Vector = fun(x, y){
+Array = fun(size){
   this = {
-    getx : fun(){ return x; };
-    gety : fun(){ return y; };
-    // print : fun(){ print(x + ", " + y); };
+        put: fun(idx, val){
+            if( idx < size){
+                this[idx] = val;
+            }
+        };
   };
   return this;
 };
 
-v1 = Vector(2,1);
-// print(v1.getx());
-print(v1.gety());
-//v1.print();
-
-x = 2;
-print(x + "hello");
+a1 = Array(10);
+a1.put(0, 5);

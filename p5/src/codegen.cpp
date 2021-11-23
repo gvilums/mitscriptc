@@ -128,8 +128,9 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
     assembler.bind(block_labels[block_index]);
     for (const auto& instr : block.instructions) {
         if (instr.op == IR::Operation::ADD) {
-            load(assembler, x86::rsi, instr.args[0]);
+            load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::rdx, instr.args[1]);
+            assembler.mov(x86::rsi, x86::r10);
             assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
             assembler.call(Imm(runtime::value_add));
             store(assembler, instr.out, x86::rax);
@@ -237,27 +238,32 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
-            load(assembler, x86::rdi, instr.args[0]);
+            load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::rsi, instr.args[1]);
+            assembler.mov(x86::rdi, x86::r10);
             assembler.call(Imm(runtime::extern_rec_load_name));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
+            load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::rdx, instr.args[1]);
+            assembler.mov(x86::rsi, x86::r10);
             assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
-            load(assembler, x86::rsi, instr.args[0]);
             assembler.call(Imm(runtime::extern_rec_load_index));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
+            load(assembler, x86::r10, instr.args[0]);
+            load(assembler, x86::r11, instr.args[1]);
             load(assembler, x86::rdx, instr.args[2]);
-            load(assembler, x86::rdi, instr.args[0]);
-            load(assembler, x86::rsi, instr.args[1]);
+            assembler.mov(x86::rdi, x86::r10);
+            assembler.mov(x86::rsi, x86::r11);
             assembler.call(Imm(runtime::extern_rec_store_name));
         } else if (instr.op == IR::Operation::REC_STORE_INDX) {
-            // TODO what if rdx and rcx need to be swapped?
-            load(assembler, x86::rdx, instr.args[1]);
+            load(assembler, x86::r10, instr.args[0]);
+            load(assembler, x86::r11, instr.args[1]);
             load(assembler, x86::rcx, instr.args[2]);
+            assembler.mov(x86::rsi, x86::r10);
+            assembler.mov(x86::rdx, x86::r11);
             assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
-            load(assembler, x86::rsi, instr.args[0]);
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
