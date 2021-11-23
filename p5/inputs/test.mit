@@ -1,9 +1,13 @@
 Vector = fun(x, y){
   this = {
-    getx : fun(){ return x; };
+    // getx : fun(){ return x; };
+    gety : fun(){ return y; };
+    // print : fun(){ print(x + ", " + y); };
   };
   return this;
 };
 
-v1 = Vector(2,2);
-print(v1.getx());
+v1 = Vector(2,1);
+// print(v1.getx());
+print(v1.gety());
+//v1.print();

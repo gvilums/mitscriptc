@@ -91,10 +91,10 @@ Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
     if (lhs_kind == ValueType::Int && rhs_kind == ValueType::Int) {
         return value_add_int32(lhs, rhs);
     }
-    if (lhs_kind != ValueType::InlineString || lhs_kind != ValueType::HeapString) {
+    if (lhs_kind != ValueType::InlineString && lhs_kind != ValueType::HeapString) {
         lhs = value_to_string(rt, lhs);
     }
-    if (rhs_kind != ValueType::InlineString || rhs_kind != ValueType::HeapString) {
+    if (rhs_kind != ValueType::InlineString && rhs_kind != ValueType::HeapString) {
         rhs = value_to_string(rt, rhs);
     }
     // update types

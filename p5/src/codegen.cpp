@@ -28,38 +28,38 @@ Executable::Executable(IR::Program&& program1) : program{std::move(program1)} {
     code.setErrorHandler(&handler);
     code.setLogger(&logger);
 
-    CodeGenState state;
-    this->state = &state;
-    state.function_labels.resize(program.functions.size());
-    for (auto& label : state.function_labels) {
+    CodeGenState cg_state;
+    this->state = &cg_state;
+    cg_state.function_labels.resize(program.functions.size());
+    for (auto& label : cg_state.function_labels) {
         label = assembler.newLabel();
     }
 
     // start at global function
-    assembler.jmp(state.function_labels.back());
+    assembler.jmp(cg_state.function_labels.back());
 
-    state.function_address_base_label = assembler.newLabel();
-    assembler.bind(state.function_address_base_label);
-    for (const auto& label : state.function_labels) {
+    cg_state.function_address_base_label = assembler.newLabel();
+    assembler.bind(cg_state.function_address_base_label);
+    for (const auto& label : cg_state.function_labels) {
         assembler.embedLabel(label);
     }
 
-    state.context_ptr_label = assembler.newLabel();
-    assembler.bind(state.context_ptr_label);
+    cg_state.context_ptr_label = assembler.newLabel();
+    assembler.bind(cg_state.context_ptr_label);
     assembler.embedUInt64(reinterpret_cast<uint64_t>(this->program.rt));
 
-    state.globals_ptr_label = assembler.newLabel();
-    assembler.bind(state.globals_ptr_label);
+    cg_state.globals_ptr_label = assembler.newLabel();
+    assembler.bind(cg_state.globals_ptr_label);
     assembler.embedUInt64(reinterpret_cast<uint64_t>(this->program.rt->globals));
 
-    state.const_pool_label = assembler.newLabel();
-    assembler.bind(state.const_pool_label);
+    cg_state.const_pool_label = assembler.newLabel();
+    assembler.bind(cg_state.const_pool_label);
     for (auto immediate : program.immediates) {
         assembler.embedUInt64(immediate);
     }
 
     for (size_t i = 0; i < program.functions.size(); ++i) {
-        process_function(assembler, state, i);
+        process_function(assembler, cg_state, i);
     }
     this->state = nullptr;
     Error err = this->jit_rt.add(&this->function, &code);

@@ -685,16 +685,16 @@ void allocate_registers(Function& func) {
 
     auto intervals = compute_live_intervals(func, block_ranges);
 
-     for (const auto& interval : intervals) {
-         std::cout << interval << std::endl;
-     }
+//     for (const auto& interval : intervals) {
+//         std::cout << interval << std::endl;
+//     }
 
     auto machine_reg_uses = compute_machine_assignments(func);
 
-    std::cout << "-------- machine regs ---------" << std::endl;
-    for (const auto& interval : machine_reg_uses) {
-        std::cout << interval << std::endl;
-    }
+//    std::cout << "-------- machine regs ---------" << std::endl;
+//    for (const auto& interval : machine_reg_uses) {
+//        std::cout << interval << std::endl;
+//    }
 
 
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>
