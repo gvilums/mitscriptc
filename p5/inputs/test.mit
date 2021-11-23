@@ -1,11 +1,9 @@
-x = 0;
-f = fun() {
-    i = 0;
-    while(i < 100000000) {
-        i = i + 1;
-    }
-    global x;
-    x = i;
+Vector = fun(x, y){
+  this = {
+    getx : fun(){ return x; };
+  };
+  return this;
 };
-f();
-print(x);
+
+v1 = Vector(2,2);
+print(v1.getx());

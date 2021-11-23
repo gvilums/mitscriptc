@@ -180,7 +180,7 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             assembler.cmp(x86::r10, x86::r11);
             // TODO SETcc instructions
             assembler.setg(x86::r10b);
-            assembler.and_(x86::r10, Imm(~0b1));
+            assembler.and_(x86::r10, Imm(0b1));
             assembler.shl(x86::r10, 4);
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
             store(assembler, instr.out, x86::r10);
