@@ -313,11 +313,12 @@ void CodeGenerator::process_block(
                 store(instr.out, target);
             }
         } else if (instr.op == IR::Operation::LOAD_GLOBAL) {
-            // TODO check for uninit and terminate
             int32_t offset = 8 * instr.args[0].index;
             assembler.mov(x86::r11, Imm(program.ctx_ptr->globals));
             assembler.mov(x86::r10, x86::qword_ptr(x86::r11, offset));
             store(instr.out, x86::r10);
+            assembler.cmp(x86::r10, Imm(0b10000));
+            assembler.je(uninit_var_label);
         } else if (instr.op == IR::Operation::STORE_GLOBAL) {
             int32_t offset = 8 * instr.args[0].index;
             load(x86::r10, instr.args[1]);
