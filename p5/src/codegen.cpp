@@ -36,6 +36,7 @@ Executable::Executable(IR::Program&& program1) : program{std::move(program1)} {
     }
 
     // start at global function
+//    assembler.and_(x86::rsp, Imm(~0b1111));
     assembler.jmp(cg_state.function_labels.back());
 
     cg_state.function_address_base_label = assembler.newLabel();
@@ -44,19 +45,6 @@ Executable::Executable(IR::Program&& program1) : program{std::move(program1)} {
         assembler.embedLabel(label);
     }
 
-    cg_state.context_ptr_label = assembler.newLabel();
-    assembler.bind(cg_state.context_ptr_label);
-    assembler.embedUInt64(reinterpret_cast<uint64_t>(this->program.rt));
-
-    cg_state.globals_ptr_label = assembler.newLabel();
-    assembler.bind(cg_state.globals_ptr_label);
-    assembler.embedUInt64(reinterpret_cast<uint64_t>(this->program.rt->globals));
-
-    cg_state.const_pool_label = assembler.newLabel();
-    assembler.bind(cg_state.const_pool_label);
-    for (auto immediate : program.immediates) {
-        assembler.embedUInt64(immediate);
-    }
 
     for (size_t i = 0; i < program.functions.size(); ++i) {
         process_function(assembler, cg_state, i);
@@ -82,7 +70,7 @@ void Executable::process_function(asmjit::x86::Assembler& assembler,
     assembler.mov(x86::rbp, x86::rsp);
 
     // reserve stack slots. To ensure 16-byte alignment at function call time, align stack to 16 bytes + 8
-    if (func.stack_slots % 2 == 1) {
+    if (func.stack_slots % 2 == 0) {
         assembler.sub(x86::rsp, 8 * func.stack_slots);
     } else {
         assembler.sub(x86::rsp, 8 * (func.stack_slots + 1));
@@ -136,7 +124,8 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::rdx, instr.args[1]);
             assembler.mov(x86::rsi, x86::r10);
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             assembler.call(Imm(runtime::value_add));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ADD_INT) {
@@ -252,7 +241,8 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::rdx, instr.args[1]);
             assembler.mov(x86::rsi, x86::r10);
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             assembler.call(Imm(runtime::extern_rec_load_index));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
@@ -268,19 +258,23 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             load(assembler, x86::rcx, instr.args[2]);
             assembler.mov(x86::rsi, x86::r10);
             assembler.mov(x86::rdx, x86::r11);
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             assembler.call(Imm(runtime::extern_alloc_ref));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_REC) {
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             assembler.call(Imm(runtime::extern_alloc_record));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_CLOSURE) {
             int32_t fn_id = instr.args[0].index;
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             // arg2 is number of free vars
             assembler.mov(x86::rsi, instr.args[2].index);
             assembler.call(Imm(runtime::extern_alloc_closure));
@@ -362,13 +356,15 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
         } else if (instr.op == IR::Operation::LOAD_GLOBAL) {
             // TODO check for uninit and terminate
             int32_t offset = 8 * instr.args[0].index;
-            assembler.mov(x86::r11, x86::ptr_64(state.globals_ptr_label));
+//            assembler.mov(x86::r11, x86::ptr_64(state.globals_ptr_label));
+            assembler.mov(x86::r11, Imm(program.rt->globals));
             assembler.mov(x86::r10, x86::qword_ptr(x86::r11, offset));
             store(assembler, instr.out, x86::r10);
         } else if (instr.op == IR::Operation::STORE_GLOBAL) {
             int32_t offset = 8 * instr.args[0].index;
             load(assembler, x86::r10, instr.args[1]);
-            assembler.mov(x86::r11, x86::ptr_64(state.globals_ptr_label));
+//            assembler.mov(x86::r11, x86::ptr_64(state.globals_ptr_label));
+            assembler.mov(x86::r11, Imm(program.rt->globals));
             assembler.mov(x86::ptr_64(x86::r11, offset), x86::r10);
         } else if (instr.op == IR::Operation::ASSERT_BOOL) {
         } else if (instr.op == IR::Operation::ASSERT_INT) {
@@ -380,7 +376,8 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             load(assembler, x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_print));
         } else if (instr.op == IR::Operation::INPUT) {
-            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+//            assembler.mov(x86::rdi, x86::ptr_64(state.context_ptr_label, 0));
+            assembler.mov(x86::rdi, Imm(program.rt));
             assembler.call(Imm(runtime::extern_input));
             store(assembler, instr.out, x86::r10);
         } else if (instr.op == IR::Operation::INTCAST) {
@@ -413,9 +410,9 @@ void Executable::load(asmjit::x86::Assembler& assembler,
     using namespace asmjit;
     switch (op.type) {
         case IR::Operand::IMMEDIATE: {
-//            assembler.mov(reg, Imm(program.immediates[op.index]));
-            int32_t offset = 8 * op.index;
-            assembler.mov(reg, x86::ptr_64(this->state->const_pool_label, offset));
+            assembler.mov(reg, Imm(program.immediates[op.index]));
+//            int32_t offset = 8 * op.index;
+//            assembler.mov(reg, x86::ptr_64(this->state->const_pool_label, offset));
         } break;
         case IR::Operand::MACHINE_REG:
             assembler.mov(reg, to_reg(op.index));
