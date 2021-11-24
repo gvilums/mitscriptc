@@ -30,25 +30,26 @@ Executable::Executable(IR::Program&& program1) : program{std::move(program1)} {
 
     CodeGenState cg_state;
     this->state = &cg_state;
+
+    cg_state.function_address_base_label = assembler.newLabel();
     cg_state.function_labels.resize(program.functions.size());
     for (auto& label : cg_state.function_labels) {
         label = assembler.newLabel();
     }
 
     // start at global function
-//    assembler.and_(x86::rsp, Imm(~0b1111));
     assembler.jmp(cg_state.function_labels.back());
-
-    cg_state.function_address_base_label = assembler.newLabel();
-    assembler.bind(cg_state.function_address_base_label);
-    for (const auto& label : cg_state.function_labels) {
-        assembler.embedLabel(label);
-    }
 
 
     for (size_t i = 0; i < program.functions.size(); ++i) {
         process_function(assembler, cg_state, i);
     }
+
+    assembler.bind(cg_state.function_address_base_label);
+    for (const auto& label : cg_state.function_labels) {
+        assembler.embedLabel(label);
+    }
+
     this->state = nullptr;
     Error err = this->jit_rt.add(&this->function, &code);
     if (err) {
@@ -298,7 +299,6 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             } else {
                 state.current_stack_args = 0;
             }
-
             // save current function
             assembler.push(x86::rbx);
             // if number of stack arguments is even, stack has to be pushed to preserve alignment:
@@ -334,13 +334,6 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
                 stack_delta += 1;
             }
             assembler.add(x86::rsp, Imm(8 * stack_delta));
-//            if (state.current_stack_args > 0) {
-//                if (state.current_stack_args % 2 == 1) {
-//                    assembler.add(x86::rsp, Imm(8 * (state.current_stack_args + 1)));
-//                } else {
-//                    assembler.add(x86::rsp, Imm(8 * state.current_stack_args));
-//                }
-//            }
             assembler.pop(x86::rbx);
         } else if (instr.op == IR::Operation::MOV) {
             x86::Gp target;
@@ -516,4 +509,10 @@ auto to_mem(int32_t stack_slot) -> asmjit::x86::Mem {
     return {asmjit::x86::rbp, 8 * (-stack_slot - 1)};
 }
 
+Runnable::Runnable(IR::Program&& program) {
+    asmjit::CodeHolder code;
+    code.init(jit_rt.environment());
+
+
+}
 };  // namespace codegen

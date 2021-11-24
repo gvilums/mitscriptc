@@ -16,9 +16,14 @@ struct CodeGenState {
     std::vector<asmjit::Label> function_labels;
     asmjit::Label function_address_base_label;
     size_t current_stack_args{0};
-    asmjit::Label context_ptr_label;
-    asmjit::Label globals_ptr_label;
-    asmjit::Label const_pool_label;
+};
+
+class Runnable {
+    asmjit::JitRuntime jit_rt;
+    runtime::ProgramContext* ctx_ptr{nullptr};
+    int (*function)(){nullptr};
+
+    explicit Runnable(IR::Program&& program);
 };
 
 class Executable {
