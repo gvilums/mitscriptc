@@ -60,7 +60,7 @@ auto main(int argc, const char* argv[]) -> int {
 //        std::cout << "ERROR: " << e << std::endl;
 //    }
 
-    std::cout << *prog << std::endl;
+//    std::cout << *prog << std::endl;
 
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
@@ -68,18 +68,18 @@ auto main(int argc, const char* argv[]) -> int {
 //    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
 //    IR::allocate_registers(prog->functions.back());
 
-    std::cout << *prog << std::endl;
+//    std::cout << *prog << std::endl;
 
     codegen::Executable compiled(std::move(*prog));
     compiled.run();
 
     // std::cout << *prog << std::endl;
-    
+
     // IR::Function& func = prog->functions[prog->functions.size() - 2];
     // pretty_print_function(std::cout, func) << std::endl;
     // IR::allocate_registers(func);
     // pretty_print_function(std::cout, func) << std::endl;
-    
+
     delete program;
     return 0;
 }

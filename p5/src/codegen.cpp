@@ -24,32 +24,6 @@ Executable::Executable(IR::Program&& program) : ctx_ptr(program.rt) {
 
     CodeGenerator generator{std::move(program), &code};
 
-//    x86::Assembler assembler(&code);
-//    assembler.addValidationOptions(BaseEmitter::kValidationOptionAssembler);
-
-//    this->program.rt->init_globals(program.num_globals);
-
-
-//    CodeGenState cg_state;
-//    this->state = &cg_state;
-//    cg_state.function_labels.resize(program.functions.size());
-//    for (auto& label : cg_state.function_labels) {
-//        label = assembler.newLabel();
-//    }
-
-    // start at global function
-//    assembler.jmp(cg_state.function_labels.back());
-
-//    cg_state.function_address_base_label = assembler.newLabel();
-//    assembler.bind(cg_state.function_address_base_label);
-//    for (const auto& label : cg_state.function_labels) {
-//        assembler.embedLabel(label);
-//    }
-
-//    for (size_t i = 0; i < program.functions.size(); ++i) {
-//        process_function(assembler, cg_state, i);
-//    }
-//    this->state = nullptr;
     Error err = this->jit_rt.add(&this->function, &code);
     if (err) {
         std::cout << DebugUtils::errorAsString(err) << std::endl;
@@ -68,7 +42,8 @@ void CodeGenerator::process_function(size_t func_index) {
     assembler.mov(x86::rbp, x86::rsp);
 
     // reserve stack slots. To ensure 16-byte alignment at function call time, align stack to 16 bytes + 8
-    if (func.stack_slots % 2 == 1) {
+    // TODO CHECK THIS
+    if (func.stack_slots % 2 == 0) {
         assembler.sub(x86::rsp, 8 * func.stack_slots);
     } else {
         assembler.sub(x86::rsp, 8 * (func.stack_slots + 1));
@@ -519,5 +494,6 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
     for (const auto& label : function_labels) {
         assembler.embedLabel(label);
     }
+    program.rt = nullptr;
 }
 };  // namespace codegen
