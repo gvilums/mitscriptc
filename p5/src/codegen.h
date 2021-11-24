@@ -16,16 +16,30 @@ struct CodeGenState {
     std::vector<asmjit::Label> function_labels;
     asmjit::Label function_address_base_label;
     size_t current_stack_args{0};
-    asmjit::Label context_ptr_label;
-    asmjit::Label globals_ptr_label;
-    asmjit::Label const_pool_label;
+};
+
+class CodeGenerator {
+    IR::Program program;
+    asmjit::x86::Assembler assembler;
+
+    std::vector<asmjit::Label> function_labels;
+    asmjit::Label function_address_base_label;
+    size_t current_stack_args{0};
+
+   public:
+    CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_holder);
+
+    void process_block(const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
+    void process_function(size_t func_index);
+
+    void load(const asmjit::x86::Gp& reg, const IR::Operand& op);
+    void store(const IR::Operand& op, const asmjit::x86::Gp& reg);
 };
 
 class Executable {
-    CodeGenState* state;
     asmjit::JitRuntime jit_rt;
-    IR::Program program;
-    int (*function)();
+    runtime::ProgramContext* ctx_ptr;
+    int (*function)(){nullptr};
 
     void process_block(asmjit::x86::Assembler& assembler, CodeGenState& state, const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
     void process_function(asmjit::x86::Assembler& assembler, CodeGenState& state, size_t func_index);
