@@ -1,42 +1,60 @@
 #pragma once
 
-#include "x86.h"
+#include <ostream>
 #include "ir.h"
 #include "regalloc.h"
+#include "x86.h"
 
 namespace codegen {
 
 /*
- * calling conventions:
- * pointer to current function resides in rdi (this is fixed, although this could be made dynamic in theory)
- * -> should be removed from register allocator consideration
+ * return value indicator table
+ * 0 - OK
+ * 1 - UninitializedVariableException
+ * 2 - IllegalCastException
+ * 3 - IllegalArithmeticException
+ * 4 - RuntimeException
  */
 
-struct CodeGenState {
-    std::vector<asmjit::Label> function_labels;
-    asmjit::Label function_address_base_label;
-    size_t current_stack_args{0};
+class RuntimeException {
+    int type{0};
+
+
+   public:
+    RuntimeException(int kind);
+    friend std::ostream& operator<<(std::ostream& os, const RuntimeException& exception);
 };
 
-class Runnable {
-    asmjit::JitRuntime jit_rt;
-    runtime::ProgramContext* ctx_ptr{nullptr};
-    int (*function)(){nullptr};
+class CodeGenerator {
+    IR::Program program;
+    asmjit::x86::Assembler assembler;
 
-    explicit Runnable(IR::Program&& program);
+    std::vector<asmjit::Label> function_labels;
+    asmjit::Label function_address_base_label;
+    asmjit::Label uninit_var_label, illegal_cast_label, illegal_arith_label, rt_exception_label;
+
+    size_t current_args{0};
+
+    void process_instruction(const IR::Instruction& instr);
+    void process_block(const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
+    void process_function(size_t func_index);
+
+    void load(const asmjit::x86::Gp& reg, const IR::Operand& op);
+    void store(const IR::Operand& op, const asmjit::x86::Gp& reg);
+
+    void generate_prelude();
+    void save_volatile();
+    void restore_volatile();
+    void init_labels();
+
+   public:
+    CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_holder);
 };
 
 class Executable {
-    CodeGenState* state;
     asmjit::JitRuntime jit_rt;
-    IR::Program program;
-    int (*function)();
-
-    void process_block(asmjit::x86::Assembler& assembler, CodeGenState& state, const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
-    void process_function(asmjit::x86::Assembler& assembler, CodeGenState& state, size_t func_index);
-
-    void load(asmjit::x86::Assembler& assembler, const asmjit::x86::Gp& reg, const IR::Operand& op);
-    void store(asmjit::x86::Assembler& assembler, const IR::Operand& op, const asmjit::x86::Gp& reg);
+    runtime::ProgramContext* ctx_ptr;
+    int (*function)(){nullptr};
 
    public:
     explicit Executable(IR::Program&& program1);

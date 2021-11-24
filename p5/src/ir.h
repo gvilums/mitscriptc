@@ -144,7 +144,7 @@ struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
     size_t num_globals{0};
-    runtime::ProgramContext* rt{nullptr};
+    runtime::ProgramContext* ctx_ptr{nullptr};
 
     Program();
     ~Program();

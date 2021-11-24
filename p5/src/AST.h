@@ -38,7 +38,7 @@ class Statement : public AST_node {
 class Program : public AST_node {
    public:
     vector<Statement*> children;
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     string tostring() {
@@ -61,13 +61,13 @@ class Program : public AST_node {
 class Block : Statement {
    public:
     vector<Statement*> children;
-    string tostring() {
+    string tostring() override {
         string res = "block";
         for (auto c : children)
             res = res + "[" + c->tostring() + "]";
         return res;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     void addChild(Statement* child) {
@@ -102,7 +102,7 @@ class BinaryExpression : Expression {
    public:
     vector<Expression*> children;
     string op;
-    string tostring() {
+    string tostring() override {
         string res = "binaryexpression" + op;
         for (auto c : children)
             res = res + "[" + c->tostring() + "]";
@@ -114,7 +114,7 @@ class BinaryExpression : Expression {
     void addOp(string o) {
         op = o;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~BinaryExpression() override {
@@ -129,7 +129,7 @@ class UnaryExpression : Expression {
    public:
     vector<Expression*> children;
     string op;
-    string tostring() {
+    string tostring() override {
         string res = "unaryexpression" + op;
         for (auto c : children)
             res = res + "[" + c->tostring() + "]";
@@ -141,7 +141,7 @@ class UnaryExpression : Expression {
     void addOp(string o) {
         op = o;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~UnaryExpression() override {
@@ -156,7 +156,7 @@ class FunctionDeclaration : Expression {
    public:
     vector<string> arguments;
     AST::Block* block;
-    string tostring() {
+    string tostring() override {
         string res = "function(";
         for (auto c : arguments)
             res = res + c + ",";
@@ -169,7 +169,7 @@ class FunctionDeclaration : Expression {
     void addBody(AST::Block* blk) {
         block = blk;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~FunctionDeclaration() override {
@@ -183,7 +183,7 @@ class Call : Expression, Statement {
     vector<Expression*> arguments;
     Expression* expr;
     bool isStatement = false;
-    string tostring() {
+    string tostring() override {
         string res = "call " + expr->tostring() + " with (";
         for (auto c : arguments)
             res = res + c->tostring() + ",";
@@ -199,7 +199,7 @@ class Call : Expression, Statement {
     void setStatement() {
         isStatement = true;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~Call() override {
@@ -268,14 +268,14 @@ class Record : Expression {
     void addMap(string str, Expression* expr) {
         dict.push_back({str, expr});
     }
-    string tostring() {
+    string tostring() override {
         string res = "{";
         for (auto p : dict)
             res = res + p.first + "->" + p.second->tostring() + ",";
         res = res + "}";
         return res;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~Record() override {
@@ -291,10 +291,10 @@ class IntegerConstant : Expression {
     void addVal(string v) {
         val = v;
     }
-    string tostring() {
+    string tostring() override {
         return val;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     int getVal() {
@@ -330,10 +330,10 @@ class BoolConstant : Expression {
     void addVal(string v) {
         val = v;
     }
-    string tostring() {
+    string tostring() override {
         return val;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     bool getVal() {
@@ -344,10 +344,10 @@ class BoolConstant : Expression {
 
 class NoneConstant : Expression {
    public:
-    string tostring() {
+    string tostring() override {
         return "None";
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~NoneConstant() override {}
@@ -356,13 +356,13 @@ class NoneConstant : Expression {
 class Global : Statement {
    public:
     string name;
-    string tostring() {
+    string tostring() override {
         return "global";
     }
     void addName(string n) {
         name = n;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~Global() override {}
@@ -371,13 +371,13 @@ class Global : Statement {
 class Return : Statement {
    public:
     AST::Expression* Expr;
-    string tostring() {
+    string tostring() override {
         return "return " + Expr->tostring();
     }
     void addExpr(AST::Expression* expr) {
         Expr = expr;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~Return() override {
@@ -389,7 +389,7 @@ class Assignment : Statement {
    public:
     AST::Expression* Lhs;
     AST::Expression* Expr;
-    string tostring() {
+    string tostring() override {
         return "assignment " + Lhs->tostring() + " = " + Expr->tostring();
     }
     void addLhs(AST::Expression* lhs) {
@@ -398,7 +398,7 @@ class Assignment : Statement {
     void addExpr(AST::Expression* expr) {
         Expr = expr;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~Assignment() override {
@@ -411,7 +411,7 @@ class IfStatement : Statement {
    public:
     vector<Block*> children;
     Expression* Expr;
-    string tostring() {
+    string tostring() override {
         string res = "if " + Expr->tostring() + " statement";
         for (auto c : children)
             res = res + "[" + c->tostring() + "]";
@@ -423,7 +423,7 @@ class IfStatement : Statement {
     void addExpr(AST::Expression* expr) {
         Expr = expr;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~IfStatement() override {
@@ -438,7 +438,7 @@ class WhileLoop : Statement {
    public:
     vector<Block*> children;
     Expression* Expr;
-    string tostring() {
+    string tostring() override {
         string res = "while " + Expr->tostring() + " do";
         for (auto c : children)
             res = res + "[" + c->tostring() + "]";
@@ -450,7 +450,7 @@ class WhileLoop : Statement {
     void addExpr(AST::Expression* expr) {
         Expr = expr;
     }
-    virtual void accept(Visitor& v) {
+    virtual void accept(Visitor& v) override {
         v.visit(*this);
     }
     virtual ~WhileLoop() override {
