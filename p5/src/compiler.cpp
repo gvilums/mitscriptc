@@ -429,6 +429,8 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 
     for (const auto& s : glob_var) {
         globals_.insert(s);
+        if (!names_.contains(s))
+            names_[s] = names_cnt_++;
         if (ref_.count(s))
             ref_.erase(s);
     }
