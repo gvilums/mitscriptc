@@ -41,12 +41,6 @@ class Executable {
     runtime::ProgramContext* ctx_ptr;
     int (*function)(){nullptr};
 
-    void process_block(asmjit::x86::Assembler& assembler, CodeGenState& state, const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);
-    void process_function(asmjit::x86::Assembler& assembler, CodeGenState& state, size_t func_index);
-
-    void load(asmjit::x86::Assembler& assembler, const asmjit::x86::Gp& reg, const IR::Operand& op);
-    void store(asmjit::x86::Assembler& assembler, const IR::Operand& op, const asmjit::x86::Gp& reg);
-
    public:
     explicit Executable(IR::Program&& program1);
     void run();
