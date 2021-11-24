@@ -1,13 +1,20 @@
-Array = fun(size){
-  this = {
-        put: fun(idx, val){
-            if( idx < size){
-                this[idx] = val;
-            }
-        };
+f = fun(x){
+  print(x);
+  x = 25;
+  g = fun(x){
+    print(x);
+    x = "Hello";
+    global x;
+    x = fun(x){
+        print("Inside fun x: " + x);
+    };
+    x("What?");
+    return x;
   };
-  return this;
+  u = g(10);
+  u(10);
 };
+x = "Outer";
+f(1000);
+f(1000);
 
-a1 = Array(10);
-a1.put(0, 5);

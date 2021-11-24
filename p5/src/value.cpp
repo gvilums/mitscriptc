@@ -322,11 +322,17 @@ void extern_print(Value val) {
 };
 
 auto extern_intcast(Value val) -> Value {
-    // TODO implement
+    auto type = value_get_type(val);
+    if (type == ValueType::HeapString || type == ValueType::InlineString) {
+        int32_t out = std::stoi(value_get_std_string(val));
+        return to_value(out);
+    }
     return 0b10000;
 }
 
 auto extern_input(ProgramContext* rt) -> Value {
+    std::string input;
+    std::getline(std::cin, input);
     // TODO implement
     return 0b10000;
 }

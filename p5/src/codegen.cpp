@@ -172,8 +172,9 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             assembler.or_(x86::rax, Imm(static_cast<size_t>(runtime::ValueType::Int)));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::EQ) {
-            load(assembler, x86::rdi, instr.args[0]);
+            load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::rsi, instr.args[1]);
+            assembler.mov(x86::rdi, x86::r10);
             assembler.call(Imm(runtime::value_eq));
             store(assembler, instr.out, x86::rax);
         } else if (instr.op == IR::Operation::GT) {
