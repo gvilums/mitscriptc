@@ -300,13 +300,6 @@ void CodeGenerator::process_block(
                 stack_delta += 1;
             }
             assembler.add(x86::rsp, Imm(8 * stack_delta));
-//            if (state.current_stack_args > 0) {
-//                if (state.current_stack_args % 2 == 1) {
-//                    assembler.add(x86::rsp, Imm(8 * (state.current_stack_args + 1)));
-//                } else {
-//                    assembler.add(x86::rsp, Imm(8 * state.current_stack_args));
-//                }
-//            }
             assembler.pop(x86::rbx);
         } else if (instr.op == IR::Operation::MOV) {
             x86::Gp target;
@@ -331,11 +324,32 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r11, Imm(program.ctx_ptr->globals));
             assembler.mov(x86::ptr_64(x86::r11, offset), x86::r10);
         } else if (instr.op == IR::Operation::ASSERT_BOOL) {
+            load(x86::r10, instr.args[0]);
+            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.cmp(x86::r10, Imm(runtime::BOOL_TAG));
+            assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_INT) {
+            load(x86::r10, instr.args[0]);
+            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
+            assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_STRING) {
+            // TODO implement or maybe remove, think about this
         } else if (instr.op == IR::Operation::ASSERT_RECORD) {
+            load(x86::r10, instr.args[0]);
+            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.cmp(x86::r10, Imm(runtime::RECORD_TAG));
+            assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_CLOSURE) {
+            load(x86::r10, instr.args[0]);
+            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.cmp(x86::r10, Imm(runtime::CLOSURE_TAG));
+            assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_NONZERO) {
+            load(x86::r10, instr.args[0]);
+            assembler.shr(x86::r10, Imm(4));
+            assembler.cmp(x86::r10, Imm(0));
+            assembler.je(illegal_arith_label);
         } else if (instr.op == IR::Operation::PRINT) {
             load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_print));

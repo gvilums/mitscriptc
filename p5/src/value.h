@@ -19,6 +19,14 @@ enum class ValueType : uint64_t {
     Reference,
 };
 
+const int32_t BOOL_TAG = static_cast<int32_t>(ValueType::Bool);
+const int32_t INT_TAG = static_cast<int32_t>(ValueType::Int);
+const int32_t INLINE_STRING_TAG = static_cast<int32_t>(ValueType::InlineString);
+const int32_t HEAP_STRING_TAG = static_cast<int32_t>(ValueType::HeapString);
+const int32_t RECORD_TAG = static_cast<int32_t>(ValueType::Record);
+const int32_t CLOSURE_TAG = static_cast<int32_t>(ValueType::Closure);
+const int32_t REFERENCE_TAG = static_cast<int32_t>(ValueType::Reference);
+
 /*
     3 lower bits are used to store type. possibilities are:
     000 - None
