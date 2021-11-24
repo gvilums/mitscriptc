@@ -36,6 +36,7 @@ Executable::Executable(IR::Program&& program1) : program{std::move(program1)} {
     }
 
     // start at global function
+    assembler.push(0);
     assembler.jmp(cg_state.function_labels.back());
 
     cg_state.function_address_base_label = assembler.newLabel();
@@ -81,7 +82,11 @@ void Executable::process_function(asmjit::x86::Assembler& assembler,
     assembler.push(x86::rbp);
     assembler.mov(x86::rbp, x86::rsp);
     // reserve stack slots (note: this needs potential rework in future)
-    assembler.sub(x86::rsp, 8 * func.stack_slots);
+    if (func.stack_slots % 2 == 0) {
+        assembler.sub(x86::rsp, 8 * func.stack_slots);
+    } else {
+        assembler.sub(x86::rsp, 8 * (func.stack_slots + 1));
+    }
 
     // init vector of block labels to be accessed by id
     std::vector<Label> block_labels(func.blocks.size());
@@ -181,7 +186,6 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
             load(assembler, x86::r10, instr.args[0]);
             load(assembler, x86::r11, instr.args[1]);
             assembler.cmp(x86::r10, x86::r11);
-            // TODO SETcc instructions
             assembler.setg(x86::r10b);
             assembler.and_(x86::r10, Imm(0b1));
             assembler.shl(x86::r10, 4);

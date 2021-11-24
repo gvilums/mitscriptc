@@ -47,11 +47,11 @@ auto main(int argc, const char* argv[]) -> int {
     Compiler compiler;
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
-    
+
 //    std::cout << *prog << std::endl;
 
-    DeadCodeRemover dc_opt(prog);
-    prog = dc_opt.optimize();
+//    DeadCodeRemover dc_opt(prog);
+//    prog = dc_opt.optimize();
 
 //    try {
 //        ConstPropagator c_prop(prog);

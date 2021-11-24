@@ -1,20 +1,33 @@
-f = fun(x){
-  print(x);
-  x = 25;
-  g = fun(x){
-    print(x);
-    x = "Hello";
-    global x;
-    x = fun(x){
-        print("Inside fun x: " + x);
+Tree = fun(){
+  Node = fun(v){
+    this= {
+        plus:fun(x){
+            print("printing Node, should print FUNCTION");
+            print(Node);
+        };
     };
-    x("What?");
-    return x;
+    return this;
   };
-  u = g(10);
-  u(10);
-};
-x = "Outer";
-f(1000);
-f(1000);
+  this = {
+    root:None;
+    plus:fun(x){
+      if(this.root==None){
+        this.root = Node(x);
+      }else{
+        this.root.plus(x);
+      }
 
+    };
+  };
+
+
+
+  return this;
+};
+
+
+t = Tree();
+t.plus(1);
+t.plus(2);
+t.plus(3);
+print("after third plus");
