@@ -1,0 +1,5 @@
+print("Enter a number:");
+a = intcast(input());
+print("Enter another number:");
+b = intcast(input());
+print(a + " + " + b + " = " + (a + b));
