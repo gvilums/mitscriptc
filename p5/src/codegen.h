@@ -33,7 +33,7 @@ class CodeGenerator {
     asmjit::Label function_address_base_label;
     asmjit::Label uninit_var_label, illegal_cast_label, illegal_arith_label, rt_exception_label;
 
-    size_t current_stack_args{0};
+    size_t current_args{0};
 
     void process_instruction(const IR::Instruction& instr);
     void process_block(const IR::Function& func, size_t block_index, std::vector<asmjit::Label>& block_labels);

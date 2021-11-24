@@ -258,23 +258,18 @@ void CodeGenerator::process_block(
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::INIT_CALL) {
-            size_t num_args = instr.args[0].index;
-            if (num_args > 6) {
-                current_stack_args = num_args - 6;
-            } else {
-                current_stack_args = 0;
-            }
-
+            current_args = instr.args[0].index;
+            size_t stack_args = std::min(current_args - 6, 0UL);
             // save current function
             assembler.push(x86::rbx);
             // if number of stack arguments is even, stack has to be pushed to preserve alignment:
             // (even) [rbx] [NULL] (odd) [rip]
             // notice that [rbx] messes up alignment
-            if (current_stack_args % 2 == 0) {
+            if (stack_args % 2 == 0) {
                 assembler.push(Imm(0));
             }
-            if (current_stack_args > 0) {
-                assembler.sub(x86::rsp, Imm(8 * current_stack_args));
+            if (stack_args > 0) {
+                assembler.sub(x86::rsp, Imm(8 * stack_args));
             }
         } else if (instr.op == IR::Operation::SET_ARG) {
             int32_t arg_index = instr.args[0].index;
@@ -286,17 +281,22 @@ void CodeGenerator::process_block(
                 assembler.mov(x86::Mem(x86::rsp, 8 * arg_index), x86::r10);
             }
         } else if (instr.op == IR::Operation::EXEC_CALL) {
-            // TODO function argument count validation
-            load(x86::r10, instr.args[0]);
-            assembler.and_(x86::r10, Imm(~0b1111));
-            assembler.mov(x86::rbx, x86::r10);
-            assembler.call(x86::Mem(x86::r10, 0));
+            load(x86::rbx, instr.args[0]);
+            assembler.and_(x86::rbx, Imm(~0b1111));
+
+            // validate number of arguments
+            assembler.mov(x86::r10, x86::Mem(x86::rbx, 8));
+            assembler.cmp(x86::r10, Imm(current_args));
+            assembler.jne(rt_exception_label);
+
+            assembler.call(x86::Mem(x86::rbx, 0));
             if (instr.out.type != IR::Operand::NONE) {
                 store(instr.out, x86::rax);
             }
 
-            int32_t stack_delta = current_stack_args;
-            if (current_stack_args % 2 == 0) {
+            size_t stack_args = std::min(current_args - 6, 0UL);
+            int32_t stack_delta = stack_args;
+            if (stack_args % 2 == 0) {
                 stack_delta += 1;
             }
             assembler.add(x86::rsp, Imm(8 * stack_delta));
