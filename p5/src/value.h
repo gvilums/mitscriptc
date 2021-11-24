@@ -125,6 +125,8 @@ struct ProgramContext {
 
     Value* globals{nullptr};
 
+    uint64_t saved_rsp{0};
+
     ProgramContext();
     ~ProgramContext();
     

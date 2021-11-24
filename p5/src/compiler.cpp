@@ -194,7 +194,7 @@ void Compiler::visit(AST::Assignment& expr) {
 
         size_t idx;
         if (!str_const_.count(exp->field)) {
-            program_->immediates.push_back(runtime::to_value(program_->rt, exp->field));
+            program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, exp->field));
             str_const_[exp->field] = imm_cnt_++;
         }
         idx = str_const_[exp->field];
@@ -706,7 +706,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 
     size_t idx;
     if (!str_const_.count(expr.field)) {
-        program_->immediates.push_back(runtime::to_value(program_->rt, expr.field));
+        program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, expr.field));
         str_const_[expr.field] = imm_cnt_++;
     }
     idx = str_const_[expr.field];
@@ -757,7 +757,7 @@ void Compiler::visit(AST::Record& expr) {
 
         size_t idx;
         if (!str_const_.count(p.first)) {
-            program_->immediates.push_back(runtime::to_value(program_->rt, p.first));
+            program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, p.first));
             str_const_[p.first] = imm_cnt_++;
         }
         idx = str_const_[p.first];
@@ -796,7 +796,7 @@ void Compiler::visit(AST::StringConstant& expr) {
 
         size_t idx;
         if (!str_const_.count(str)) {
-            program_->immediates.push_back(runtime::to_value(program_->rt, str));  // str
+            program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, str));  // str
             str_const_[str] = imm_cnt_++;
         }
         idx = str_const_[str];

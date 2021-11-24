@@ -12,7 +12,7 @@ class MyErrorHandler : public asmjit::ErrorHandler {
     }
 };
 
-Executable::Executable(IR::Program&& program) : ctx_ptr(program.rt) {
+Executable::Executable(IR::Program&& program) : ctx_ptr(program.ctx_ptr) {
     using namespace asmjit;
     MyErrorHandler handler;
     FileLogger logger(stdout);
@@ -20,7 +20,7 @@ Executable::Executable(IR::Program&& program) : ctx_ptr(program.rt) {
     CodeHolder code;
     code.init(jit_rt.environment());
     code.setErrorHandler(&handler);
-    code.setLogger(&logger);
+//    code.setLogger(&logger);
 
     CodeGenerator generator{std::move(program), &code};
 
@@ -31,7 +31,7 @@ Executable::Executable(IR::Program&& program) : ctx_ptr(program.rt) {
 }
 
 void CodeGenerator::process_function(size_t func_index) {
-    std::cout << "------- function " << func_index << "---------" << std::endl;
+//    std::cout << "------- function " << func_index << "---------" << std::endl;
     using namespace asmjit;
     assembler.bind(function_labels[func_index]);
     const IR::Function& func = this->program.functions[func_index];
@@ -87,7 +87,7 @@ void CodeGenerator::process_block(
                                const IR::Function& func,
                                size_t block_index,
                                std::vector<asmjit::Label>& block_labels) {
-    std::cout << "------- block " << block_index << "---------" << std::endl;
+//    std::cout << "------- block " << block_index << "---------" << std::endl;
     using namespace asmjit;
     const IR::BasicBlock block = func.blocks[block_index];
     assembler.bind(block_labels[block_index]);
@@ -96,7 +96,7 @@ void CodeGenerator::process_block(
             load(x86::r10, instr.args[0]);
             load(x86::rdx, instr.args[1]);
             assembler.mov(x86::rsi, x86::r10);
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::value_add));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ADD_INT) {
@@ -212,7 +212,7 @@ void CodeGenerator::process_block(
             load(x86::r10, instr.args[0]);
             load(x86::rdx, instr.args[1]);
             assembler.mov(x86::rsi, x86::r10);
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_load_index));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
@@ -228,19 +228,19 @@ void CodeGenerator::process_block(
             load(x86::rcx, instr.args[2]);
             assembler.mov(x86::rsi, x86::r10);
             assembler.mov(x86::rdx, x86::r11);
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_alloc_ref));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_REC) {
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_alloc_record));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_CLOSURE) {
             int32_t fn_id = instr.args[0].index;
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             // arg2 is number of free vars
             assembler.mov(x86::rsi, instr.args[2].index);
             assembler.call(Imm(runtime::extern_alloc_closure));
@@ -322,13 +322,13 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::LOAD_GLOBAL) {
             // TODO check for uninit and terminate
             int32_t offset = 8 * instr.args[0].index;
-            assembler.mov(x86::r11, Imm(program.rt->globals));
+            assembler.mov(x86::r11, Imm(program.ctx_ptr->globals));
             assembler.mov(x86::r10, x86::qword_ptr(x86::r11, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::STORE_GLOBAL) {
             int32_t offset = 8 * instr.args[0].index;
             load(x86::r10, instr.args[1]);
-            assembler.mov(x86::r11, Imm(program.rt->globals));
+            assembler.mov(x86::r11, Imm(program.ctx_ptr->globals));
             assembler.mov(x86::ptr_64(x86::r11, offset), x86::r10);
         } else if (instr.op == IR::Operation::ASSERT_BOOL) {
         } else if (instr.op == IR::Operation::ASSERT_INT) {
@@ -340,7 +340,7 @@ void CodeGenerator::process_block(
             load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_print));
         } else if (instr.op == IR::Operation::INPUT) {
-            assembler.mov(x86::rdi, Imm(program.rt));
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_input));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::INTCAST) {
@@ -406,11 +406,8 @@ void CodeGenerator::store(const IR::Operand& op, const asmjit::x86::Gp& reg) {
 
 void Executable::run() {
     int exit_code = this->function();
-    switch (exit_code) {
-        case 0:
-            return;
-        default:
-            assert(false && "error handling not yet implemented");
+    if (exit_code != 0) {
+        throw RuntimeException(exit_code);
     }
 }
 
@@ -476,16 +473,19 @@ auto to_mem(int32_t stack_slot) -> asmjit::x86::Mem {
 CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_holder)
     : program(std::move(program1)), assembler(code_holder) {
 
-    program.rt->init_globals(program.num_globals);
+    program.ctx_ptr->init_globals(program.num_globals);
     assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
 
-    function_address_base_label = assembler.newLabel();
-    function_labels.resize(program.functions.size());
-    for (auto& label : function_labels) {
-        label = assembler.newLabel();
-    }
+//    function_address_base_label = assembler.newLabel();
+//    function_labels.resize(program.functions.size());
+//    for (auto& label : function_labels) {
+//        label = assembler.newLabel();
+//    }
+    init_labels();
+    generate_prelude();
 
-    assembler.jmp(function_labels.back());
+//    assembler.jmp(function_labels.back());
+
     for (size_t i = 0; i < program.functions.size(); ++i) {
         process_function(i);
     }
@@ -494,6 +494,99 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
     for (const auto& label : function_labels) {
         assembler.embedLabel(label);
     }
-    program.rt = nullptr;
+    program.ctx_ptr = nullptr;
 }
+
+void CodeGenerator::generate_prelude() {
+    using namespace asmjit;
+    auto reg_restore_label = assembler.newLabel();
+
+    save_volatile();
+    // default call procedure
+    assembler.call(function_labels.back());
+    assembler.mov(x86::rax, Imm(0));
+    assembler.jmp(reg_restore_label);
+
+    assembler.bind(uninit_var_label);
+    assembler.mov(x86::rax, Imm(1));
+    assembler.jmp(reg_restore_label);
+
+    assembler.bind(illegal_cast_label);
+    assembler.mov(x86::rax, Imm(2));
+    assembler.jmp(reg_restore_label);
+
+    assembler.bind(illegal_arith_label);
+    assembler.mov(x86::rax, Imm(3));
+    assembler.jmp(reg_restore_label);
+
+    assembler.bind(rt_exception_label);
+    assembler.mov(x86::rax, Imm(4));
+    assembler.jmp(reg_restore_label);
+
+    assembler.bind(reg_restore_label);
+    restore_volatile();
+    assembler.ret();
+}
+
+void CodeGenerator::save_volatile() {
+    using namespace asmjit;
+    assembler.push(x86::rbx);
+    assembler.push(x86::rsp);
+    assembler.push(x86::rbp);
+    assembler.push(x86::r12);
+    assembler.push(x86::r13);
+    assembler.push(x86::r14);
+    assembler.push(x86::r15);
+
+    assembler.mov(x86::r10, Imm(&program.ctx_ptr->saved_rsp));
+    assembler.mov(x86::ptr_64(x86::r10), x86::rsp);
+}
+
+void CodeGenerator::restore_volatile() {
+    using namespace asmjit;
+    assembler.mov(x86::r10, Imm(&program.ctx_ptr->saved_rsp));
+    assembler.mov(x86::rsp, x86::ptr_64(x86::r10));
+
+    assembler.pop(x86::r15);
+    assembler.pop(x86::r14);
+    assembler.pop(x86::r13);
+    assembler.pop(x86::r12);
+    assembler.pop(x86::rbp);
+    assembler.pop(x86::rsp);
+    assembler.pop(x86::rbx);
+}
+
+void CodeGenerator::init_labels() {
+    function_labels.resize(program.functions.size());
+    for (auto& label : function_labels) {
+        label = assembler.newLabel();
+    }
+    function_address_base_label = assembler.newLabel();
+    uninit_var_label = assembler.newLabel();
+    illegal_cast_label = assembler.newLabel();
+    illegal_arith_label = assembler.newLabel();
+    rt_exception_label = assembler.newLabel();
+}
+
+std::ostream& operator<<(std::ostream& os, const RuntimeException& exception) {
+    switch (exception.type) {
+        case 1:
+            os << "UninitializedVariableException";
+            break;
+        case 2:
+            os << "IllegalCastException";
+            break;
+        case 3:
+            os << "IllegalArithmeticException";
+            break;
+        case 4:
+            os << "RuntimeException";
+            break;
+        default:
+            os << "INVALID EXCEPTION STATE";
+            break;
+    }
+    return os;
+}
+RuntimeException::RuntimeException(int kind) : type(kind) {}
 };  // namespace codegen

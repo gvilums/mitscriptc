@@ -73,6 +73,8 @@ auto main(int argc, const char* argv[]) -> int {
     codegen::Executable compiled(std::move(*prog));
     compiled.run();
 
+    std::cout << ">> DEBUG: successfully ran program" << std::endl;
+
     // std::cout << *prog << std::endl;
 
     // IR::Function& func = prog->functions[prog->functions.size() - 2];

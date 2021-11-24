@@ -5,14 +5,14 @@
 namespace IR {
 
 Program::Program() {
-    this->rt = new runtime::ProgramContext;
+    this->ctx_ptr = new runtime::ProgramContext;
 }
 Program::~Program() {
-    delete this->rt;
+    delete this->ctx_ptr;
 }
 Program::Program(Program&& other) noexcept {
-    this->rt = other.rt;
-    other.rt = nullptr;
+    this->ctx_ptr = other.ctx_ptr;
+    other.ctx_ptr = nullptr;
     this->num_globals = other.num_globals;
     this->functions = std::move(other.functions);
     this->immediates = std::move(other.immediates);
