@@ -510,16 +510,15 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
             set_c.args[2] = {IR::Operand::OpType::VIRT_REG, tlocal_vars[s.first]};
             instr.push_back(set_c);
         } else if (tfree_vars.count(s.first)) {
-            tblock.instructions.push_back({IR::Operation::LOAD_FREE_REF,
-                                           {IR::Operand::OpType::VIRT_REG, treg_cnt},
-                                           {IR::Operand::OpType::VIRT_REG, tfree_vars[s.first]}});
+            // tblock.instructions.push_back({IR::Operation::LOAD_FREE_REF, {IR::Operand::OpType::VIRT_REG, treg_cnt}, {IR::Operand::OpType::VIRT_REG, tfree_vars[s.first]}});
+
             IR::Instruction set_c;
             set_c.op = IR::Operation::SET_CAPTURE;
             set_c.args[0] = {IR::Operand::OpType::LOGICAL, idx};
             set_c.args[1] = fun_reg;
-            set_c.args[2] = {IR::Operand::OpType::VIRT_REG, treg_cnt};
+            set_c.args[2] = {IR::Operand::OpType::VIRT_REG, tfree_vars[s.first]};
             instr.push_back(set_c);
-            treg_cnt++;
+            // treg_cnt++;
         }
         idx++;
     }
