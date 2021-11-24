@@ -36,7 +36,6 @@ Executable::Executable(IR::Program&& program1) : program{std::move(program1)} {
     }
 
     // start at global function
-    assembler.push(0);
     assembler.jmp(cg_state.function_labels.back());
 
     cg_state.function_address_base_label = assembler.newLabel();
@@ -81,8 +80,9 @@ void Executable::process_function(asmjit::x86::Assembler& assembler,
     auto order = get_block_dfs_order(func);
     assembler.push(x86::rbp);
     assembler.mov(x86::rbp, x86::rsp);
-    // reserve stack slots (note: this needs potential rework in future)
-    if (func.stack_slots % 2 == 0) {
+
+    // reserve stack slots. To ensure 16-byte alignment at function call time, align stack to 16 bytes + 8
+    if (func.stack_slots % 2 == 1) {
         assembler.sub(x86::rsp, 8 * func.stack_slots);
     } else {
         assembler.sub(x86::rsp, 8 * (func.stack_slots + 1));
@@ -307,9 +307,10 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
 
             // save current function
             assembler.push(x86::rbx);
-            // if number of stack arguments is odd, stack has to be pushed to preserve alignment:
+            // if number of stack arguments is even, stack has to be pushed to preserve alignment:
             // (even) [rbx] [NULL] (odd) [rip]
-            if (state.current_stack_args % 2 == 1) {
+            // notice that [rbx] messes up alignment
+            if (state.current_stack_args % 2 == 0) {
                 assembler.push(Imm(0));
             }
             if (state.current_stack_args > 0) {
@@ -334,14 +335,18 @@ void Executable::process_block(asmjit::x86::Assembler& assembler,
                 store(assembler, instr.out, x86::rax);
             }
 
-            // restore current closure pointer
-            if (state.current_stack_args > 0) {
-                if (state.current_stack_args % 2 == 1) {
-                    assembler.add(x86::rsp, Imm(8 * (state.current_stack_args + 1)));
-                } else {
-                    assembler.add(x86::rsp, Imm(8 * state.current_stack_args));
-                }
+            int32_t stack_delta = state.current_stack_args;
+            if (state.current_stack_args % 2 == 0) {
+                stack_delta += 1;
             }
+            assembler.add(x86::rsp, Imm(8 * stack_delta));
+//            if (state.current_stack_args > 0) {
+//                if (state.current_stack_args % 2 == 1) {
+//                    assembler.add(x86::rsp, Imm(8 * (state.current_stack_args + 1)));
+//                } else {
+//                    assembler.add(x86::rsp, Imm(8 * state.current_stack_args));
+//                }
+//            }
             assembler.pop(x86::rbx);
         } else if (instr.op == IR::Operation::MOV) {
             x86::Gp target;
