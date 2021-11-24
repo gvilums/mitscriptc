@@ -361,7 +361,8 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::INTCAST) {
             load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_intcast));
-            // TODO check for invalid
+            assembler.cmp(x86::rax, 0b10000);
+            assembler.je(illegal_cast_label);
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::SWAP) {
             if (instr.args[0].type != IR::Operand::MACHINE_REG ||
