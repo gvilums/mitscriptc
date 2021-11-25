@@ -68,6 +68,9 @@ size_t LiveInterval::first_use() const {
 }
 
 auto LiveInterval::split_at(size_t pos) -> LiveInterval {
+    if (pos >= this->ranges.back().second) {
+        assert(false);
+    }
     LiveInterval result;
     result.reg_id = this->reg_id;
     result.split_off = true;
@@ -685,9 +688,9 @@ void allocate_registers(Function& func) {
 
     auto intervals = compute_live_intervals(func, block_ranges);
 
-//     for (const auto& interval : intervals) {
-//         std::cout << interval << std::endl;
-//     }
+     for (const auto& interval : intervals) {
+         std::cout << interval << std::endl;
+     }
 
     auto machine_reg_uses = compute_machine_assignments(func);
 
@@ -696,10 +699,17 @@ void allocate_registers(Function& func) {
 //        std::cout << interval << std::endl;
 //    }
 
+//    for (const auto& interval : intervals) {
+//        if (interval.empty()) {
+//            std::cout << interval << std::endl;
+//            assert(false);
+//        }
+//    }
 
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>
         unhandled(std::make_move_iterator(intervals.begin()),
                   std::make_move_iterator(intervals.end()));
+
 
     std::vector<LiveInterval> active;
     std::vector<LiveInterval> inactive;

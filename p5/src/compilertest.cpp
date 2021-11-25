@@ -71,7 +71,12 @@ auto main(int argc, const char* argv[]) -> int {
 //    std::cout << *prog << std::endl;
 
     codegen::Executable compiled(std::move(*prog));
-    compiled.run();
+    try {
+        compiled.run();
+    } catch (codegen::RuntimeException& exception) {
+        std::cout << exception << std::endl;
+        return 1;
+    }
 
     // std::cout << *prog << std::endl;
     
