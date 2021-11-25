@@ -95,7 +95,7 @@ struct Operand {
         MACHINE_REG,
         STACK_SLOT,
     } type{NONE};
-    size_t index{0};
+    int index{0};
 
     bool operator==(const Operand& other) const {
         return this->type == other.type && this->index == other.index;
@@ -104,9 +104,6 @@ struct Operand {
     bool operator!=(const Operand& other) const {
         return this->type != other.type || this->index != other.index;
     }
-
-    auto get_machine() const -> std::optional<MachineReg>;
-
 };
 
 struct Instruction {
@@ -117,33 +114,33 @@ struct Instruction {
 
 struct PhiNode {
     Operand out;
-    std::vector<std::pair<size_t, Operand>> args;
+    std::vector<std::pair<int, Operand>> args;
 };
 
 struct BasicBlock {
     std::vector<PhiNode> phi_nodes;
     std::vector<Instruction> instructions;
-    std::vector<size_t> predecessors;
-    std::vector<size_t> successors;
+    std::vector<int> predecessors;
+    std::vector<int> successors;
 
     bool is_loop_header{false};
-    size_t final_loop_block{0};
+    int final_loop_block{0};
 };
 
 struct Function {
     std::vector<BasicBlock> blocks;
-    size_t virt_reg_count;
-    size_t parameter_count;
+    int virt_reg_count;
+    int parameter_count;
 
-    size_t stack_slots;
+    int stack_slots;
     
-    auto split_edge(size_t from, size_t to) -> BasicBlock&;
+    auto split_edge(int from, int to) -> BasicBlock&;
 };
 
 struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
-    size_t num_globals{0};
+    int num_globals{0};
     runtime::ProgramContext* ctx_ptr{nullptr};
 
     Program();

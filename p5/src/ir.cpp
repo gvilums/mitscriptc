@@ -18,15 +18,15 @@ Program::Program(Program&& other) noexcept {
     this->immediates = std::move(other.immediates);
 }
 
-auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {
-    size_t new_block_index = this->blocks.size();
+auto Function::split_edge(int32_t from, int32_t to) -> BasicBlock& {
+    auto new_block_index = (int)this->blocks.size();
     this->blocks.push_back({{}, {}, {from}, {to}});
-    for (size_t& succ : this->blocks[from].successors) {
+    for (int32_t& succ : this->blocks[from].successors) {
         if (succ == to) {
             succ = new_block_index;
         }
     }
-    for (size_t& pred : this->blocks[to].predecessors) {
+    for (int32_t& pred : this->blocks[to].predecessors) {
         if (pred == from) {
             pred = new_block_index;
         }
@@ -41,10 +41,4 @@ auto Function::split_edge(size_t from, size_t to) -> BasicBlock& {
     return this->blocks.back();
 }
 
-auto Operand::get_machine() const -> std::optional<MachineReg> {
-    if (this->type == MACHINE_REG) {
-        return static_cast<MachineReg>(this->index);
-    }
-    return std::nullopt;
-}
 };

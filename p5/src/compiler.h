@@ -19,13 +19,13 @@ class Compiler : public Visitor {
     IR::BasicBlock block_;
     IR::Operand opr_;
     bool is_opr_;
-    size_t reg_cnt_;
-    size_t ret_reg_;
+    int reg_cnt_;
+    int ret_reg_;
     
-    std::map<std::string, size_t> local_vars_;
+    std::map<std::string, int> local_vars_;
     std::set<std::string> local_reference_vars_;
-    std::map<std::string, size_t> free_vars_;
-    std::map<std::string, size_t> names_;
+    std::map<std::string, int> free_vars_;
+    std::map<std::string, int> names_;
     
     std::set<std::string> globals_; 
     std::set<std::string> ref_;

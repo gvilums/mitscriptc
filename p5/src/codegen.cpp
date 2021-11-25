@@ -259,7 +259,7 @@ void CodeGenerator::process_block(
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::INIT_CALL) {
             current_args = instr.args[0].index;
-            size_t stack_args = std::min(current_args - 6, 0UL);
+            int32_t stack_args = std::max(current_args - 6, 0);
             // save current function
             assembler.push(x86::rbx);
             // if number of stack arguments is even, stack has to be pushed to preserve alignment:
@@ -278,7 +278,7 @@ void CodeGenerator::process_block(
                 load(to_reg(arg_index), instr.args[1]);
             } else {  // passed on stack
                 load(x86::r10, instr.args[1]);
-                assembler.mov(x86::Mem(x86::rsp, 8 * arg_index), x86::r10);
+                assembler.mov(x86::Mem(x86::rsp, 8 * (arg_index - 6)), x86::r10);
             }
         } else if (instr.op == IR::Operation::EXEC_CALL) {
             load(x86::rbx, instr.args[0]);
@@ -294,9 +294,8 @@ void CodeGenerator::process_block(
                 store(instr.out, x86::rax);
             }
 
-            size_t stack_args = std::min(current_args - 6, 0UL);
-            int32_t stack_delta = stack_args;
-            if (stack_args % 2 == 0) {
+            int32_t stack_delta = std::max(current_args - 6, 0);
+            if (stack_delta % 2 == 0) {
                 stack_delta += 1;
             }
             assembler.add(x86::rsp, Imm(8 * stack_delta));
@@ -605,4 +604,5 @@ std::ostream& operator<<(std::ostream& os, const RuntimeException& exception) {
     return os;
 }
 RuntimeException::RuntimeException(int kind) : type(kind) {}
+
 };  // namespace codegen
