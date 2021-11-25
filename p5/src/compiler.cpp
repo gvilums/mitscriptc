@@ -628,7 +628,15 @@ void Compiler::visit(AST::BinaryExpression& expr) {
         block_.instructions.push_back({IR::Operation::ASSERT_BOOL, IR::Operand(), opr2});
     }
 
-    block_.instructions.push_back({op, {IR::Operand::OpType::VIRT_REG, reg_cnt_}, opr1, opr2});
+    if (expr.op == "/")
+        block_.instructions.push_back({IR::Operation::ASSERT_NONZERO, {}, opr2});
+    
+    IR::Instruction opr;
+    opr.op = op;
+    opr.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
+    opr.args[0] = opr1;
+    opr.args[1] = opr2;
+    block_.instructions.push_back(opr);
     is_opr_ = false;
     ret_reg_ = reg_cnt_;
     reg_cnt_++;
