@@ -50,8 +50,10 @@ auto main(int argc, const char* argv[]) -> int {
 
 //    std::cout << *prog << std::endl;
 
-//    DeadCodeRemover dc_opt(prog);
-//    prog = dc_opt.optimize();
+    DeadCodeRemover dc_opt(prog);
+    prog = dc_opt.optimize();
+
+    // std::cout << *prog << std::endl;
 
 //    try {
 //        ConstPropagator c_prop(prog);
