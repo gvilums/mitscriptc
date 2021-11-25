@@ -5,5 +5,3 @@ private:
   - infinite loop
 - test21-list.mit
   - infinite loop
-- test31-usingGlobal.mit
-  - memory corruption
