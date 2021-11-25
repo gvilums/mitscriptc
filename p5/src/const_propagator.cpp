@@ -8,12 +8,14 @@ ConstPropagator::ConstPropagator(IR::Program* prog) : prog_(prog){}
 bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_map<size_t, runtime::Value> &const_var) {
     bool can_eliminate = true;
     for (auto& arg : ins.args) {
-        if (arg.type == IR::Operand::VIRT_REG && const_var.count(arg.index))
-            arg = {IR::Operand::IMMEDIATE, const_var[arg.index]};
-        else if (arg.type == IR::Operand::IMMEDIATE)
+        if (arg.type == IR::Operand::VIRT_REG && const_var.count(arg.index))  {
+            // TODO FIXME
+//            arg = {IR::Operand::IMMEDIATE, const_var[arg.index]};
+        } else if (arg.type == IR::Operand::IMMEDIATE) {
             continue;
-        else if (arg.type != IR::Operand::NONE)
+        } else if (arg.type != IR::Operand::NONE) {
             can_eliminate = false;
+        }
     }
 
     if (!can_eliminate)
@@ -147,7 +149,8 @@ void ConstPropagator::propagate_const() {
                     for (auto arg : pn.args)
                         if (arg.second.type == IR::Operand::VIRT_REG && const_var.count(arg.second.index)) {
                             size_t val_idx = find(prog_->immediates.begin(), prog_->immediates.end(), const_var[arg.second.index]) - prog_->immediates.begin();
-                            arg.second = {IR::Operand::IMMEDIATE, val_idx};
+                            // TODO FIXME
+//                            arg.second = {IR::Operand::IMMEDIATE, val_idx};
                         }
                 }
             }

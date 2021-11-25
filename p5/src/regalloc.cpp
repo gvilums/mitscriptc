@@ -290,7 +290,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                     break;
                 case Operation::LOAD_ARG:
                     // argument registers must be preserved from beginning to only point of use
-                    for (size_t arg = 0; arg < std::min(func.parameter_count, 6UL); ++arg) {
+                    for (size_t arg = 0; arg < std::min(func.parameter_count, 6); ++arg) {
                         builders[static_cast<size_t>(arg_regs[arg])].push_range({0, instr_id - 1});
                     }
                     break;

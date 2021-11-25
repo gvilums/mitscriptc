@@ -1,13 +1,13 @@
-b = fun(a, b, c, d, e, f, g) {
-    return a + b + c + d + e + f + g;
+z = 3;
+x = fun(){
+	global y;
+	y = 7;
+	return 4;
 };
-
-c = fun(a, b, c, d, e, f, g, h) {
-    return a + b + c + d + e + f + g + h;
-};
-
-// print("Should print: 7");
-// print(b(1,1,1,1,1,1,1));
-
-print("Should print: 8");
-print(c(1,1,1,1,1,1,1,1));
+z = z + x();
+print("Should be 7");
+print(y);
+y = 2;
+x();
+print("Should still be 7");
+print(z == y);

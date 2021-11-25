@@ -184,7 +184,7 @@ void Compiler::visit(AST::Assignment& expr) {
     } else if (expr.Lhs->isFieldDereference()) {
         AST::FieldDereference* exp = ((AST::FieldDereference*)expr.Lhs);
         exp->baseexpr->accept(*((Visitor*)this));
-        size_t rec_reg = ret_reg_;
+        int rec_reg = ret_reg_;
         block_.instructions.push_back({IR::Operation::ASSERT_RECORD,
                                        IR::Operand(),
                                        {IR::Operand::OpType::VIRT_REG, rec_reg}});
@@ -193,7 +193,7 @@ void Compiler::visit(AST::Assignment& expr) {
         if (!is_opr_)
             opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 
-        size_t idx;
+        int idx;
         if (!str_const_.count(exp->field)) {
             program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, exp->field));
             str_const_[exp->field] = imm_cnt_++;
@@ -210,7 +210,7 @@ void Compiler::visit(AST::Assignment& expr) {
     } else if (expr.Lhs->isIndexExpression()) {
         AST::IndexExpression* exp = ((AST::IndexExpression*)expr.Lhs);
         exp->baseexpr->accept(*((Visitor*)this));
-        size_t rec_reg = ret_reg_;
+        int rec_reg = ret_reg_;
         block_.instructions.push_back({IR::Operation::ASSERT_RECORD,
                                        IR::Operand(),
                                        {IR::Operand::OpType::VIRT_REG, rec_reg}});
@@ -234,7 +234,7 @@ void Compiler::visit(AST::Assignment& expr) {
 }
 
 void Compiler::visit(AST::IfStatement& expr) {
-    size_t last_idx = fun_->blocks.size(), cond_idx, last_if_idx, last_else_idx, next_idx;
+    int last_idx = fun_->blocks.size(), cond_idx, last_if_idx, last_else_idx, next_idx;
     last_idx = fun_->blocks.size();
     cond_idx = last_idx + 1;
     last_else_idx = cond_idx;
@@ -254,7 +254,7 @@ void Compiler::visit(AST::IfStatement& expr) {
 
     fun_->blocks.push_back(block_);
 
-    std::map<std::string, size_t> tlocal_vars1 = local_vars_, tlocal_vars2 = local_vars_;
+    std::map<std::string, int> tlocal_vars1 = local_vars_, tlocal_vars2 = local_vars_;
     block_ = IR::BasicBlock();
     block_.predecessors.push_back(cond_idx);
 
@@ -307,7 +307,7 @@ void Compiler::visit(AST::IfStatement& expr) {
 }
 
 void Compiler::visit(AST::WhileLoop& expr) {  // could contain empty blocks
-    size_t last_idx, header_idx, last_body_idx;
+    int last_idx, header_idx, last_body_idx;
 
     last_idx = fun_->blocks.size();
     header_idx = last_idx + 1;
@@ -326,7 +326,7 @@ void Compiler::visit(AST::WhileLoop& expr) {  // could contain empty blocks
     block_.instructions.push_back({IR::Operation::BRANCH, IR::Operand(), opr_});
     fun_->blocks.push_back(block_);
 
-    std::map<std::string, size_t> tlocal_vars = local_vars_;
+    std::map<std::string, int> tlocal_vars = local_vars_;
     block_ = IR::BasicBlock();
     block_.predecessors.push_back(header_idx);
 
@@ -337,7 +337,7 @@ void Compiler::visit(AST::WhileLoop& expr) {  // could contain empty blocks
     fun_->blocks[header_idx].final_loop_block = last_body_idx;
     fun_->blocks.push_back(block_);
 
-    std::map<size_t, size_t> new_args;
+    std::map<int, int> new_args;
     for (const auto& var : tlocal_vars) {
         if (local_vars_[var.first] != var.second) {
             IR::PhiNode pn;
@@ -382,16 +382,16 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     bool tscope = global_scope_;
     std::set<string> tglobals = globals_;
     std::set<string> tref = ref_;
-    size_t treg_cnt = reg_cnt_;
-    size_t tret_reg = ret_reg_;
+    int treg_cnt = reg_cnt_;
+    int tret_reg = ret_reg_;
 
-    std::map<std::string, size_t> tlocal_vars = std::move(local_vars_);
+    std::map<std::string, int> tlocal_vars = std::move(local_vars_);
     std::set<std::string> tlocal_reference_vars = std::move(local_reference_vars_);
-    std::map<std::string, size_t> tfree_vars = std::move(free_vars_);
+    std::map<std::string, int> tfree_vars = std::move(free_vars_);
 
-    local_vars_ = std::map<std::string, size_t>();
+    local_vars_ = std::map<std::string, int>();
     local_reference_vars_ = std::set<std::string>();
-    free_vars_ = std::map<std::string, size_t>();
+    free_vars_ = std::map<std::string, int>();
 
     fun_ = new IR::Function;
     block_ = IR::BasicBlock();
@@ -460,13 +460,13 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
             free_vars_[s] = -1;
 
     IR::Operand fun_reg = {IR::Operand::OpType::VIRT_REG, treg_cnt};
-    size_t b_idx = tblock.instructions.size();
+    int b_idx = tblock.instructions.size();
     tblock.instructions.push_back({});
 
     tret_reg = treg_cnt;
     treg_cnt++;
 
-    size_t args_idx = 0;
+    int args_idx = 0;
     std::vector<IR::Instruction> a_refs;
     for (const auto& s: expr.arguments) {
         IR::Instruction l_arg;
@@ -476,7 +476,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
         block_.instructions.push_back(l_arg);
 
         if (local_reference_vars_.count(s)) {
-            size_t new_reg = reg_cnt_++;
+            int new_reg = reg_cnt_++;
             a_refs.push_back(
                 {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, new_reg}});
             IR::Instruction s_ref;
@@ -491,7 +491,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     for (const auto &s : a_refs)
         block_.instructions.push_back(s);
 
-    size_t idx = 0;
+    int idx = 0;
     vector<IR::Instruction> instr;
    
     for (const auto& s : free_vars_) {
@@ -547,9 +547,9 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     IR::Instruction a_closure;
     a_closure.op = IR::Operation::ALLOC_CLOSURE;
     a_closure.out = fun_reg;
-    a_closure.args[0] = {IR::Operand::OpType::LOGICAL, program_->functions.size()};
-    a_closure.args[1] = {IR::Operand::OpType::LOGICAL, expr.arguments.size()};
-    a_closure.args[2] = {IR::Operand::OpType::LOGICAL, free_vars_.size()};
+    a_closure.args[0] = {IR::Operand::OpType::LOGICAL, (int)program_->functions.size()};
+    a_closure.args[1] = {IR::Operand::OpType::LOGICAL, (int)expr.arguments.size()};
+    a_closure.args[2] = {IR::Operand::OpType::LOGICAL, (int)free_vars_.size()};
     tblock.instructions[b_idx] = a_closure;
 
     block_.instructions.push_back(
@@ -667,9 +667,9 @@ void Compiler::visit(AST::Call& expr) {
     expr.expr->accept(*((Visitor*)this));
     block_.instructions.push_back(
         {IR::Operation::ASSERT_CLOSURE, IR::Operand(), {IR::Operand::VIRT_REG, ret_reg_}});
-    size_t fun_reg = ret_reg_;
+    int fun_reg = ret_reg_;
 
-    size_t arg_cnt = 0;
+    int arg_cnt = 0;
     std::vector<IR::Instruction> args;
     for (auto c : expr.arguments) {
         c->accept(*((Visitor*)this));
@@ -706,11 +706,11 @@ void Compiler::visit(AST::Call& expr) {
 
 void Compiler::visit(AST::FieldDereference& expr) {
     expr.baseexpr->accept(*((Visitor*)this));
-    size_t rec_reg = ret_reg_;
+    int rec_reg = ret_reg_;
     block_.instructions.push_back(
         {IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
 
-    size_t idx;
+    int idx;
     if (!str_const_.count(expr.field)) {
         program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, expr.field));
         str_const_[expr.field] = imm_cnt_++;
@@ -730,7 +730,7 @@ void Compiler::visit(AST::FieldDereference& expr) {
 
 void Compiler::visit(AST::IndexExpression& expr) {
     expr.baseexpr->accept(*((Visitor*)this));
-    size_t rec_reg = ret_reg_;
+    int rec_reg = ret_reg_;
     block_.instructions.push_back(
         {IR::Operation::ASSERT_RECORD, IR::Operand(), {IR::Operand::OpType::VIRT_REG, rec_reg}});
 
@@ -750,7 +750,7 @@ void Compiler::visit(AST::IndexExpression& expr) {
 }
 
 void Compiler::visit(AST::Record& expr) {
-    size_t rec_reg = reg_cnt_;
+    int rec_reg = reg_cnt_;
     block_.instructions.push_back(
         {IR::Operation::ALLOC_REC, {IR::Operand::OpType::VIRT_REG, rec_reg}});
     reg_cnt_++;
@@ -761,7 +761,7 @@ void Compiler::visit(AST::Record& expr) {
         if (!is_opr_)
             opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
 
-        size_t idx;
+        int idx;
         if (!str_const_.count(p.first)) {
             program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, p.first));
             str_const_[p.first] = imm_cnt_++;
@@ -783,7 +783,7 @@ void Compiler::visit(AST::Record& expr) {
 void Compiler::visit(AST::IntegerConstant& expr) {
     is_opr_ = true;
     int val = expr.getVal();
-    size_t idx;
+    int idx;
     if (!int_const_.count(val)) {
         program_->immediates.push_back(runtime::to_value(val));  // val
         int_const_[val] = imm_cnt_++;
@@ -800,7 +800,7 @@ void Compiler::visit(AST::StringConstant& expr) {
         is_opr_ = true;
         string str = s.substr(1, s.size() - 2);
 
-        size_t idx;
+        int idx;
         if (!str_const_.count(str)) {
             program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, str));  // str
             str_const_[str] = imm_cnt_++;
@@ -839,7 +839,7 @@ void Compiler::visit(AST::StringConstant& expr) {
 
 void Compiler::visit(AST::BoolConstant& expr) {
     is_opr_ = true;
-    size_t idx = expr.getVal() ? 1 : 2;
+    int idx = expr.getVal() ? 1 : 2;
     opr_ = {IR::Operand::OpType::IMMEDIATE, idx};
 }
 
