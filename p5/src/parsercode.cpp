@@ -104,10 +104,10 @@ AST::Assignment* Assignment(antlr4::CommonTokenStream& tokens, AST::Expression* 
 AST::Statement* CallStatement(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
     antlr4::Token* token = tokens.get(tokens.index());
     AST::Call* Cl = Call(tokens, Lhs);
-    Cl->setStatement();
 
     if (!Cl)
         return NULL;
+    Cl->setStatement();
     check(SEMICOLON);
     return (AST::Statement*)Cl;
 }
@@ -536,13 +536,11 @@ AST::Call* Call(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
 
     AST::Call* Cl = new AST::Call();
     Cl->addExpr(Lhs);
-
     check(BROPEN);
 
     token = tokens.get(tokens.index());
     if (token->getType() != lexer::MITScript::BRCLOSE) {
         AST::Expression* Arg = Expression(tokens);
-
         if (!Arg)
             return NULL;
         Cl->addArg(Arg);
@@ -556,6 +554,7 @@ AST::Call* Call(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
             token = tokens.get(tokens.index());
         }
     }
+    
     check(BRCLOSE);
     return Cl;
 }
