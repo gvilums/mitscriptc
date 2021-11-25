@@ -145,7 +145,9 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::GT) {
             load(x86::r10, instr.args[0]);
             load(x86::r11, instr.args[1]);
-            assembler.cmp(x86::r10, x86::r11);
+            assembler.shr(x86::r10, Imm(4));
+            assembler.shr(x86::r11, Imm(4));
+            assembler.cmp(x86::r10d, x86::r11d);
             assembler.setg(x86::r10b);
             assembler.and_(x86::r10, Imm(0b1));
             assembler.shl(x86::r10, 4);
@@ -154,7 +156,9 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::GEQ) {
             load(x86::r10, instr.args[0]);
             load(x86::r11, instr.args[1]);
-            assembler.cmp(x86::r10, x86::r11);
+            assembler.shr(x86::r10, Imm(4));
+            assembler.shr(x86::r11, Imm(4));
+            assembler.cmp(x86::r10d, x86::r11d);
             assembler.setge(x86::r10b);
             assembler.and_(x86::r10, Imm(0b1));
             assembler.shl(x86::r10, 4);
