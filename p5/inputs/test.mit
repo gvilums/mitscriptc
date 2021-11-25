@@ -1,3 +1,10 @@
+Ncars = 50;
+Nsteps = 20;
+
+Car = fun(x, y){
+   return { x:x; y:y; vx:0; vy:0; };
+};
+
 manycars = fun(n, xbnd ){
   carmap = {n:n;};
   x = 0;
@@ -20,7 +27,6 @@ manycars = fun(n, xbnd ){
   return carmap;
 };
 
+
 cars = manycars(Ncars, 100);
-
-
 
