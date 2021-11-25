@@ -131,7 +131,7 @@ void CodeGenerator::process_block(
             load(x86::r10, instr.args[1]);
             assembler.shr(x86::rax, 4);
             assembler.shr(x86::r10, 4);
-            assembler.xor_(x86::edx, x86::edx);
+            assembler.cdq();
             assembler.idiv(x86::r10d);
             assembler.shl(x86::rax, 4);
             assembler.or_(x86::rax, Imm(static_cast<size_t>(runtime::ValueType::Int)));
