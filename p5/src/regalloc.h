@@ -48,6 +48,7 @@ struct IntervalBuilder {
     void shorten(size_t new_begin);
     
     auto finish() -> LiveInterval;
+    auto empty() -> bool;
 };
 
 struct IntervalGroup {
