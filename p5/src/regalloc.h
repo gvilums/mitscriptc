@@ -78,8 +78,8 @@ auto compute_machine_assignments(
 ) -> std::vector<LiveInterval>;
 
 auto mapping_to_instructions(
-    const std::vector<std::pair<Operand, Operand>>& mapping
-) -> std::vector<Instruction>;
+    const std::vector<std::pair<Operand, Operand>>& mapping,
+    std::vector<Instruction>& instructions);
 
 auto try_alloc_reg(
     LiveInterval& current,

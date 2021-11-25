@@ -345,10 +345,9 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
     return intervals;
 }
 
-auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& mapping)
-    -> std::vector<Instruction> {
-    std::vector<Instruction> instructions;
-    instructions.reserve(mapping.size());
+auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& mapping,
+                             std::vector<Instruction>& instructions) {
+    instructions.reserve(instructions.size() + mapping.size());
 
     std::vector<Operand> operands;
     std::vector<Operand> inputs;
@@ -405,8 +404,6 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
     for (const auto& [from, to] : in_only) {
         instructions.push_back(Instruction{Operation::MOV, to, from});
     }
-
-    return instructions;
 }
 
 auto compute_live_intervals(const Function& func,
@@ -656,18 +653,18 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
     switch (instr.op) {
         case Operation::ADD:
         case Operation::REC_LOAD_INDX:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RSI));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::RDX));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
             break;
         case Operation::EQ:
         case Operation::REC_LOAD_NAME:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RDI));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::RSI));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RSI));
             break;
         case Operation::MUL:
         case Operation::DIV:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RAX));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::R10));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RAX));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::R10));
             break;
         case Operation::ADD_INT:
         case Operation::SUB:
@@ -676,8 +673,8 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::AND:
         case Operation::OR:
         case Operation::REF_STORE:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::R10));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::R11));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::R11));
             break;
         case Operation::NOT:
         case Operation::REF_LOAD:
@@ -688,38 +685,38 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::ASSERT_CLOSURE:
         case Operation::ASSERT_NONZERO:
         case Operation::BRANCH:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::R10));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
             break;
         case Operation::REC_STORE_NAME:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RDI));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::RSI));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::RDX));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RSI));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
             break;
         case Operation::REC_STORE_INDX:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RSI));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::RDX));
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::RCX));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RCX));
             break;
         case Operation::ALLOC_REF:
         case Operation::ALLOC_REC:
         case Operation::ALLOC_CLOSURE:
             break;
         case Operation::SET_CAPTURE:
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::R10));
-            mapping.emplace_back(instr.args[2], Operand(MachineReg::R11));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::R10));
+            mapping.emplace_back(instr.args[2], Operand::from(MachineReg::R11));
             break;
         case Operation::SET_ARG:
         case Operation::STORE_GLOBAL:
-            mapping.emplace_back(instr.args[1], Operand(MachineReg::R10));
+            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::R10));
             break;
         case Operation::EXEC_CALL:
             break;
         case Operation::RETURN:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RAX));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RAX));
             break;
         case Operation::PRINT:
         case Operation::INTCAST:
-            mapping.emplace_back(instr.args[0], Operand(MachineReg::RDI));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
             break;
         case Operation::INPUT:
         case Operation::SWAP:
@@ -731,6 +728,12 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
             break;
     }
 }
+
+//void insert_mapping(std::vector<Instruction>& instructions,
+//                    const std::vector<std::pair<size_t, std::pair<Operand, Operand>>>& resolves,
+//                    const Instruction& current_instr,
+//                    size_t current_index) {
+//}
 
 void rewrite_instructions(Function& func,
                           const std::vector<IntervalGroup>& groups,
@@ -745,18 +748,30 @@ void rewrite_instructions(Function& func,
         std::vector<Instruction> new_instructions;
 
         for (const auto& instr : block.instructions) {
-            new_instructions.push_back(set_instr_machine_regs(instr, instr_id, groups));
-            instr_id += 2;
+            Instruction new_instr = set_instr_machine_regs(instr, instr_id, groups);
 
             std::vector<std::pair<Operand, Operand>> current_resolves;
             while (resolve_index < resolves.size() && resolves[resolve_index].first < instr_id) {
                 current_resolves.push_back(resolves[resolve_index].second);
                 ++resolve_index;
             }
-            std::vector<Instruction> resolving_moves = mapping_to_instructions(current_resolves);
-            new_instructions.insert(new_instructions.end(), resolving_moves.begin(),
-                                    resolving_moves.end());
+            generate_instr_mapping(new_instr, current_resolves);
+
+            mapping_to_instructions(current_resolves, new_instructions);
+
+            new_instructions.push_back(new_instr);
+            instr_id += 2;
+
         }
+
+        // TODO check if the following is necessary
+//        std::vector<std::pair<Operand, Operand>> edge_resolves;
+//        while (resolve_index < resolves.size() && resolves[resolve_index].first < instr_id) {
+//            edge_resolves.push_back(resolves[resolve_index].second);
+//            ++resolve_index;
+//        }
+//        mapping_to_instructions(edge_resolves, new_instructions);
+
 
         block.phi_nodes.clear();
         block.instructions = std::move(new_instructions);
@@ -888,7 +903,9 @@ void allocate_registers(Function& func) {
     // nonsuccessive interval split handling
     size_t initial_blocks = func.blocks.size();
     for (size_t pred = 0; pred < initial_blocks; ++pred) {
-        for (size_t succ : func.blocks[pred].successors) {
+        // TODO CHECK THIS
+        for (size_t i = 0;i < func.blocks[pred].successors.size(); ++i) {
+            size_t succ = func.blocks[pred].successors[i];
             std::vector<std::pair<Operand, Operand>> resolve_moves;
             for (const auto& phi : func.blocks[succ].phi_nodes) {
                 for (const auto& [phi_pred, operand] : phi.args) {
@@ -924,7 +941,7 @@ void allocate_registers(Function& func) {
                 }
             }
             if (!resolve_moves.empty()) {
-                func.split_edge(pred, succ).instructions = mapping_to_instructions(resolve_moves);
+                mapping_to_instructions(resolve_moves, func.split_edge(pred, succ).instructions);
             }
         }
     }

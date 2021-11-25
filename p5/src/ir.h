@@ -97,7 +97,12 @@ struct Operand {
     } type{NONE};
     int index{0};
 
-    explicit Operand(MachineReg reg) : type{MACHINE_REG}, index{static_cast<int>(reg)} {}
+//    Operand() = default;
+//    explicit Operand(MachineReg reg) : type{MACHINE_REG}, index{static_cast<int>(reg)} {}
+
+    static auto from(MachineReg reg) -> Operand {
+        return {MACHINE_REG, static_cast<int>(reg)};
+    }
 
     bool operator==(const Operand& other) const {
         return this->type == other.type && this->index == other.index;
