@@ -148,7 +148,8 @@ void Compiler::visit(AST::Assignment& expr) {
         string s = ((AST::StringConstant*)expr.Lhs)->getVal();
 
         if (global_scope_ && !globals_.count(s)) {
-            names_[s] = names_cnt_++;
+            if (!names_.count(s))
+                names_[s] = names_cnt_++;
             globals_.insert(s);
         }
 
@@ -492,10 +493,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 
     size_t idx = 0;
     vector<IR::Instruction> instr;
-    for (const auto& s : local_reference_vars_) {
-        std::cout << s << std::endl;
-    }
-
+   
     for (const auto& s : free_vars_) {
         block_.instructions.push_back({IR::Operation::LOAD_FREE_REF,
                                        {IR::Operand::OpType::VIRT_REG, reg_cnt_},
@@ -812,7 +810,8 @@ void Compiler::visit(AST::StringConstant& expr) {
         opr_ = {IR::Operand::OpType::IMMEDIATE, idx};
     } else {
         if (global_scope_ && !globals_.count(s)) {
-            names_[s] = names_cnt_++;
+            if (!names_.count(s))
+                names_[s] = names_cnt_++;
             globals_.insert(s);
         }
 
