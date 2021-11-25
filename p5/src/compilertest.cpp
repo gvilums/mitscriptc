@@ -60,7 +60,7 @@ auto main(int argc, const char* argv[]) -> int {
 //        std::cout << "ERROR: " << e << std::endl;
 //    }
 
-//    std::cout << *prog << std::endl;
+    std::cout << *prog << std::endl;
 
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
