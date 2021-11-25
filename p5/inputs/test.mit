@@ -1,13 +1,42 @@
-plus = fun(N){
-  state = 1;
-  rv = 1;
-  f = fun(){
-        v = 1;
-        while(true){ 
-            state.carry = state.carry + N; 
-        }
-        rv.plus(v);
-  };
+List = fun(){ this = {head:None;
+        len: fun(){ if(this.head == None){ return 0; }else{ return this.head.len; }};
+        plus: fun(v){ this.head = {len:this.len()+1 ; car:v; cdr:this.head;}; };
+
+        forall: fun(f){ t = this.head;
+                print("called forall");
+                while(!(t == None)){
+                        print("loop");
+                        print(t.car);
+                        f(t.car);
+                        t = t.cdr;
+                        print(t);
+                }
+        };
+        print: fun(){
+                        t = this.head;
+                        s = "";
+                        while(!(t == None)){
+                                s = s + (t.car)+ ", ";
+                                t = t.cdr;
+                        }
+                        print(s);
+                };
+};
+return this;
 };
 
 
+
+print("test");
+l1 = List();
+l1.plus({v1: 5, v2:5});
+l1.print();
+l1.forall(fun(pair){
+                  v = pair.v1 + pair.v2;
+                  while(v >= N){
+                      v = v - N;
+                      state.carry = state.carry + 1;
+                  }
+                  rv.plus(v);
+              });
+print("ciao1");
