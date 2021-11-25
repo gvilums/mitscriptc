@@ -16,7 +16,7 @@ namespace IR {
 
 const size_t MACHINE_REG_COUNT = 11;
 
-enum class MachineReg : size_t {
+enum class MachineReg {
     RDI, // gp, first arg, volatile
     RSI, // gp, second arg, volatile
     RDX, // gp, third arg, volatile
@@ -96,6 +96,8 @@ struct Operand {
         STACK_SLOT,
     } type{NONE};
     int index{0};
+
+    explicit Operand(MachineReg reg) : type{MACHINE_REG}, index{static_cast<int>(reg)} {}
 
     bool operator==(const Operand& other) const {
         return this->type == other.type && this->index == other.index;

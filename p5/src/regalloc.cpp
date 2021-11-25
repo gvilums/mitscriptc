@@ -400,7 +400,7 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
         }
     }
 
-    // finally handle all input only registers. Can be handled last as they are no overwritten by
+    // finally, handle all input only registers. Can be handled last as they are not overwritten by
     // def.
     for (const auto& [from, to] : in_only) {
         instructions.push_back(Instruction{Operation::MOV, to, from});
@@ -652,6 +652,86 @@ auto set_instr_machine_regs(const Instruction& instr,
     return changed;
 }
 
+void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Operand, Operand>>& mapping) {
+    switch (instr.op) {
+        case Operation::ADD:
+        case Operation::REC_LOAD_INDX:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RSI));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::RDX));
+            break;
+        case Operation::EQ:
+        case Operation::REC_LOAD_NAME:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RDI));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::RSI));
+            break;
+        case Operation::MUL:
+        case Operation::DIV:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RAX));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::R10));
+            break;
+        case Operation::ADD_INT:
+        case Operation::SUB:
+        case Operation::GT:
+        case Operation::GEQ:
+        case Operation::AND:
+        case Operation::OR:
+        case Operation::REF_STORE:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::R10));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::R11));
+            break;
+        case Operation::NOT:
+        case Operation::REF_LOAD:
+        case Operation::ASSERT_BOOL:
+        case Operation::ASSERT_INT:
+        case Operation::ASSERT_STRING:
+        case Operation::ASSERT_RECORD:
+        case Operation::ASSERT_CLOSURE:
+        case Operation::ASSERT_NONZERO:
+        case Operation::BRANCH:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::R10));
+            break;
+        case Operation::REC_STORE_NAME:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RDI));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::RSI));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::RDX));
+            break;
+        case Operation::REC_STORE_INDX:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RSI));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::RDX));
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::RCX));
+            break;
+        case Operation::ALLOC_REF:
+        case Operation::ALLOC_REC:
+        case Operation::ALLOC_CLOSURE:
+            break;
+        case Operation::SET_CAPTURE:
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::R10));
+            mapping.emplace_back(instr.args[2], Operand(MachineReg::R11));
+            break;
+        case Operation::SET_ARG:
+        case Operation::STORE_GLOBAL:
+            mapping.emplace_back(instr.args[1], Operand(MachineReg::R10));
+            break;
+        case Operation::EXEC_CALL:
+            break;
+        case Operation::RETURN:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RAX));
+            break;
+        case Operation::PRINT:
+        case Operation::INTCAST:
+            mapping.emplace_back(instr.args[0], Operand(MachineReg::RDI));
+            break;
+        case Operation::INPUT:
+        case Operation::SWAP:
+        case Operation::INIT_CALL:
+        case Operation::LOAD_ARG:
+        case Operation::LOAD_FREE_REF:
+        case Operation::MOV:
+        case Operation::LOAD_GLOBAL:
+            break;
+    }
+}
+
 void rewrite_instructions(Function& func,
                           const std::vector<IntervalGroup>& groups,
                           std::vector<std::pair<size_t, std::pair<Operand, Operand>>> resolves) {
@@ -875,12 +955,9 @@ void allocate_registers(Function& func) {
             }
         }
     }
+
     std::sort(resolve_moves.begin(), resolve_moves.end(),
               [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
-
-    // for (const auto& [pos, operands] : resolve_moves) {
-    //     std::cout << pos << ": " << operands.first << " -> " << operands.second << std::endl;
-    // }
 
     rewrite_instructions(func, interval_groups, resolve_moves);
     func.stack_slots = stack_slot;
