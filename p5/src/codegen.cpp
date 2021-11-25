@@ -360,7 +360,7 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::INPUT) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_input));
-            store(instr.out, x86::r10);
+            store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::INTCAST) {
             load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_intcast));
@@ -416,7 +416,7 @@ void CodeGenerator::store(const IR::Operand& op, const asmjit::x86::Gp& reg) {
             assembler.mov(to_mem(op.index), reg);
             break;
         case IR::Operand::NONE:
-            std::cerr << "storing to none, no instruction emitted" << std::endl;
+//            std::cerr << "storing to none, no instruction emitted" << std::endl;
             break;
         default:
             assert(false && "invalid operand");

@@ -1,45 +1,14 @@
-List = fun(){ this = {head:None;
-        len: fun(){ if(this.head == None){ return 0; }else{ return this.head.len; }};
-        plus: fun(v){ this.head = {len:this.len()+1 ; car:v; cdr:this.head;}; };
-
-        print: fun(){
-                t = this.head;
-                s = "";
-                while(!(t == None)){
-                        s = s + (t.car)+ ", ";
-                        t = t.cdr;
-                }
-                print(s);
-        };
-        forall: fun(f){ t = this.head;
-                while(!(t == None)){
-                        f(t.car);
-                        t = t.cdr;
-                }
-        };
-};
-return this;
- };
-
-
 plus = fun(){
-  state = {carry:0;};
-  rv = List();
-  temp = List();
+  rv = {};
   rec = {v1: 5; v2: 5;};
-  temp.plus(rec);
-  temp.forall(
-    fun(pair){
+  f = fun(pair){
+      state = 0;
       N = 10;
-      v = pair.v1 + pair.v2 + state.carry;
-      state.carry = 0;
-      while(v >= N){
-        v = v - N;
-        state.carry = state.carry + 1;
-      }
-      rv.plus(v);
-    }
-  );
+      v = pair.v1 + pair.v2 + state;
+      v = v - N;
+      rv.plus = v;
+    };
+    f(rec);
 };
 
 

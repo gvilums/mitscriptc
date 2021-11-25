@@ -1,0 +1,6 @@
+l.len() = 85
+big.len = 2720
+Duplicates l other: 0
+Duplicates l l: 263
+Duplicates other other: 43
+Duplicates big big: 2720

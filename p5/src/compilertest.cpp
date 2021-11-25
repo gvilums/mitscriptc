@@ -60,12 +60,13 @@ auto main(int argc, const char* argv[]) -> int {
 //        std::cout << "ERROR: " << e << std::endl;
 //    }
 
-    std::cout << *prog << std::endl;
+//    std::cout << *prog << std::endl;
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
+//    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
 //    IR::allocate_registers(prog->functions.back());
 
 //    std::cout << *prog << std::endl;

@@ -1,0 +1,46 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = ["\"printing: \"", None],
+			parameter_count = 1,
+			local_vars = [x],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [oldprint],
+			instructions = 
+			[
+				load_global	0
+				load_const	0
+				load_local	0
+				add
+				call	1
+				load_const	1
+				return
+			]
+		}
+	],
+	constants = [42, 42],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [print, intcast, input, oldprint],
+	instructions = 
+	[
+		load_global	0
+		store_global	3
+		load_func	0
+		alloc_closure	0
+		store_global	0
+		load_global	0
+		load_const	0
+		call	1
+		load_global	3
+		load_const	1
+		call	1
+	]
+}

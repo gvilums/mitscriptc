@@ -1,0 +1,15 @@
+prime = fun(x){
+	if (x < 2){return false;}
+	i = 2;
+	while (i < x){
+		if ((x / i) * i == x){return false;}
+		i = i + 1;
+	}
+	return true;
+};
+
+i = 2;
+while(i < 30){
+	print("is " + i + " prime? " + prime(i));
+	i = i + 1;
+}
