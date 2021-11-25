@@ -2,41 +2,46 @@ List = fun(){ this = {head:None;
         len: fun(){ if(this.head == None){ return 0; }else{ return this.head.len; }};
         plus: fun(v){ this.head = {len:this.len()+1 ; car:v; cdr:this.head;}; };
 
-        forall: fun(f){ t = this.head;
-                print("called forall");
+        print: fun(){
+                t = this.head;
+                s = "";
                 while(!(t == None)){
-                        print("loop");
-                        print(t.car);
+                        s = s + (t.car)+ ", ";
+                        t = t.cdr;
+                }
+                print(s);
+        };
+        forall: fun(f){ t = this.head;
+                while(!(t == None)){
                         f(t.car);
                         t = t.cdr;
-                        print(t);
                 }
         };
-        print: fun(){
-                        t = this.head;
-                        s = "";
-                        while(!(t == None)){
-                                s = s + (t.car)+ ", ";
-                                t = t.cdr;
-                        }
-                        print(s);
-                };
 };
 return this;
+ };
+
+
+plus = fun(){
+  state = {carry:0;};
+  rv = List();
+  temp = List();
+  rec = {v1: 5; v2: 5;};
+  temp.plus(rec);
+  temp.forall(
+    fun(pair){
+      N = 10;
+      v = pair.v1 + pair.v2 + state.carry;
+      state.carry = 0;
+      while(v >= N){
+        v = v - N;
+        state.carry = state.carry + 1;
+      }
+      rv.plus(v);
+    }
+  );
 };
 
 
+plus();
 
-print("test");
-l1 = List();
-l1.plus({v1: 5, v2:5});
-l1.print();
-l1.forall(fun(pair){
-                  v = pair.v1 + pair.v2;
-                  while(v >= N){
-                      v = v - N;
-                      state.carry = state.carry + 1;
-                  }
-                  rv.plus(v);
-              });
-print("ciao1");
