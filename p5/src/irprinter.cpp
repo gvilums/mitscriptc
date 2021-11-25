@@ -145,7 +145,7 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 }
 
 std::ostream& operator<<(std::ostream& os, const IR::LiveInterval& interval) {
-    os << "interval reg id " << interval.reg_id << " {" << std::endl;
+    os << "interval reg id: " << interval.reg_id << " {" << std::endl;
     os << "ranges: ";
 	for (const auto [begin, end] : interval.ranges) {
 		std::cout << begin << " " << end << "; ";

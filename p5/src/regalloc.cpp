@@ -68,6 +68,9 @@ size_t LiveInterval::first_use() const {
 }
 
 auto LiveInterval::split_at(size_t pos) -> LiveInterval {
+    if (pos >= this->ranges.back().second) {
+        assert(false);
+    }
     LiveInterval result;
     result.reg_id = this->reg_id;
     result.split_off = true;
@@ -132,6 +135,10 @@ auto IntervalBuilder::finish() -> LiveInterval {
         }
     }
     return LiveInterval{std::move(merged_ranges), std::move(this->use_locations), this->reg_id};
+}
+
+auto IntervalBuilder::empty() -> bool {
+    return this->ranges.empty();
 }
 
 auto LiveInterval::next_intersection(const LiveInterval& other) const -> std::optional<size_t> {
@@ -482,7 +489,9 @@ auto compute_live_intervals(const Function& func,
     std::vector<LiveInterval> intervals;
     intervals.reserve(builders.size());
     for (auto& builder : builders) {
-        intervals.push_back(builder.finish());
+        if (!builder.empty()) {
+            intervals.push_back(builder.finish());
+        }
     }
     return intervals;
 }
@@ -591,7 +600,7 @@ void alloc_blocked_reg(
         }
     }
 
-    if (current.first_use() > max_use) {
+    if (current.first_use() >= max_use) {
         current.op.type = Operand::STACK_SLOT;
         current.op.index = stack_slot;
         stack_slot++;
@@ -685,7 +694,8 @@ void allocate_registers(Function& func) {
 
     auto intervals = compute_live_intervals(func, block_ranges);
 
-//     for (const auto& interval : intervals) {
+//    std::cout << "----------" << std::endl;
+//    for (const auto& interval : intervals) {
 //         std::cout << interval << std::endl;
 //     }
 
@@ -696,10 +706,17 @@ void allocate_registers(Function& func) {
 //        std::cout << interval << std::endl;
 //    }
 
+//    for (const auto& interval : intervals) {
+//        if (interval.empty()) {
+//            std::cout << interval << std::endl;
+//            assert(false);
+//        }
+//    }
 
     std::priority_queue<LiveInterval, std::vector<LiveInterval>, std::greater<LiveInterval>>
         unhandled(std::make_move_iterator(intervals.begin()),
                   std::make_move_iterator(intervals.end()));
+
 
     std::vector<LiveInterval> active;
     std::vector<LiveInterval> inactive;
@@ -787,44 +804,6 @@ void allocate_registers(Function& func) {
     for (auto& group : intervals_by_vreg) {
         interval_groups.push_back({std::move(group)});
     }
-
-    // std::vector<std::vector<std::vector<std::pair<Operand, Operand>>>> edge_resolves;
-    // for (const auto& block : func.blocks) {
-    //     edge_resolves.push_back(std::vector<std::vector<std::pair<Operand,
-    //     Operand>>>(block.successors.size()));
-    // }
-
-    // phi node decomposition
-    // for (size_t succ = 0; succ < func.blocks.size(); ++succ) {
-    //     for (const auto& phi :func.blocks[succ].phi_nodes) {
-    //         for (const auto& [pred, operand] : phi.args) {
-    //             Operand move_from;
-    //             if (operand.type == Operand::VIRT_REG) {
-    //                 move_from =
-    //                 interval_groups[operand.index].assignment_at(block_ranges[pred].second).value();
-    //             } else if (operand.type == Operand::IMMEDIATE) {
-    //                 move_from = operand;
-    //             } else {
-    //                 assert(false && "unsupported operand");
-    //             }
-    //             if (auto to =
-    //             interval_groups[phi.out.index].assignment_at(block_ranges[succ].first + 1)) {
-    //                 Operand move_to = *to;
-    //                 if (move_from != move_to) {
-    //                     // func.blocks[pred].resolution_map.push_back({move_from, move_to});
-    //                     for (size_t i = 0; i < func.blocks[pred].successors.size(); ++i) {
-    //                         if (func.blocks[pred].successors[i] == succ) {
-    //                             edge_resolves[pred][i].push_back({move_from, move_to});
-    //                             break;
-    //                         }
-    //                     }
-    //                     // resolve_moves.push_back({block_range[pred].first, {move_from,
-    //                     move_to}});
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     // nonsuccessive interval split handling
     size_t initial_blocks = func.blocks.size();
