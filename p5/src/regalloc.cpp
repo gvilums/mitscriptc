@@ -690,12 +690,12 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::REC_STORE_NAME:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RSI));
-            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
+            mapping.emplace_back(instr.args[2], Operand::from(MachineReg::RDX));
             break;
         case Operation::REC_STORE_INDX:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
-            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RCX));
+            mapping.emplace_back(instr.args[2], Operand::from(MachineReg::RCX));
             break;
         case Operation::ALLOC_REF:
         case Operation::ALLOC_REC:
@@ -709,8 +709,6 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::STORE_GLOBAL:
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::R10));
             break;
-        case Operation::EXEC_CALL:
-            break;
         case Operation::RETURN:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RAX));
             break;
@@ -718,6 +716,7 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::INTCAST:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
             break;
+        case Operation::EXEC_CALL:
         case Operation::INPUT:
         case Operation::SWAP:
         case Operation::INIT_CALL:

@@ -93,15 +93,10 @@ void CodeGenerator::process_block(
     assembler.bind(block_labels[block_index]);
     for (const auto& instr : block.instructions) {
         if (instr.op == IR::Operation::ADD) {
-            load(x86::r10, instr.args[0]);
-            load(x86::rdx, instr.args[1]);
-            assembler.mov(x86::rsi, x86::r10);
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::value_add));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ADD_INT) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.shr(x86::r10, 4);
             assembler.shr(x86::r11, 4);
             assembler.add(x86::r10d, x86::r11d);
@@ -109,8 +104,6 @@ void CodeGenerator::process_block(
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Int)));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::SUB) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.shr(x86::r10, 4);
             assembler.shr(x86::r11, 4);
             assembler.sub(x86::r10d, x86::r11d);
@@ -118,8 +111,6 @@ void CodeGenerator::process_block(
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Int)));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::MUL) {
-            load(x86::rax, instr.args[0]);
-            load(x86::r10, instr.args[1]);
             assembler.shr(x86::rax, 4);
             assembler.shr(x86::r10, 4);
             assembler.imul(x86::r10d);
@@ -127,8 +118,6 @@ void CodeGenerator::process_block(
             assembler.or_(x86::rax, Imm(static_cast<size_t>(runtime::ValueType::Int)));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::DIV) {
-            load(x86::rax, instr.args[0]);
-            load(x86::r10, instr.args[1]);
             assembler.shr(x86::rax, 4);
             assembler.shr(x86::r10, 4);
             assembler.cdq();
@@ -137,14 +126,9 @@ void CodeGenerator::process_block(
             assembler.or_(x86::rax, Imm(static_cast<size_t>(runtime::ValueType::Int)));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::EQ) {
-            load(x86::r10, instr.args[0]);
-            load(x86::rsi, instr.args[1]);
-            assembler.mov(x86::rdi, x86::r10);
             assembler.call(Imm(runtime::value_eq));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::GT) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.shr(x86::r10, Imm(4));
             assembler.shr(x86::r11, Imm(4));
             assembler.cmp(x86::r10d, x86::r11d);
@@ -154,8 +138,6 @@ void CodeGenerator::process_block(
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::GEQ) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.shr(x86::r10, Imm(4));
             assembler.shr(x86::r11, Imm(4));
             assembler.cmp(x86::r10d, x86::r11d);
@@ -165,17 +147,12 @@ void CodeGenerator::process_block(
             assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::AND) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.and_(x86::r10, x86::r11);
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::OR) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.or_(x86::r10, x86::r11);
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::NOT) {
-            load(x86::r10, instr.args[0]);
             assembler.shr(x86::r10, 4);
             assembler.mov(x86::r11, Imm(1));
             assembler.sub(x86::r11, x86::r10);
@@ -197,41 +174,22 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r10, x86::Mem(x86::rbx, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_LOAD) {
-            load(x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::r10, x86::Mem(x86::r10, 0));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_STORE) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
-            load(x86::r10, instr.args[0]);
-            load(x86::rsi, instr.args[1]);
-            assembler.mov(x86::rdi, x86::r10);
             assembler.call(Imm(runtime::extern_rec_load_name));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
-            load(x86::r10, instr.args[0]);
-            load(x86::rdx, instr.args[1]);
-            assembler.mov(x86::rsi, x86::r10);
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_load_index));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
-            load(x86::rdx, instr.args[2]);
-            assembler.mov(x86::rdi, x86::r10);
-            assembler.mov(x86::rsi, x86::r11);
             assembler.call(Imm(runtime::extern_rec_store_name));
         } else if (instr.op == IR::Operation::REC_STORE_INDX) {
-            load(x86::r10, instr.args[0]);
-            load(x86::r11, instr.args[1]);
-            load(x86::rcx, instr.args[2]);
-            assembler.mov(x86::rsi, x86::r10);
-            assembler.mov(x86::rdx, x86::r11);
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::ALLOC_REF) {
@@ -257,8 +215,6 @@ void CodeGenerator::process_block(
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::SET_CAPTURE) {
             int32_t offset = 24 + 8 * instr.args[0].index;
-            load(x86::r10, instr.args[1]);
-            load(x86::r11, instr.args[2]);
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::INIT_CALL) {
@@ -279,9 +235,8 @@ void CodeGenerator::process_block(
             int32_t arg_index = instr.args[0].index;
             // passed in register
             if (arg_index < 6) {
-                load(to_reg(arg_index), instr.args[1]);
+                assembler.mov(to_reg(arg_index), x86::r10);
             } else {  // passed on stack
-                load(x86::r10, instr.args[1]);
                 assembler.mov(x86::Mem(x86::rsp, 8 * (arg_index - 6)), x86::r10);
             }
         } else if (instr.op == IR::Operation::EXEC_CALL) {
@@ -306,6 +261,9 @@ void CodeGenerator::process_block(
             assembler.pop(x86::rbx);
         } else if (instr.op == IR::Operation::MOV) {
             x86::Gp target;
+            if (instr.out.type == IR::Operand::NONE) {
+                continue;
+            }
             if (instr.out.type == IR::Operand::MACHINE_REG) {
                 target = to_reg(instr.out.index);
             } else {
@@ -324,45 +282,37 @@ void CodeGenerator::process_block(
             assembler.je(uninit_var_label);
         } else if (instr.op == IR::Operation::STORE_GLOBAL) {
             int32_t offset = 8 * instr.args[0].index;
-            load(x86::r10, instr.args[1]);
             assembler.mov(x86::r11, Imm(program.ctx_ptr->globals));
             assembler.mov(x86::ptr_64(x86::r11, offset), x86::r10);
         } else if (instr.op == IR::Operation::ASSERT_BOOL) {
-            load(x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(0b1111));
             assembler.cmp(x86::r10, Imm(runtime::BOOL_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_INT) {
-            load(x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(0b1111));
             assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_STRING) {
             // TODO implement or maybe remove, think about this
         } else if (instr.op == IR::Operation::ASSERT_RECORD) {
-            load(x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(0b1111));
             assembler.cmp(x86::r10, Imm(runtime::RECORD_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_CLOSURE) {
-            load(x86::r10, instr.args[0]);
             assembler.and_(x86::r10, Imm(0b1111));
             assembler.cmp(x86::r10, Imm(runtime::CLOSURE_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_NONZERO) {
-            load(x86::r10, instr.args[0]);
             assembler.shr(x86::r10, Imm(4));
             assembler.cmp(x86::r10, Imm(0));
             assembler.je(illegal_arith_label);
         } else if (instr.op == IR::Operation::PRINT) {
-            load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_print));
         } else if (instr.op == IR::Operation::INPUT) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_input));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::INTCAST) {
-            load(x86::rdi, instr.args[0]);
             assembler.call(Imm(runtime::extern_intcast));
             assembler.cmp(x86::rax, 0b10000);
             assembler.je(illegal_cast_label);
@@ -376,7 +326,6 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::BRANCH) {
             break;
         } else if (instr.op == IR::Operation::RETURN) {
-            load(x86::rax, instr.args[0]);
             assembler.mov(x86::rsp, x86::rbp);
             assembler.pop(x86::rbp);
             assembler.ret();

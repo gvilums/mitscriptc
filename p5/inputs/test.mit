@@ -1,16 +1,2 @@
-plus = fun(){
-  rv = {};
-  rec = {v1: 5; v2: 5;};
-  f = fun(pair){
-      state = 0;
-      N = 10;
-      v = pair.v1 + pair.v2 + state;
-      v = v - N;
-      rv.plus = v;
-    };
-    f(rec);
-};
-
-
-plus();
-
+r = {a: 1;};
+print(r.a);
