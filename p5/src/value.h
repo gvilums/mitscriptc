@@ -1,8 +1,9 @@
 #pragma once
 
+//#include <unordered_map>
 #include <cstdint>
-#include <unordered_map>
 #include <string>
+#include "phmap.h"
 
 namespace runtime {
     
@@ -72,7 +73,8 @@ struct Closure {
 };
 
 struct Record {
-    std::unordered_map<Value, Value, ValueHash, ValueEq> fields;
+    phmap::flat_hash_map<Value, Value, ValueHash, ValueEq> fields;
+//    std::unordered_map<Value, Value, ValueHash, ValueEq> fields;
 };
 
 auto value_get_type(Value val) -> ValueType;

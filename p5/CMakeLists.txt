@@ -28,6 +28,7 @@ add_executable(mitscriptc ${sources} src/compilertest.cpp)
 target_link_libraries(mitscriptc PUBLIC antlr)
 target_link_libraries(mitscriptc PUBLIC asmjit)
 target_include_directories(mitscriptc PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/grammar")
+target_include_directories(mitscriptc PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/external/parallel_hashmap")
 
 # add_executable(test ${sources} ${test_sources})
 # target_link_libraries(test PUBLIC antlr)
