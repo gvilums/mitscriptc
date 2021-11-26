@@ -11,3 +11,4 @@ compile_commands.json
 cbuild/*
 cmake-build-debug
 cmake-build-release
+build-release

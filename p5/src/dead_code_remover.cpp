@@ -56,17 +56,15 @@ void DeadCodeRemover::rm_dead_code() {
             new_block.is_loop_header = fun.blocks[idx].is_loop_header;
             new_block.final_loop_block = fun.blocks[idx].final_loop_block;
 
-            if (fun.blocks[idx].successors.empty() || fun.blocks[idx].successors[0] >= idx) {
-                for (const auto& pn : fun.blocks[idx].phi_nodes) {
-                    if (used_var.contains(pn.out.index)) {
-                        for (auto arg : pn.args)
-                            if (arg.second.type == IR::Operand::VIRT_REG)
-                                used_var.insert(arg.second.index);
-                        new_block.phi_nodes.push_back(pn);
-                    }
+            for (const auto& pn : fun.blocks[idx].phi_nodes) {
+                if (used_var.contains(pn.out.index)) {
+                    for (auto arg : pn.args)
+                        if (arg.second.type == IR::Operand::VIRT_REG)
+                            used_var.insert(arg.second.index);
+                    new_block.phi_nodes.push_back(pn);
                 }
             }
-
+            
             std::reverse(new_block.instructions.begin(), new_block.instructions.end());
             fun.blocks[idx] = new_block;
         }

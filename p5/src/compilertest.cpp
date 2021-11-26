@@ -50,17 +50,19 @@ auto main(int argc, const char* argv[]) -> int {
 
 //    std::cout << *prog << std::endl;
 
-//    DeadCodeRemover dc_opt(prog);
-//    prog = dc_opt.optimize();
+    DeadCodeRemover dc_opt(prog);
+    prog = dc_opt.optimize();
 
-//    try {
-//        ConstPropagator c_prop(prog);
-//        prog = c_prop.optimize();
-//    } catch (const std::string& e) {
-//        std::cout << "ERROR: " << e << std::endl;
-//    }
+    std::cout << *prog << std::endl;
 
-//    std::cout << *prog << std::endl;
+   /*try {
+        ConstPropagator c_prop(prog);
+        prog = c_prop.optimize();
+    } catch (const std::string& e) {
+        std::cout << "ERROR: " << e << std::endl;
+    }*/
+
+    // std::cout << *prog << std::endl;
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
     for (auto& func : prog->functions) {

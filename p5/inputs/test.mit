@@ -1,2 +1,12 @@
-r = {a: 1;};
-print(r.a);
+x = 3;
+y = fun(){
+	if (x > 5){
+        z = 2;
+	}
+	return z;
+};
+print("Should return None, not error:");
+print(y());
+while(true){
+    y = 3;
+}
