@@ -351,7 +351,7 @@ void CodeGenerator::process_block(
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.mov(x86::rsi, x86::rbp);
             assembler.mov(x86::rdx, x86::rsp);
-            assembler.call(Imm(runtime::trace_value));
+            assembler.call(Imm(runtime::trace_collect));
             if (num_live % 2 != 0) {
                 assembler.add(x86::rsp, Imm(8));
             }

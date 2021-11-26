@@ -12,6 +12,11 @@
 
 namespace runtime {
 
+bool is_heap_type(ValueType type) {
+    return type == ValueType::HeapString || type == ValueType::Record
+           || type == ValueType::Closure || type == ValueType::Reference;
+}
+
 ValueType value_get_type(Value val) {
     return static_cast<ValueType>(val & TAG_MASK);
 }
@@ -412,6 +417,11 @@ auto ProgramContext::alloc_bytes(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
     // align to multiple of 16
     size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
+    current_alloc += aligned_size;
+    if (current_alloc >= region_size) {
+        std::cout << "out of memory" << std::endl;
+        std::exit(1);
+    }
     auto* ptr = reinterpret_cast<HeapObject*>(write_head);
     write_head += aligned_size;
     ptr->region = current_region;
@@ -438,9 +448,11 @@ void ProgramContext::switch_region() {
     current_region = 1 - current_region;
     // reset write head
     write_head = heap + 8 + current_region * region_size;
+    current_alloc = 0;
 }
 
 void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
+    std::cout << "collection initiated" << std::endl;
     ctx->switch_region();
     // TODO CHECK
     // base rbp is pointing two slots above saved rsp on stack

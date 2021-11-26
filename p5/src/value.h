@@ -27,10 +27,7 @@ const int32_t RECORD_TAG = static_cast<int32_t>(ValueType::Record);
 const int32_t CLOSURE_TAG = static_cast<int32_t>(ValueType::Closure);
 const int32_t REFERENCE_TAG = static_cast<int32_t>(ValueType::Reference);
 
-bool is_heap_type(ValueType type) {
-    return type == ValueType::HeapString || type == ValueType::Record
-           || type == ValueType::Closure || type == ValueType::Reference;
-}
+bool is_heap_type(ValueType type);
 
 /*
     3 lower bits are used to store type. possibilities are:

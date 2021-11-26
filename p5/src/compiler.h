@@ -36,7 +36,7 @@ class Compiler : public Visitor {
     std::map<int, int> int_const_;
     
    public:
-    Compiler();
+    explicit Compiler(size_t heap_size);
     IR::Program* get_program();
     void visit(AST::Program& expr);
     void visit(AST::Block& expr);

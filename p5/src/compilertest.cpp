@@ -44,7 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
         return 1;
     }
     
-    Compiler compiler;
+    Compiler compiler(40 * (1 << 20));
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 

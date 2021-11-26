@@ -152,7 +152,7 @@ struct Program {
     int num_globals{0};
     runtime::ProgramContext* ctx_ptr{nullptr};
 
-    Program();
+    explicit Program(size_t heap_size);
     ~Program();
 
     Program(const Program& other) = delete;

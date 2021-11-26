@@ -4,8 +4,8 @@
 
 namespace IR {
 
-Program::Program() {
-    this->ctx_ptr = new runtime::ProgramContext;
+Program::Program(size_t heap_size) {
+    this->ctx_ptr = new runtime::ProgramContext(heap_size);
 }
 Program::~Program() {
     delete this->ctx_ptr;

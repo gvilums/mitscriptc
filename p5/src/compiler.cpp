@@ -10,8 +10,8 @@
 
 using namespace std;
 
-Compiler::Compiler() {
-    program_ = new IR::Program;
+Compiler::Compiler(size_t heap_size) {
+    program_ = new IR::Program(heap_size);
 
     IR::Function print_ = {
         {{{},
