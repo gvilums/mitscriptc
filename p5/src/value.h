@@ -27,6 +27,11 @@ const int32_t RECORD_TAG = static_cast<int32_t>(ValueType::Record);
 const int32_t CLOSURE_TAG = static_cast<int32_t>(ValueType::Closure);
 const int32_t REFERENCE_TAG = static_cast<int32_t>(ValueType::Reference);
 
+bool is_heap_type(ValueType type) {
+    return type == ValueType::HeapString || type == ValueType::Record
+           || type == ValueType::Closure || type == ValueType::Reference;
+}
+
 /*
     3 lower bits are used to store type. possibilities are:
     000 - None
@@ -110,22 +115,22 @@ Value to_value(String* str);
 Value to_value(Record* rec);
 Value to_value(Closure*);
 
-struct HeapObject {
-    HeapObject* next{nullptr};
-    enum {
-        REF,
-        STR,
-        REC,
-        CLOSURE,
-    } type;
-    bool marked{false};
-    std::uint64_t data[];
+struct HeapObj {
+    uint8_t region;
+    uint64_t data[];
 };
 
 struct ProgramContext {
-    size_t total_alloc{0};
-    HeapObject* heap_head{nullptr};
-    
+    void* region0{nullptr};
+    void* region1{nullptr};
+
+    // start with region 0
+    uint8_t current_region{0};
+
+    // track allocation amount
+    size_t current_alloc{0};
+    size_t next_alloc{0};
+
     Value none_string{0};
     Value false_string{0};
     Value true_string{0};
@@ -164,5 +169,44 @@ Value extern_alloc_ref(ProgramContext* rt);
 Value extern_alloc_string(ProgramContext* rt, size_t length);
 Value extern_alloc_record(ProgramContext* rt);
 Value extern_alloc_closure(ProgramContext* rt, size_t num_free);
+
+
+void trace_value(ProgramContext* ctx, Value* ptr) {
+    auto type = value_get_type(*ptr);
+    if (is_heap_type(type)) {
+        auto* heap_obj = reinterpret_cast<HeapObj*>((*ptr & DATA_MASK) - sizeof(HeapObj));
+        if (heap_obj->region != ctx->current_region) {
+            // if moved, new value is in data field
+            //! IMPORTANT note: data already has tag bit set
+            *ptr = heap_obj->data[0];
+            return;
+        }
+        // heap object has not been moved
+        if (type == ValueType::Reference) {
+
+        } else if (type == ValueType::HeapString) {
+
+        } else if (type == ValueType::Record) {
+
+        } else if (type == ValueType::Closure) {
+
+        }
+    }
+}
+
+void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
+    // TODO CHECK
+    // base rbp is pointing two slots above saved rsp on stack
+    auto* base_rbp = reinterpret_cast<uint64_t*>(ctx->saved_rsp - 16);
+    while (rbp != base_rbp) {
+        while (rsp != rbp) {
+            trace_value(ctx, rsp);
+            rsp -= 1;
+        }
+        rbp = reinterpret_cast<uint64_t*>(*rsp);
+        rsp -= 2;
+    }
+    ctx->switch_region();
+}
 
 };
