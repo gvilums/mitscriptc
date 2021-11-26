@@ -366,7 +366,16 @@ void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Valu
     rec_ptr->fields[name] = val;
 }
 
-ProgramContext::ProgramContext() {
+ProgramContext::ProgramContext(size_t heap_size) {
+    assert(heap_size % 32 == 0);
+    // all allocations happen on 8 byte offset of 16 byte boundary
+    // hence, allocate 8 additional bytes for overwriting
+    this->heap = static_cast<char*>(malloc(heap_size + 8));
+    this->region_size = heap_size / 2;
+    this->gc_threshold = region_size - 1024;
+    // + 8 to preserve alignment for heap object data fields
+    this->write_head = heap + 8;
+
     this->none_string = to_value(this, "None");
     this->true_string = to_value(this, "true");
     this->false_string = to_value(this, "false");
@@ -374,101 +383,43 @@ ProgramContext::ProgramContext() {
 }
 
 auto ProgramContext::alloc_ref() -> Value* {
-    HeapObject* obj = this->alloc_tracked(sizeof(Value));
-    obj->type = HeapObject::REF;
+    HeapObject* obj = this->alloc_bytes(sizeof(Value));
     return reinterpret_cast<Value*>(&obj->data);
 }
 
 auto ProgramContext::alloc_string(size_t length) -> String* {
-    HeapObject* obj = this->alloc_tracked(sizeof(String) + length);
-    obj->type = HeapObject::STR;
-    String* str = reinterpret_cast<String*>(&obj->data);
+    HeapObject* obj = this->alloc_bytes(sizeof(String) + length);
+    auto* str = reinterpret_cast<String*>(&obj->data);
     str->len = length;
     return str;
 }
 
 auto ProgramContext::alloc_record() -> Record* {
-    HeapObject* obj = this->alloc_tracked(sizeof(Record));
-    obj->type = HeapObject::REC;
-    Record* rec = reinterpret_cast<Record*>(&obj->data);
+    HeapObject* obj = this->alloc_bytes(sizeof(Record));
+    auto* rec = reinterpret_cast<Record*>(&obj->data);
     new (rec) Record{};
     return rec;
 }
 
 auto ProgramContext::alloc_closure(size_t num_free) -> Closure* {
-    HeapObject* obj = this->alloc_tracked(sizeof(Closure) + sizeof(Value) * num_free);
-    obj->type = HeapObject::CLOSURE;
-    Closure* closure = reinterpret_cast<Closure*>(&obj->data);
+    HeapObject* obj = this->alloc_bytes(sizeof(Closure) + sizeof(Value) * num_free);
+    auto* closure = reinterpret_cast<Closure*>(&obj->data);
     closure->n_free_vars = num_free;
     return closure;
 }
 
-auto ProgramContext::alloc_tracked(size_t data_size) -> HeapObject* {
+auto ProgramContext::alloc_bytes(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
-    this->total_alloc += allocation_size;
-    HeapObject* ptr = static_cast<HeapObject*>(malloc(allocation_size));
-    ptr->marked = false;
-    ptr->next = this->heap_head;
-    this->heap_head = ptr;
-    if (ptr == nullptr) {
-        assert(false && "out of memory");
-    }
+    // align to multiple of 16
+    size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
+    auto* ptr = reinterpret_cast<HeapObject*>(write_head);
+    write_head += aligned_size;
+    ptr->region = current_region;
     return ptr;
 }
 
-void ProgramContext::dealloc_tracked(HeapObject* obj) {
-    if (obj->type == HeapObject::REF) {
-        this->total_alloc -= sizeof(HeapObject) + sizeof(Value);
-    } else if (obj->type == HeapObject::STR) {
-        this->total_alloc -= sizeof(HeapObject) + sizeof(String) + reinterpret_cast<String*>(&obj->data)->len;
-    } else if (obj->type == HeapObject::REC) {
-        this->total_alloc -= sizeof(HeapObject) + sizeof(Record);
-    } else if (obj->type == HeapObject::CLOSURE) {
-        this->total_alloc -=
-            sizeof(HeapObject) + sizeof(Closure) + sizeof(Value) * reinterpret_cast<Closure*>(&obj->data)->n_free_vars;
-    }
-    free(obj);
-}
-
-void ProgramContext::collect() {
-    // no current allocations
-    if (this->heap_head == nullptr) {
-        return;
-    }
-
-    // free unmarked heads
-    while (this->heap_head != nullptr && !this->heap_head->marked) {
-        HeapObject* next = this->heap_head->next;
-        this->dealloc_tracked(this->heap_head);
-        this->heap_head = next;
-    }
-
-    // if we just cleared the entire heap, return
-    if (this->heap_head == nullptr) {
-        return;
-    }
-
-    // unmark head as we'll skip it in the following
-    this->heap_head->marked = false;
-    HeapObject* prev = this->heap_head;
-    HeapObject* current = this->heap_head->next;
-
-    while (current != nullptr) {
-        if (!current->marked) {
-            HeapObject* next = current->next;
-            this->dealloc_tracked(current);
-            current = next;
-            prev->next = current;
-        } else {
-            current->marked = false;
-            prev = current;
-            current = current->next;
-        }
-    }
-}
-
 ProgramContext::~ProgramContext() {
-    this->collect();
+    std::free(this->heap);
     std::free(this->globals);
 }
 
@@ -481,6 +432,98 @@ void ProgramContext::init_globals(size_t num_globals) {
         this->globals[i] = 0b10000;
     }
 }
+
+void ProgramContext::switch_region() {
+    // switch region
+    current_region = 1 - current_region;
+    // reset write head
+    write_head = heap + 8 + current_region * region_size;
+}
+
+void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
+    ctx->switch_region();
+    // TODO CHECK
+    // base rbp is pointing two slots above saved rsp on stack
+    auto* base_rbp = reinterpret_cast<uint64_t*>(ctx->saved_rsp - 16);
+    while (rbp != base_rbp) {
+        while (rsp != rbp) {
+            trace_value(ctx, rsp);
+            rsp -= 1;
+        }
+        rbp = reinterpret_cast<uint64_t*>(*rsp);
+        rsp -= 2;
+    }
+}
+
+void trace_value(ProgramContext* ctx, Value* ptr) {
+    auto type = value_get_type(*ptr);
+    if (is_heap_type(type)) {
+        auto* heap_obj = reinterpret_cast<HeapObject*>((*ptr & DATA_MASK) - sizeof(HeapObject));
+        if (heap_obj->region == ctx->current_region) {
+            // if moved, new value is in data field
+            //! IMPORTANT note: data already has tag bit set
+            *ptr = heap_obj->data[0];
+            return;
+        }
+        // heap object has not been moved
+        if (type == ValueType::Reference) {
+            // allocate new value
+            Value* new_ref = ctx->alloc_ref();
+            // copy previous data to new data
+            *new_ref = *value_get_ref(*ptr);
+            // set forward
+            heap_obj->region = ctx->current_region;
+            Value new_value = to_value(new_ref);
+            heap_obj->data[0] = new_value;
+            *ptr = new_value;
+            // trace reference
+            trace_value(ctx, new_ref);
+        } else if (type == ValueType::HeapString) {
+            String* old_string = value_get_string_ptr(*ptr);
+            size_t len = old_string->len;
+            // copy data
+            String* new_string = ctx->alloc_string(len);
+            std::memcpy(&new_string->data, &old_string->data, len);
+            // set forward
+            heap_obj->region = ctx->current_region;
+            Value new_value = to_value(new_string);
+            heap_obj->data[0] = new_value;
+            *ptr = new_value;
+            // nothing to trace
+        } else if (type == ValueType::Record) {
+            Record* old_record = value_get_record(*ptr);
+            // copy data
+            Record* new_record = ctx->alloc_record();
+            new_record->fields = std::move(old_record->fields);
+            // set forward
+            heap_obj->region = ctx->current_region;
+            Value new_value = to_value(new_record);
+            heap_obj->data[0] = new_value;
+            *ptr = new_value;
+            // trace fields of record
+            for (auto& elem : new_record->fields) {
+                // TODO check if this is allowed
+                trace_value(ctx, &elem.second);
+            }
+        } else if (type == ValueType::Closure) {
+            Closure* old_closure = value_get_closure(*ptr);
+            size_t num_free = old_closure->n_free_vars;
+            // copy data
+            Closure* new_closure = ctx->alloc_closure(num_free);
+            std::memcpy(new_closure, old_closure, sizeof(Closure) + 8 * num_free);
+            //set forward
+            heap_obj->region = ctx->current_region;
+            Value new_value = to_value(new_closure);
+            heap_obj->data[0] = new_value;
+            *ptr = new_value;
+            // trace captures
+            for (int i = 0; i < num_free; ++i) {
+                trace_value(ctx, &new_closure->free_vars[i]);
+            }
+        }
+    }
+}
+
 
 std::size_t ValueHash::operator()(const Value& val) const noexcept {
     ValueType tag = static_cast<ValueType>(val & TAG_MASK);

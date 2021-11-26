@@ -8,6 +8,7 @@
 #include <system_error>
 #include <unordered_set>
 #include <vector>
+#include <bitset>
 
 #include "ir.h"
 #include "irprinter.h"
@@ -646,6 +647,17 @@ auto set_instr_machine_regs(const Instruction& instr,
             changed.out = Operand{};
         }
     }
+    if (instr.op == Operation::GC) {
+        std::bitset<MACHINE_REG_COUNT> live_regs;
+        for (const auto& group : groups) {
+            if (auto assign = group.assignment_at(instr_id)) {
+                if (assign->type == Operand::MACHINE_REG) {
+                    live_regs.set(assign->index);
+                }
+            }
+        }
+        changed.args[0] = Operand{Operand::LOGICAL, (int)live_regs.to_ulong()};
+    }
     return changed;
 }
 
@@ -724,7 +736,12 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::LOAD_FREE_REF:
         case Operation::MOV:
         case Operation::LOAD_GLOBAL:
+        case Operation::GC:
             break;
+    }
+    // special case for GC
+    if (instr.op == Operation::GC) {
+
     }
 }
 

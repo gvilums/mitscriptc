@@ -329,6 +329,38 @@ void CodeGenerator::process_block(
             assembler.mov(x86::rsp, x86::rbp);
             assembler.pop(x86::rbp);
             assembler.ret();
+        } else if (instr.op == IR::Operation::GC) {
+            Label skip_gc_label = assembler.newLabel();
+            assembler.mov(x86::r10, Imm(&program.ctx_ptr->current_alloc));
+            assembler.mov(x86::r10, x86::ptr_64(x86::r10));
+            assembler.mov(x86::r11, Imm(program.ctx_ptr->gc_threshold));
+            assembler.cmp(x86::r10, x86::r11);
+            assembler.jl(skip_gc_label);
+            std::bitset<IR::MACHINE_REG_COUNT> live_regs(instr.args[0].index);
+            int num_live = 0;
+            for (int i = 0; i < IR::MACHINE_REG_COUNT; ++i) {
+                if (live_regs.test(i)) {
+                    assembler.push(to_reg(i));
+                    num_live += 1;
+                }
+            }
+            if (num_live % 2 != 0) {
+                assembler.push(0);
+            }
+            // call tracer to perform gc
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
+            assembler.mov(x86::rsi, x86::rbp);
+            assembler.mov(x86::rdx, x86::rsp);
+            assembler.call(Imm(runtime::trace_value));
+            if (num_live % 2 != 0) {
+                assembler.add(x86::rsp, Imm(8));
+            }
+            for (int i = IR::MACHINE_REG_COUNT - 1; i >= 0; --i) {
+                if (live_regs.test(i)) {
+                    assembler.pop(to_reg(i));
+                }
+            }
+            assembler.bind(skip_gc_label);
         } else {
             assert(false);
         }
