@@ -9,8 +9,8 @@ bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_
     bool can_eliminate = true;
     for (auto& arg : ins.args) {
         if (arg.type == IR::Operand::VIRT_REG && const_var.count(arg.index))  {
-            // TODO FIXME
-//            arg = {IR::Operand::IMMEDIATE, const_var[arg.index]};
+            size_t val_idx = find(prog_->immediates.begin(), prog_->immediates.end(), const_var[arg.index]) - prog_->immediates.begin();
+            arg = {IR::Operand::IMMEDIATE, int32_t(val_idx)};
         } else if (arg.type == IR::Operand::IMMEDIATE) {
             continue;
         } else if (arg.type != IR::Operand::NONE) {
@@ -66,15 +66,7 @@ bool ConstPropagator::propagate_instruction(IR::Instruction ins, std::unordered_
             return false;
     }
 
-    size_t val_idx;
-    if (!count(prog_->immediates.begin(), prog_->immediates.end(), new_value)) {
-        val_idx = prog_->immediates.size();
-        prog_->immediates.push_back(new_value);
-    }
-    else
-        val_idx = find(prog_->immediates.begin(), prog_->immediates.end(), new_value) - prog_->immediates.begin();
-
-    const_var[ins.out.index] = val_idx;
+    const_var[ins.out.index] = new_value;
     return true;
 }
 
@@ -127,6 +119,16 @@ void ConstPropagator::propagate_const() {
         for (size_t idx = 0; idx < fun.blocks.size() - 1; idx++) {
             IR::BasicBlock new_block;
 
+            for (const auto& pn : fun.blocks[idx].phi_nodes) {
+                IR::PhiNode new_phi_node = pn;
+                for (auto& arg : new_phi_node.args)
+                    if (arg.second.type == IR::Operand::VIRT_REG && const_var.count(arg.second.index)) {
+                        size_t val_idx = find(prog_->immediates.begin(), prog_->immediates.end(), const_var[arg.second.index]) - prog_->immediates.begin();
+                        arg  = {arg.first, {IR::Operand::IMMEDIATE, int32_t(val_idx)}};
+                    }
+                new_block.phi_nodes.push_back(new_phi_node);
+            }
+
             for (int i = 0; i < fun.blocks[idx].instructions.size(); i++) {
                 IR::Instruction ins = fun.blocks[idx].instructions[i];
                 
@@ -145,12 +147,11 @@ void ConstPropagator::propagate_const() {
 
             if (!fun.blocks[idx].successors.empty() && fun.blocks[idx].successors[0] < idx) {
                 size_t header = fun.blocks[idx].successors[0];
-                for (const auto& pn : fun.blocks[header].phi_nodes) {
+                for (const auto &pn : fun.blocks[header].phi_nodes) {
                     for (auto arg : pn.args)
                         if (arg.second.type == IR::Operand::VIRT_REG && const_var.count(arg.second.index)) {
-                            size_t val_idx = find(prog_->immediates.begin(), prog_->immediates.end(), const_var[arg.second.index]) - prog_->immediates.begin();
-                            // TODO FIXME
-//                            arg.second = {IR::Operand::IMMEDIATE, val_idx};
+                           size_t val_idx = find(prog_->immediates.begin(), prog_->immediates.end(), const_var[arg.second.index]) - prog_->immediates.begin();
+                           arg.second = {IR::Operand::IMMEDIATE, int32_t(val_idx)};
                         }
                 }
             }
