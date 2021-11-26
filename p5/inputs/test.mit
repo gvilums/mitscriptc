@@ -7,3 +7,6 @@ y = fun(){
 };
 print("Should return None, not error:");
 print(y());
+while(true){
+    y = 3;
+}
