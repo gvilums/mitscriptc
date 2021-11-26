@@ -1,12 +1,11 @@
-x = 3;
-y = fun(){
-	if (x > 5){
-        z = 2;
-	}
-	return z;
+Account = fun(){
+    private = { balances: {}; };
+    this = {
+        addClient: fun(name){ private.balances[name] = 0; };
+    };
+    return this;
 };
-print("Should return None, not error:");
-print(y());
-while(true){
-    y = 3;
-}
+
+
+acc = Account();
+acc.addClient("Armando");

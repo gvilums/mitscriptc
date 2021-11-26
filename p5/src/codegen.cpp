@@ -43,10 +43,16 @@ void CodeGenerator::process_function(size_t func_index) {
 
     // reserve stack slots. To ensure 16-byte alignment at function call time, align stack to 16 bytes + 8
     // TODO CHECK THIS
+    int allocated_stack_slots;
     if (func.stack_slots % 2 == 0) {
         assembler.sub(x86::rsp, 8 * func.stack_slots);
+        allocated_stack_slots = func.stack_slots;
     } else {
         assembler.sub(x86::rsp, 8 * (func.stack_slots + 1));
+        allocated_stack_slots = func.stack_slots + 1;
+    }
+    for (int i = 0; i < allocated_stack_slots; ++i) {
+        assembler.mov(x86::ptr_64(x86::rsp, 8 * i), Imm(0));
     }
 
     // init vector of block labels to be accessed by id
@@ -335,11 +341,12 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r10, x86::ptr_64(x86::r10));
             assembler.mov(x86::r11, Imm(program.ctx_ptr->gc_threshold));
             assembler.cmp(x86::r10, x86::r11);
-            assembler.jl(skip_gc_label);
+            assembler.jg(skip_gc_label);
             std::bitset<IR::MACHINE_REG_COUNT> live_regs(instr.args[0].index);
             int num_live = 0;
             for (int i = 0; i < IR::MACHINE_REG_COUNT; ++i) {
                 if (live_regs.test(i)) {
+//                    std::cout << "saving reg" << std::endl;
                     assembler.push(to_reg(i));
                     num_live += 1;
                 }
@@ -371,7 +378,9 @@ void CodeGenerator::load(const asmjit::x86::Gp& reg, const IR::Operand& op) {
     using namespace asmjit;
     switch (op.type) {
         case IR::Operand::IMMEDIATE: {
-            assembler.mov(reg, Imm(program.immediates[op.index]));
+//            assembler.mov(reg, Imm(program.immediates[op.index]));
+            assembler.mov(reg, Imm(program.ctx_ptr->immediates + op.index));
+            assembler.mov(reg, x86::ptr_64(reg));
         } break;
         case IR::Operand::MACHINE_REG:
             assembler.mov(reg, to_reg(op.index));
@@ -474,17 +483,12 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
     : program(std::move(program1)), assembler(code_holder) {
 
     program.ctx_ptr->init_globals(program.num_globals);
+    program.ctx_ptr->init_immediates(program.immediates);
+    // TODO maybe remove this in release builds, although speed difference should be small
     assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
 
-//    function_address_base_label = assembler.newLabel();
-//    function_labels.resize(program.functions.size());
-//    for (auto& label : function_labels) {
-//        label = assembler.newLabel();
-//    }
     init_labels();
     generate_prelude();
-
-//    assembler.jmp(function_labels.back());
 
     for (size_t i = 0; i < program.functions.size(); ++i) {
         process_function(i);

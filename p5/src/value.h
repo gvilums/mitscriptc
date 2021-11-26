@@ -135,7 +135,11 @@ struct ProgramContext {
     Value true_string{0};
     Value function_string{0};
 
+    size_t globals_size{0};
     Value* globals{nullptr};
+
+    size_t immediates_size{0};
+    Value* immediates{nullptr};
 
     uint64_t saved_rsp{0};
 
@@ -152,6 +156,9 @@ struct ProgramContext {
     auto alloc_bytes(size_t data_size) -> HeapObject*;
 
     void init_globals(size_t num_globals);
+    void reset_globals();
+
+    void init_immediates(const std::vector<Value>& imm);
 };
 
 void extern_print(Value val);

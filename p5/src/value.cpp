@@ -435,9 +435,10 @@ ProgramContext::~ProgramContext() {
 
 void ProgramContext::init_globals(size_t num_globals) {
     if (this->globals != nullptr) {
-        std::free(this->globals);
+        assert(false && "cannot reinitialize globals");
     }
-    this->globals = static_cast<Value*>(malloc(8 * num_globals));
+    this->globals_size = num_globals;
+    this->globals = static_cast<Value*>(malloc(sizeof(Value) * num_globals));
     for (size_t i = 0; i < num_globals; ++i) {
         this->globals[i] = 0b10000;
     }
@@ -451,8 +452,26 @@ void ProgramContext::switch_region() {
     current_alloc = 0;
 }
 
+void ProgramContext::reset_globals() {
+    for (int i = 0; i < globals_size; ++i) {
+        // reset to uninit
+        globals[globals_size] = 0b10000;
+    }
+}
+
+void ProgramContext::init_immediates(const std::vector<Value>& imm) {
+    if (immediates != nullptr) {
+        assert(false && "cannot reinitialize immediates");
+    }
+    immediates_size = imm.size();
+    immediates = static_cast<Value*>(malloc(sizeof(Value) * immediates_size));
+    for (int i = 0; i < immediates_size; ++i) {
+        immediates[i] = imm[i];
+    }
+}
+
 void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
-    std::cout << "collection initiated" << std::endl;
+//    std::cout << "------ collecting ------" << std::endl;
     ctx->switch_region();
     // TODO CHECK
     // base rbp is pointing two slots above saved rsp on stack
@@ -460,14 +479,28 @@ void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
     while (rbp != base_rbp) {
         while (rsp != rbp) {
             trace_value(ctx, rsp);
-            rsp -= 1;
+            rsp += 1;
         }
         rbp = reinterpret_cast<uint64_t*>(*rsp);
-        rsp -= 2;
+        rsp += 2;
     }
+    for (int i = 0; i < ctx->globals_size; ++i) {
+        trace_value(ctx, ctx->globals + i);
+    }
+    for (int i = 0; i < ctx->immediates_size; ++i) {
+        trace_value(ctx, ctx->immediates + i);
+    }
+    trace_value(ctx, &ctx->none_string);
+    trace_value(ctx, &ctx->true_string);
+    trace_value(ctx, &ctx->false_string);
+    trace_value(ctx, &ctx->function_string);
+    // TODO DEBUG
+//    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
+//    std::memset(cleared_region, 0, ctx->region_size);
 }
 
 void trace_value(ProgramContext* ctx, Value* ptr) {
+//    std::cout << value_get_std_string(*ptr) << std::endl;
     auto type = value_get_type(*ptr);
     if (is_heap_type(type)) {
         auto* heap_obj = reinterpret_cast<HeapObject*>((*ptr & DATA_MASK) - sizeof(HeapObject));
