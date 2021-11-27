@@ -118,7 +118,7 @@ bool ConstPropagator::eliminate_assert(IR::Instruction ins, std::unordered_map<s
             break;
         case IR::Operation::ASSERT_NONZERO:
             if (runtime::value_get_type(imm) != runtime::ValueType::Int || runtime::value_get_int32(imm) == 0)
-                throw std::string("DivideByZero");
+                throw std::string("IllegalArithmeticException");
             return true;
             break;
         default:
