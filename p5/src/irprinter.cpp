@@ -48,6 +48,7 @@ std::string op_str[] = {
 	"SWAP",
     "BRANCH",
     "INIT_CALL",
+    "GC"
 };
 
 std::string opr_str[] = {

@@ -10,8 +10,8 @@
 
 using namespace std;
 
-Compiler::Compiler() {
-    program_ = new IR::Program;
+Compiler::Compiler(size_t heap_size) {
+    program_ = new IR::Program(heap_size);
 
     IR::Function print_ = {
         {{{},
@@ -121,6 +121,7 @@ void Compiler::visit(AST::Program& expr) {
     for (auto c : expr.children)
         c->accept(*((Visitor*)this));
 
+    
     block_.instructions.push_back({IR::Operation::RETURN, {}, {IR::Operand::IMMEDIATE, 0}});
     fun_->blocks.push_back(block_);
     fun_->virt_reg_count = reg_cnt_;
@@ -140,6 +141,7 @@ void Compiler::visit(AST::Return& expr) {
     expr.Expr->accept(*((Visitor*)this));
     if (!is_opr_)
         opr_ = {IR::Operand::OpType::VIRT_REG, ret_reg_};
+    block_.instructions.push_back({IR::Operation::GC, IR::Operand(), {}});
     block_.instructions.push_back({IR::Operation::RETURN, IR::Operand(), opr_});
 }
 
@@ -335,6 +337,7 @@ void Compiler::visit(AST::WhileLoop& expr) {  // could contain empty blocks
     block_.successors.push_back(header_idx);
     fun_->blocks[header_idx].predecessors.push_back(last_body_idx);
     fun_->blocks[header_idx].final_loop_block = last_body_idx;
+    block_.instructions.push_back({IR::Operation::GC, IR::Operand(), {}});
     fun_->blocks.push_back(block_);
 
     std::map<int, int> new_args;
@@ -552,6 +555,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     a_closure.args[2] = {IR::Operand::OpType::LOGICAL, (int)free_vars_.size()};
     tblock.instructions[b_idx] = a_closure;
 
+    block_.instructions.push_back({IR::Operation::GC, IR::Operand(), {}});
     block_.instructions.push_back(
         {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}});
     fun_->virt_reg_count = reg_cnt_;

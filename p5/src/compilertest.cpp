@@ -44,7 +44,7 @@ auto main(int argc, const char* argv[]) -> int {
         return 1;
     }
     
-    Compiler compiler;
+    Compiler compiler(40 * (1 << 20));
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 
@@ -62,10 +62,11 @@ auto main(int argc, const char* argv[]) -> int {
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
-//    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
+//    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
 //    IR::allocate_registers(prog->functions.back());
 
-    // std::cout << *prog << std::endl;
+//    std::cout << *prog << std::endl;
+
 
     codegen::Executable compiled(std::move(*prog));
     try {

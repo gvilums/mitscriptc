@@ -8,6 +8,7 @@
 #include <system_error>
 #include <unordered_set>
 #include <vector>
+#include <bitset>
 
 #include "ir.h"
 #include "irprinter.h"
@@ -17,7 +18,7 @@ namespace std {
 
 template <>
 struct hash<::IR::LiveInterval> {
-    size_t operator()(const ::IR::LiveInterval& interval) {
+    size_t operator()(const ::IR::LiveInterval& interval) const {
         const size_t prime = 1000000007;
         size_t cprime = prime;
         size_t value = 0;
@@ -37,7 +38,7 @@ struct hash<::IR::LiveInterval> {
 
 template <>
 struct hash<::IR::Operand> {
-    size_t operator()(const ::IR::Operand& operand) {
+    size_t operator()(const ::IR::Operand& operand) const {
         std::hash<int> inthash;
         std::hash<size_t> sizethash;
         return inthash(static_cast<int>(operand.type)) ^ (sizethash(operand.index) << 1);
@@ -349,9 +350,8 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
                              std::vector<Instruction>& instructions) {
     instructions.reserve(instructions.size() + mapping.size());
 
+    // get vector of all operands, mapping index to op
     std::vector<Operand> operands;
-    std::vector<Operand> inputs;
-    std::vector<Operand> outputs;
     for (const auto& [from, to] : mapping) {
         if (std::find(operands.begin(), operands.end(), from) == operands.end()) {
             operands.push_back(from);
@@ -359,31 +359,52 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
         if (std::find(operands.begin(), operands.end(), to) == operands.end()) {
             operands.push_back(to);
         }
-        inputs.push_back(from);
-        outputs.push_back(to);
     }
 
-    std::vector<std::pair<Operand, Operand>> out_only;
-    std::vector<std::pair<Operand, Operand>> permuted;
-    std::vector<std::pair<Operand, Operand>> in_only;
+    std::unordered_map<Operand, int> operand_indices;
+    for (int i = 0; i < operands.size(); ++i) {
+        operand_indices[operands[i]] = i;
+    }
 
+    // for each operand, compute its parent
+    // -1 indicates no parent, operand is only input
+    std::vector<int> parent(operands.size(), -1);
+    // for each operand, indicates how many operands read its value
+    std::vector<int> child_count(operands.size(), 0);
     for (const auto& [from, to] : mapping) {
-        bool out_is_in = std::find(inputs.begin(), inputs.end(), to) != inputs.end();
-        bool in_is_out = std::find(outputs.begin(), outputs.end(), from) != outputs.end();
-        if (out_is_in && in_is_out) {
-            permuted.push_back({from, to});
-        } else if (!out_is_in) {
-            out_only.push_back({from, to});
-        } else if (!in_is_out) {
-            in_only.push_back({from, to});
-        } else {
-            assert(false);
+        parent[operand_indices[to]] = operand_indices[from];
+        child_count[operand_indices[from]] += 1;
+    }
+
+
+    bool updated = true;
+    while (updated) {
+        updated = false;
+        for (int i = 0; i < operands.size(); ++i) {
+            // operands without parent are irrelevant
+            if (parent[i] == -1) {
+                continue;
+            }
+            // if child_count == 0, update mapping
+            if (child_count[i] == 0) {
+                instructions.push_back(
+                    Instruction{Operation::MOV, operands[i], operands[parent[i]]});
+                child_count[parent[i]] -= 1;
+                parent[i] = -1;
+                updated = true;
+            }
         }
     }
 
-    // can first overwrite any registers which are only outputs
-    for (const auto& [from, to] : out_only) {
-        instructions.push_back(Instruction{Operation::MOV, to, from});
+    // now only permuted registers remain
+    std::vector<std::pair<Operand, Operand>> permuted;
+    for (int i = 0; i < operands.size(); ++i) {
+        if (parent[i] == -1) {
+            continue;
+        }
+        if (child_count[parent[i]] > 0) {
+            permuted.push_back({operands[parent[i]], operands[i]});
+        }
     }
 
     // handle all permuted registers
@@ -392,17 +413,14 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
             size_t j = 0;
             while (permuted[j].first != permuted[i].second) {
                 ++j;
+                if (j == permuted.size()) {
+                    assert(false);
+                }
             }
             instructions.push_back(
                 Instruction{Operation::SWAP, {}, permuted[i].first, permuted[j].first, {}});
             std::swap(permuted[i].second, permuted[j].second);
         }
-    }
-
-    // finally, handle all input only registers. Can be handled last as they are not overwritten by
-    // def.
-    for (const auto& [from, to] : in_only) {
-        instructions.push_back(Instruction{Operation::MOV, to, from});
     }
 }
 
@@ -646,6 +664,17 @@ auto set_instr_machine_regs(const Instruction& instr,
             changed.out = Operand{};
         }
     }
+    if (instr.op == Operation::GC) {
+        std::bitset<MACHINE_REG_COUNT> live_regs;
+        for (const auto& group : groups) {
+            if (auto assign = group.assignment_at(instr_id)) {
+                if (assign->type == Operand::MACHINE_REG) {
+                    live_regs.set(assign->index);
+                }
+            }
+        }
+        changed.args[0] = Operand{Operand::LOGICAL, (int)live_regs.to_ulong()};
+    }
     return changed;
 }
 
@@ -724,7 +753,12 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::LOAD_FREE_REF:
         case Operation::MOV:
         case Operation::LOAD_GLOBAL:
+        case Operation::GC:
             break;
+    }
+    // special case for GC
+    if (instr.op == Operation::GC) {
+
     }
 }
 
