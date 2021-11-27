@@ -15,20 +15,53 @@
 #include "const_propagator.h"
 #include "codegen.h"
 
+struct Arguments {
+    std::string filename{"../inputs/test.mit"};
+    size_t memory_limit{40 * (1 << 20)};
+    bool use_const_propagation{false};
+    bool use_dead_code_removal{false};
+    bool use_type_inference{false};
+    bool emit_ir{false};
+
+    Arguments(int argc, const char* argv[]) {
+        int i = 1;
+        while (i < argc) {
+            std::string arg{argv[i]};
+            i += 1;
+            if (arg == "--opt==all") {
+                use_const_propagation = true;
+                use_dead_code_removal = true;
+                use_type_inference = true;
+            } else if (arg == "--opt=constant-prop") {
+                use_const_propagation = true;
+            } else if (arg == "--opt=dead-code-rm") {
+                use_dead_code_removal = true;
+            } else if (arg == "--opt=type-inference") {
+                use_type_inference = true;
+            } else if (arg == "-mem") {
+                assert(i < argc);
+                memory_limit = std::stol(argv[i]) * (1 << 20);
+                i += 1;
+            } else if (arg == "--emit-code") {
+                emit_ir = true;
+            } else if (arg == "-s") {
+                assert(i < argc);
+                filename = argv[i];
+                i += 1;
+            } else {
+                // allow specifying filename without specific arg
+                filename = arg;
+            }
+        }
+    }
+};
 
 auto main(int argc, const char* argv[]) -> int {
-    std::ifstream file;
-    if (argc == 1) {
-        file.open("../inputs/test.mit");
-    } else if (argc == 2) {
-        file.open(argv[1]);
-    } else {
-        std::cout << "Usage: mitscript <filename>\n";
-        return 1;
-    }
+    Arguments args(argc, argv);
+    std::ifstream file(args.filename);
 
     if (!file.is_open()) {
-        std::cout << "Failed to open file: " << argv[1] << "\n";
+        std::cout << "Failed to open file" << std::endl;
         return 1;
     }
 
@@ -44,19 +77,23 @@ auto main(int argc, const char* argv[]) -> int {
         return 1;
     }
     
-    Compiler compiler(40 * (1 << 20));
+    Compiler compiler(args.memory_limit);
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 
-    try {
-        ConstPropagator c_prop(prog);
-        prog = c_prop.optimize();
-    } catch (const std::string& e) {
-        std::cout << "ERROR: " << e << std::endl;
+    if (args.use_const_propagation) {
+        try {
+            ConstPropagator c_prop(prog);
+            prog = c_prop.optimize();
+        } catch (const std::string& e) {
+            std::cout << "ERROR: " << e << std::endl;
+        }
     }
 
-    DeadCodeRemover dc_opt(prog);
-    prog = dc_opt.optimize();
+    if (args.use_dead_code_removal) {
+        DeadCodeRemover dc_opt(prog);
+        prog = dc_opt.optimize();
+    }
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
     for (auto& func : prog->functions) {
