@@ -48,19 +48,15 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 
-//    std::cout << *prog << std::endl;
+    try {
+        ConstPropagator c_prop(prog);
+        prog = c_prop.optimize();
+    } catch (const std::string& e) {
+        std::cout << "ERROR: " << e << std::endl;
+    }
 
-//    DeadCodeRemover dc_opt(prog);
-//    prog = dc_opt.optimize();
-
-//    try {
-//        ConstPropagator c_prop(prog);
-//        prog = c_prop.optimize();
-//    } catch (const std::string& e) {
-//        std::cout << "ERROR: " << e << std::endl;
-//    }
-
-//    std::cout << *prog << std::endl;
+    DeadCodeRemover dc_opt(prog);
+    prog = dc_opt.optimize();
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
     for (auto& func : prog->functions) {
@@ -69,7 +65,7 @@ auto main(int argc, const char* argv[]) -> int {
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
 //    IR::allocate_registers(prog->functions.back());
 
-//    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
 
     codegen::Executable compiled(std::move(*prog));
     try {

@@ -13,6 +13,6 @@ public:
     IR::Program* optimize();
 
     void propagate_const();
-    bool propagate_instruction(IR::Instruction ins, std::unordered_map<size_t, runtime::Value> &const_var);
+    bool propagate_instruction(IR::Instruction &ins, std::unordered_map<size_t, runtime::Value> &const_var);
     bool eliminate_assert(IR::Instruction ins, std::unordered_map<size_t, runtime::Value> &const_var);
 };
