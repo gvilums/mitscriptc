@@ -303,7 +303,9 @@ auto value_get_std_string(Value val) -> std::string {
         String* str = value_get_string_ptr(val);
         return {str->data, str->len};
     }
-    return "<<INVALID>>";
+    if (type == ValueType::Reference) {
+        return "REF TO: " + value_get_std_string(*value_get_ref(val));
+    }
 }
 
 Value extern_alloc_ref(ProgramContext* rt) {
@@ -372,7 +374,8 @@ void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Valu
 }
 
 ProgramContext::ProgramContext(size_t heap_size) {
-    assert(heap_size % 32 == 0);
+    // align heap size
+    heap_size &= ~0b1111;
     // all allocations happen on 8 byte offset of 16 byte boundary
     // hence, allocate 8 additional bytes for overwriting
     this->heap = static_cast<char*>(malloc(heap_size + 8));
@@ -388,32 +391,32 @@ ProgramContext::ProgramContext(size_t heap_size) {
 }
 
 auto ProgramContext::alloc_ref() -> Value* {
-    HeapObject* obj = this->alloc_bytes(sizeof(Value));
+    HeapObject* obj = this->alloc_traced(sizeof(Value));
     return reinterpret_cast<Value*>(&obj->data);
 }
 
 auto ProgramContext::alloc_string(size_t length) -> String* {
-    HeapObject* obj = this->alloc_bytes(sizeof(String) + length);
+    HeapObject* obj = this->alloc_traced(sizeof(String) + length);
     auto* str = reinterpret_cast<String*>(&obj->data);
     str->len = length;
     return str;
 }
 
 auto ProgramContext::alloc_record() -> Record* {
-    HeapObject* obj = this->alloc_bytes(sizeof(Record));
+    HeapObject* obj = this->alloc_traced(sizeof(Record));
     auto* rec = reinterpret_cast<Record*>(&obj->data);
-    new (rec) Record{};
+    new (rec) Record{this};
     return rec;
 }
 
 auto ProgramContext::alloc_closure(size_t num_free) -> Closure* {
-    HeapObject* obj = this->alloc_bytes(sizeof(Closure) + sizeof(Value) * num_free);
+    HeapObject* obj = this->alloc_traced(sizeof(Closure) + sizeof(Value) * num_free);
     auto* closure = reinterpret_cast<Closure*>(&obj->data);
     closure->n_free_vars = num_free;
     return closure;
 }
 
-auto ProgramContext::alloc_bytes(size_t data_size) -> HeapObject* {
+auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
     // align to multiple of 16
     size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
@@ -470,13 +473,27 @@ void ProgramContext::init_immediates(const std::vector<Value>& imm) {
     }
 }
 
+auto ProgramContext::alloc_raw(size_t num_bytes) -> void* {
+    // align to 16 bytes
+    size_t aligned_size = ((num_bytes - 1) | 0b1111) + 1;
+    current_alloc += aligned_size;
+    if (current_alloc >= region_size) {
+        std::cout << "out of memory" << std::endl;
+        std::exit(1);
+    }
+    void* ptr = write_head;
+    write_head += aligned_size;
+    return ptr;
+}
+
 void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
 //    std::cout << "------ collecting ------" << std::endl;
     ctx->switch_region();
     // TODO CHECK
     // base rbp is pointing two slots above saved rsp on stack
-    auto* base_rbp = reinterpret_cast<uint64_t*>(ctx->saved_rsp - 16);
-    while (rbp != base_rbp) {
+//    std::cout << "--- tracing stack ---" << std::endl;
+    auto* base_rsp = reinterpret_cast<uint64_t*>(ctx->saved_rsp);
+    while (rsp != base_rsp) {
         while (rsp != rbp) {
             trace_value(ctx, rsp);
             rsp += 1;
@@ -484,23 +501,26 @@ void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
         rbp = reinterpret_cast<uint64_t*>(*rsp);
         rsp += 2;
     }
+//    std::cout << "--- tracing globals ---" << std::endl;
     for (int i = 0; i < ctx->globals_size; ++i) {
         trace_value(ctx, ctx->globals + i);
     }
+//    std::cout << "--- tracing immediates ---" << std::endl;
     for (int i = 0; i < ctx->immediates_size; ++i) {
         trace_value(ctx, ctx->immediates + i);
     }
+//    std::cout << "--- tracing string constants ---" << std::endl;
     trace_value(ctx, &ctx->none_string);
     trace_value(ctx, &ctx->true_string);
     trace_value(ctx, &ctx->false_string);
     trace_value(ctx, &ctx->function_string);
+//    std::cout << "----- finished collecting -----" << std::endl;
     // TODO DEBUG
-//    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
-//    std::memset(cleared_region, 0, ctx->region_size);
+    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
+    std::memset(cleared_region, 0, ctx->region_size);
 }
 
 void trace_value(ProgramContext* ctx, Value* ptr) {
-//    std::cout << value_get_std_string(*ptr) << std::endl;
     auto type = value_get_type(*ptr);
     if (is_heap_type(type)) {
         auto* heap_obj = reinterpret_cast<HeapObject*>((*ptr & DATA_MASK) - sizeof(HeapObject));
@@ -539,17 +559,20 @@ void trace_value(ProgramContext* ctx, Value* ptr) {
             Record* old_record = value_get_record(*ptr);
             // copy data
             Record* new_record = ctx->alloc_record();
-            new_record->fields = std::move(old_record->fields);
             // set forward
             heap_obj->region = ctx->current_region;
             Value new_value = to_value(new_record);
             heap_obj->data[0] = new_value;
             *ptr = new_value;
             // trace fields of record
-            for (auto& elem : new_record->fields) {
-                // TODO check if this is allowed
-                trace_value(ctx, &elem.second);
+            for (auto& elem : old_record->fields) {
+                Value key = elem.first;
+                Value val = elem.second;
+                trace_value(ctx, &key);
+                trace_value(ctx, &val);
+                new_record->fields[key] = val;
             }
+            // map allocates in gc heap and hence needs no dealloc
         } else if (type == ValueType::Closure) {
             Closure* old_closure = value_get_closure(*ptr);
             size_t num_free = old_closure->n_free_vars;
@@ -590,5 +613,7 @@ std::size_t ValueHash::operator()(const Value& val) const noexcept {
 bool ValueEq::operator()(const Value& lhs, const Value& rhs) const noexcept {
     return value_eq_bool(lhs, rhs);
 }
+
+Record::Record(ProgramContext* ctx) : fields{ProgramAllocator<alloc_type>{ctx}} {}
 
 };  // namespace runtime

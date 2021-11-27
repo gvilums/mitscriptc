@@ -341,12 +341,11 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r10, x86::ptr_64(x86::r10));
             assembler.mov(x86::r11, Imm(program.ctx_ptr->gc_threshold));
             assembler.cmp(x86::r10, x86::r11);
-            assembler.jg(skip_gc_label);
+            assembler.jl(skip_gc_label);
             std::bitset<IR::MACHINE_REG_COUNT> live_regs(instr.args[0].index);
             int num_live = 0;
             for (int i = 0; i < IR::MACHINE_REG_COUNT; ++i) {
                 if (live_regs.test(i)) {
-//                    std::cout << "saving reg" << std::endl;
                     assembler.push(to_reg(i));
                     num_live += 1;
                 }

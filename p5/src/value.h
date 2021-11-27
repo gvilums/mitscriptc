@@ -3,10 +3,61 @@
 #include <cstdint>
 #include <unordered_map>
 #include <string>
+#include <iostream>
 
 namespace runtime {
-    
-struct ProgramContext;
+
+using Value = std::uint64_t;
+
+struct HeapObject;
+struct Record;
+struct Closure;
+struct String;
+
+struct ProgramContext {
+    char* heap{nullptr};
+
+    char* write_head{nullptr};
+
+    // start with region 0
+    int current_region{0};
+
+    // track allocation amount
+    size_t current_alloc{0};
+    size_t region_size{0};
+    size_t gc_threshold{0};
+
+    Value none_string{0};
+    Value false_string{0};
+    Value true_string{0};
+    Value function_string{0};
+
+    size_t globals_size{0};
+    Value* globals{nullptr};
+
+    size_t immediates_size{0};
+    Value* immediates{nullptr};
+
+    uint64_t saved_rsp{0};
+
+    explicit ProgramContext(size_t heap_size);
+    ~ProgramContext();
+
+    void switch_region();
+
+    auto alloc_ref() -> Value*;
+    auto alloc_string(size_t length) -> String*;
+    auto alloc_record() -> Record*;
+    auto alloc_closure(size_t num_free) -> Closure*;
+
+    auto alloc_traced(size_t data_size) -> HeapObject*;
+    auto alloc_raw(size_t num_bytes) -> void*;
+
+    void init_globals(size_t num_globals);
+    void reset_globals();
+
+    void init_immediates(const std::vector<Value>& imm);
+};
 
 enum class ValueType : uint64_t {
     None,
@@ -47,7 +98,6 @@ bool is_heap_type(ValueType type);
     Inline String   - [char data[7] 56 x 0/1][length 4 x 0/1]0011
     Pointer Based   - ptr | 0000...0100
 */
-using Value = std::uint64_t;
 
 struct ValueHash {
     std::size_t operator()(const Value& val) const noexcept;
@@ -71,10 +121,6 @@ struct Closure {
     std::uint64_t n_args;
     std::uint64_t n_free_vars;
     Value free_vars[];
-};
-
-struct Record {
-    std::unordered_map<Value, Value, ValueHash, ValueEq> fields;
 };
 
 auto value_get_type(Value val) -> ValueType;
@@ -117,49 +163,6 @@ struct HeapObject {
     uint64_t data[];
 };
 
-struct ProgramContext {
-    char* heap{nullptr};
-
-    char* write_head{nullptr};
-
-    // start with region 0
-    uint8_t current_region{0};
-
-    // track allocation amount
-    size_t current_alloc{0};
-    size_t region_size{0};
-    size_t gc_threshold{0};
-
-    Value none_string{0};
-    Value false_string{0};
-    Value true_string{0};
-    Value function_string{0};
-
-    size_t globals_size{0};
-    Value* globals{nullptr};
-
-    size_t immediates_size{0};
-    Value* immediates{nullptr};
-
-    uint64_t saved_rsp{0};
-
-    explicit ProgramContext(size_t heap_size);
-    ~ProgramContext();
-
-    void switch_region();
-    
-    auto alloc_ref() -> Value*;
-    auto alloc_string(size_t length) -> String*;
-    auto alloc_record() -> Record*;
-    auto alloc_closure(size_t num_free) -> Closure*;
-
-    auto alloc_bytes(size_t data_size) -> HeapObject*;
-
-    void init_globals(size_t num_globals);
-    void reset_globals();
-
-    void init_immediates(const std::vector<Value>& imm);
-};
 
 void extern_print(Value val);
 auto extern_intcast(Value val) -> Value;
@@ -178,5 +181,50 @@ Value extern_alloc_closure(ProgramContext* rt, size_t num_free);
 void trace_value(ProgramContext* ctx, Value* ptr);
 
 void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp);
+
+template<typename T>
+struct ProgramAllocator {
+    using value_type = T;
+    using is_always_equal = std::false_type;
+
+    ProgramContext* ctx{nullptr};
+
+    explicit ProgramAllocator(ProgramContext* ctx_ptr) : ctx{ctx_ptr} {}
+
+    template<typename U>
+    ProgramAllocator(const ProgramAllocator<U>& alloc) noexcept : ctx{alloc.ctx} {}
+
+    auto allocate(size_t n) -> T* {
+        size_t num_bytes = sizeof(T) * n;
+        return static_cast<T*>(ctx->alloc_raw(num_bytes));
+    }
+
+    void deallocate(T* ptr, size_t n) {}
+};
+
+template<typename T, typename U>
+bool operator==(const ProgramAllocator<T>& lhs, const ProgramAllocator<U>& rhs) {
+    return lhs.ctx == rhs.ctx;
+}
+
+template<typename T, typename U>
+bool operator!=(const ProgramAllocator<T>& lhs, const ProgramAllocator<U>& rhs) {
+    return lhs.ctx != rhs.ctx;
+}
+
+
+struct Record {
+    using alloc_type = std::pair<const Value, Value>;
+    using map_type = std::unordered_map<
+        Value,
+        Value,
+        ValueHash,
+        ValueEq,
+        ProgramAllocator<alloc_type>>;
+    map_type fields;
+
+
+    explicit Record(ProgramContext* ctx);
+};
 
 };

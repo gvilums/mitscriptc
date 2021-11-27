@@ -1,11 +1,13 @@
-Account = fun(){
-    private = { balances: {}; };
-    this = {
-        addClient: fun(name){ private.balances[name] = 0; };
-    };
-    return this;
+get = fun(){
+  x = {a:"banana";};
+  return x;
 };
 
+r = {x:get(); y:get(); z:get(); a:get(); b:get();};
 
-acc = Account();
-acc.addClient("Armando");
+print("P" + r.x);
+print("P" + r.y);
+print("P" + r.z);
+print("P" + r.a);
+print("P" + r.b);
+
