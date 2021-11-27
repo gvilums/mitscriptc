@@ -11,4 +11,5 @@ compile_commands.json
 cbuild/*
 cmake-build-debug
 cmake-build-release
+cmake-build-relwithdebinfo
 build-release
