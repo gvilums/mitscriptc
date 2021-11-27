@@ -2,6 +2,7 @@
 #include <stack>
 #include "value.h"
 #include <cassert>
+#include <bitset>
 
 namespace codegen {
 
