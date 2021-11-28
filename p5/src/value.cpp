@@ -1,4 +1,3 @@
-#include <sys/types.h>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
@@ -13,8 +12,8 @@
 namespace runtime {
 
 bool is_heap_type(ValueType type) {
-    return type == ValueType::HeapString || type == ValueType::Record
-           || type == ValueType::Closure || type == ValueType::Reference;
+    return type == ValueType::HeapString || type == ValueType::Record || type == ValueType::Closure
+           || type == ValueType::Reference || type == ValueType::Struct;
 }
 
 ValueType value_get_type(Value val) {
@@ -43,6 +42,10 @@ Record* value_get_record(Value val) {
 
 Closure* value_get_closure(Value val) {
     return reinterpret_cast<Closure*>(val & DATA_MASK);
+}
+
+Struct* value_get_struct(Value val) {
+    return reinterpret_cast<Struct*>(val & DATA_MASK);
 }
 
 Value to_value(bool b) {
@@ -88,6 +91,10 @@ Value to_value(Record* rec) {
 
 Value to_value(Closure* closure) {
     return reinterpret_cast<uint64_t>(closure) | static_cast<uint64_t>(ValueType::Closure);
+}
+
+Value to_value(Struct* struct_ptr) {
+    return reinterpret_cast<uint64_t>(struct_ptr) | STRUCT_TAG;
 }
 
 Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
@@ -245,7 +252,6 @@ Value value_to_string(ProgramContext* rt, Value val) {
         }
     }
     if (type == ValueType::Int) {
-        // TODO make more efficient
         return to_value(rt, std::to_string(value_get_int32(val)));
     }
     if (type == ValueType::Record) {
@@ -253,6 +259,9 @@ Value value_to_string(ProgramContext* rt, Value val) {
     }
     if (type == ValueType::Closure) {
         return rt->function_string;
+    }
+    if (type == ValueType::Struct) {
+        return to_value(rt, value_get_std_string(val));
     }
     return 0;
 }
@@ -306,6 +315,9 @@ auto value_get_std_string(Value val) -> std::string {
     if (type == ValueType::Reference) {
         return "REF TO: " + value_get_std_string(*value_get_ref(val));
     }
+    if (type == ValueType::Struct) {
+        return "<< UNIMPLEMENTED >> ";
+    }
 }
 
 Value extern_alloc_ref(ProgramContext* rt) {
@@ -322,6 +334,10 @@ Value extern_alloc_record(ProgramContext* rt) {
 
 Value extern_alloc_closure(ProgramContext* rt, size_t num_free) {
     return to_value(rt->alloc_closure(num_free));
+}
+
+Value extern_alloc_struct(ProgramContext* rt, size_t num_fields) {
+    return to_value(rt->alloc_struct(num_fields));
 }
 
 void extern_print(Value val) {
@@ -414,6 +430,16 @@ auto ProgramContext::alloc_closure(size_t num_free) -> Closure* {
     auto* closure = reinterpret_cast<Closure*>(&obj->data);
     closure->n_free_vars = num_free;
     return closure;
+}
+
+auto ProgramContext::alloc_struct(uint32_t num_fields) -> Struct* {
+    HeapObject* obj = this->alloc_traced(sizeof(Struct) + sizeof(Value) * num_fields);
+    auto* struct_ptr = reinterpret_cast<Struct*>(&obj->data);
+    struct_ptr->num_fields = num_fields;
+    for (int i = 0; i < num_fields; ++i) {
+        struct_ptr->data[i] = 0;
+    }
+    return struct_ptr;
 }
 
 auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
@@ -587,6 +613,18 @@ void trace_value(ProgramContext* ctx, Value* ptr) {
             // trace captures
             for (int i = 0; i < num_free; ++i) {
                 trace_value(ctx, &new_closure->free_vars[i]);
+            }
+        } else if (type == ValueType::Struct) {
+            Struct* old_struct = value_get_struct(*ptr);
+            Struct* new_struct = ctx->alloc_struct(old_struct->num_fields);
+            std::memcpy(new_struct, old_struct, sizeof(Struct) + 8 * old_struct->num_fields);
+            heap_obj->region = ctx->current_region;
+            Value new_value = to_value(new_struct);
+            heap_obj->data[0] = new_value;
+            *ptr = new_value;
+
+            for (int i = 0; i < new_struct->num_fields; ++i) {
+                trace_value(ctx, &new_struct->data[i]);
             }
         }
     }

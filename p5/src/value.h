@@ -14,6 +14,7 @@ struct HeapObject;
 struct Record;
 struct Closure;
 struct String;
+struct Struct;
 
 struct ProgramContext {
     char* heap{nullptr};
@@ -50,6 +51,7 @@ struct ProgramContext {
     auto alloc_string(size_t length) -> String*;
     auto alloc_record() -> Record*;
     auto alloc_closure(size_t num_free) -> Closure*;
+    auto alloc_struct(uint32_t num_fields) -> Struct*;
 
     auto alloc_traced(size_t data_size) -> HeapObject*;
     auto alloc_raw(size_t num_bytes) -> void*;
@@ -69,6 +71,7 @@ enum class ValueType : uint64_t {
     Record,
     Closure,
     Reference,
+    Struct,
 };
 
 const int32_t BOOL_TAG = static_cast<int32_t>(ValueType::Bool);
@@ -78,6 +81,7 @@ const int32_t HEAP_STRING_TAG = static_cast<int32_t>(ValueType::HeapString);
 const int32_t RECORD_TAG = static_cast<int32_t>(ValueType::Record);
 const int32_t CLOSURE_TAG = static_cast<int32_t>(ValueType::Closure);
 const int32_t REFERENCE_TAG = static_cast<int32_t>(ValueType::Reference);
+const int32_t STRUCT_TAG = static_cast<int32_t>(ValueType::Struct);
 
 bool is_heap_type(ValueType type);
 
@@ -91,6 +95,7 @@ bool is_heap_type(ValueType type);
     101 - Record
     110 - Closure
     111 - Reference
+   1000 - Struct
     
     Formats:
     None            - 0000...0000
@@ -108,7 +113,8 @@ struct ValueEq {
     bool operator()(const Value& lhs, const Value& rhs) const noexcept;
 };
 
-const std::uint64_t TAG_MASK = 0b111;
+// TODO CHECK IF THIS UPDATE DOESN'T BREAK ANYTHING
+const std::uint64_t TAG_MASK = 0b1111;
 const std::uint64_t DATA_MASK = ~TAG_MASK;
 
 
@@ -124,7 +130,14 @@ struct Closure {
     Value free_vars[];
 };
 
+struct Struct {
+    std::uint32_t num_fields;
+    std::uint32_t layout_index;
+    std::uint64_t data[];
+};
+
 auto value_get_type(Value val) -> ValueType;
+
 auto value_get_bool(Value val) -> bool;
 auto value_get_int32(Value val) -> int;
 auto value_get_ref(Value val) -> Value*;
@@ -132,6 +145,8 @@ auto value_get_string_ptr(Value val) -> String*;
 auto value_get_record(Value val) -> Record*;
 auto value_get_closure(Value val) -> Closure*;
 auto value_get_std_string(Value val) -> std::string;
+auto value_get_struct(Value val) -> Struct*;
+
 auto value_eq_bool(Value lhs, Value rhs) -> bool;
 
 // checks types
@@ -156,8 +171,9 @@ Value to_value(ProgramContext* rt, const std::string& str);
 Value to_value(ProgramContext* rt, const char* str);
 Value to_value(Value* ref);
 Value to_value(String* str);
-Value to_value(Record* rec);
-Value to_value(Closure*);
+Value to_value(Record* rec_ptr);
+Value to_value(Closure* closure_ptr);
+Value to_value(Struct* struct_ptr);
 
 struct HeapObject {
     uint8_t region;
@@ -178,6 +194,7 @@ Value extern_alloc_ref(ProgramContext* rt);
 Value extern_alloc_string(ProgramContext* rt, size_t length);
 Value extern_alloc_record(ProgramContext* rt);
 Value extern_alloc_closure(ProgramContext* rt, size_t num_free);
+Value extern_alloc_struct(ProgramContext* rt, size_t num_fields);
 
 void trace_value(ProgramContext* ctx, Value* ptr);
 

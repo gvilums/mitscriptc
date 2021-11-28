@@ -283,6 +283,7 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                 case Operation::ALLOC_CLOSURE:
                 case Operation::ALLOC_REC:
                 case Operation::ALLOC_REF:
+                case Operation::ALLOC_STRUCT:
                 case Operation::REC_LOAD_NAME:
                 case Operation::REC_LOAD_INDX:
                 case Operation::REC_STORE_NAME:
@@ -714,6 +715,7 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::ASSERT_CLOSURE:
         case Operation::ASSERT_NONZERO:
         case Operation::BRANCH:
+        case Operation::STRUCT_LOAD:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
             break;
         case Operation::REC_STORE_NAME:
@@ -725,10 +727,6 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
             mapping.emplace_back(instr.args[2], Operand::from(MachineReg::RCX));
-            break;
-        case Operation::ALLOC_REF:
-        case Operation::ALLOC_REC:
-        case Operation::ALLOC_CLOSURE:
             break;
         case Operation::SET_CAPTURE:
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::R10));
@@ -745,6 +743,10 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::INTCAST:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
             break;
+        case Operation::ALLOC_REF:
+        case Operation::ALLOC_REC:
+        case Operation::ALLOC_CLOSURE:
+        case Operation::ALLOC_STRUCT:
         case Operation::EXEC_CALL:
         case Operation::INPUT:
         case Operation::SWAP:
@@ -755,10 +757,10 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::LOAD_GLOBAL:
         case Operation::GC:
             break;
-    }
-    // special case for GC
-    if (instr.op == Operation::GC) {
-
+        case Operation::STRUCT_STORE:
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
+            mapping.emplace_back(instr.args[2], Operand::from(MachineReg::R11));
+            break;
     }
 }
 

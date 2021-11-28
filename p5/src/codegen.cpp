@@ -368,6 +368,23 @@ void CodeGenerator::process_block(
                 }
             }
             assembler.bind(skip_gc_label);
+        } else if (instr.op == IR::Operation::ALLOC_STRUCT) {
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
+            assembler.mov(x86::rsi, Imm(instr.args[0].index));
+            assembler.call(Imm(runtime::extern_alloc_struct));
+            // set struct layout index
+            assembler.mov(x86::ptr_32(x86::rax, 4), Imm(instr.args[1].index));
+            store(instr.out, x86::rax);
+        } else if (instr.op == IR::Operation::STRUCT_LOAD) {
+            // + 1 to skip struct header
+            int offset = 8 * (instr.args[1].index + 1);
+            assembler.and_(x86::r10, Imm(~0b1111));
+            assembler.mov(x86::r10, x86::ptr_64(x86::r10, offset));
+            store(instr.out, x86::r10);
+        } else if (instr.op == IR::Operation::STRUCT_STORE) {
+            int offset = 8 * (instr.args[1].index + 1);
+            assembler.and_(x86::r10, Imm(~0b1111));
+            assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);
         } else {
             assert(false);
         }

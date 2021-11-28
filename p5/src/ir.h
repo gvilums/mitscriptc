@@ -85,7 +85,11 @@ enum class Operation {
     BRANCH,         // BRANCH NONE <- (PARAM) (if true branch to block 0, else block 1)
     INIT_CALL,      // INIT_CALL NONE <- (LOGICAL num_params)
 
-    GC
+    GC,
+
+    ALLOC_STRUCT,   // ALLOC_STRUCT (VIRT_REG out) <- (LOGICAL size) (LOGICAL layout)
+    STRUCT_LOAD,    // STRUCT_LOAD  (VIRT_REG out) <- (VIRT_REG struct) (LOGICAL index)
+    STRUCT_STORE    // STRUCT_STORE (NONE)         <- (VIRT_REG struct) (LOGICAL index) (VIRT_REG value)
 };
 
 struct Operand {
@@ -149,6 +153,7 @@ struct Function {
 struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
+    std::vector<std::vector<std::string>> struct_layouts;
     int num_globals{0};
     runtime::ProgramContext* ctx_ptr{nullptr};
 

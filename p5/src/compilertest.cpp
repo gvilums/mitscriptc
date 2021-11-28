@@ -28,7 +28,7 @@ struct Arguments {
         while (i < argc) {
             std::string arg{argv[i]};
             i += 1;
-            if (arg == "--opt==all") {
+            if (arg == "--opt=all") {
                 use_const_propagation = true;
                 use_dead_code_removal = true;
                 use_type_inference = true;
