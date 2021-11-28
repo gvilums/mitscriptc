@@ -255,18 +255,18 @@ Value value_to_string(ProgramContext* rt, Value val) {
         return to_value(rt, std::to_string(value_get_int32(val)));
     }
     if (type == ValueType::Record) {
-        return to_value(rt, value_get_std_string(val));
+        return to_value(rt, value_get_std_string(rt, val));
     }
     if (type == ValueType::Closure) {
         return rt->function_string;
     }
     if (type == ValueType::Struct) {
-        return to_value(rt, value_get_std_string(val));
+        return to_value(rt, value_get_std_string(rt, val));
     }
     return 0;
 }
 
-auto value_get_std_string(Value val) -> std::string {
+auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string {
     auto type = value_get_type(val);
     if (type == ValueType::None) {
         return "None";
@@ -286,13 +286,13 @@ auto value_get_std_string(Value val) -> std::string {
         std::string out{"{"};
         std::vector<std::pair<Value, Value>> vals{record->fields.begin(), record->fields.end()};
         std::sort(vals.begin(), vals.end(),
-                  [](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) {
-                      return value_get_std_string(l.first) < value_get_std_string(r.first);
+                  [=](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) {
+                      return value_get_std_string(ctx, l.first) < value_get_std_string(ctx, r.first);
                   });
         for (auto [key, field_value] : vals) {
-            out.append(value_get_std_string(key));
+            out.append(value_get_std_string(ctx, key));
             out.push_back(':');
-            out.append(value_get_std_string(field_value));
+            out.append(value_get_std_string(ctx, field_value));
             out.push_back(' ');
         }
         out.push_back('}');
@@ -313,10 +313,19 @@ auto value_get_std_string(Value val) -> std::string {
         return {str->data, str->len};
     }
     if (type == ValueType::Reference) {
-        return "REF TO: " + value_get_std_string(*value_get_ref(val));
+        return "REF TO: " + value_get_std_string(ctx, *value_get_ref(val));
     }
     if (type == ValueType::Struct) {
-        return "<< UNIMPLEMENTED >> ";
+        std::string out{"{"};
+        Struct* struct_ptr = value_get_struct(val);
+        for (int i = 0; i < struct_ptr->num_fields; ++i) {
+            out.append(ctx->struct_layouts[struct_ptr->layout_index][i]);
+            out.push_back(':');
+            out.append(value_get_std_string(ctx, struct_ptr->data[i]));
+            out.push_back(' ');
+        }
+        out.push_back('}');
+        return out;
     }
 }
 
@@ -340,15 +349,15 @@ Value extern_alloc_struct(ProgramContext* rt, size_t num_fields) {
     return to_value(rt->alloc_struct(num_fields));
 }
 
-void extern_print(Value val) {
-    std::cout << value_get_std_string(val) << '\n';
+void extern_print(ProgramContext* rt, Value val) {
+    std::cout << value_get_std_string(rt, val) << '\n';
 };
 
-auto extern_intcast(Value val) -> Value {
+auto extern_intcast(ProgramContext* rt, Value val) -> Value {
     auto type = value_get_type(val);
     if (type == ValueType::HeapString || type == ValueType::InlineString) {
         try {
-            int32_t out = std::stoi(value_get_std_string(val));
+            int32_t out = std::stoi(value_get_std_string(rt, val));
             return to_value(out);
         } catch (...) {}
     }
@@ -497,6 +506,10 @@ void ProgramContext::init_immediates(const std::vector<Value>& imm) {
     for (int i = 0; i < immediates_size; ++i) {
         immediates[i] = imm[i];
     }
+}
+
+void ProgramContext::init_layouts(std::vector<std::vector<std::string>> layouts) {
+    this->struct_layouts = std::move(layouts);
 }
 
 auto ProgramContext::alloc_raw(size_t num_bytes) -> void* {

@@ -314,12 +314,14 @@ void CodeGenerator::process_block(
             assembler.cmp(x86::r10, Imm(0));
             assembler.je(illegal_arith_label);
         } else if (instr.op == IR::Operation::PRINT) {
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_print));
         } else if (instr.op == IR::Operation::INPUT) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_input));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::INTCAST) {
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_intcast));
             assembler.cmp(x86::rax, 0b10000);
             assembler.je(illegal_cast_label);
@@ -501,6 +503,7 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
 
     program.ctx_ptr->init_globals(program.num_globals);
     program.ctx_ptr->init_immediates(program.immediates);
+    program.ctx_ptr->init_layouts(program.struct_layouts);
     // TODO maybe remove this in release builds, although speed difference should be small
     assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
 

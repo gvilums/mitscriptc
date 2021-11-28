@@ -741,7 +741,7 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
             break;
         case Operation::PRINT:
         case Operation::INTCAST:
-            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
+            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
             break;
         case Operation::ALLOC_REF:
         case Operation::ALLOC_REC:

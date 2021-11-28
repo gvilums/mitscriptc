@@ -42,6 +42,8 @@ struct ProgramContext {
 
     uint64_t saved_rsp{0};
 
+    std::vector<std::vector<std::string>> struct_layouts;
+
     explicit ProgramContext(size_t heap_size);
     ~ProgramContext();
 
@@ -60,6 +62,7 @@ struct ProgramContext {
     void reset_globals();
 
     void init_immediates(const std::vector<Value>& imm);
+    void init_layouts(std::vector<std::vector<std::string>> layouts);
 };
 
 enum class ValueType : uint64_t {
@@ -144,8 +147,8 @@ auto value_get_ref(Value val) -> Value*;
 auto value_get_string_ptr(Value val) -> String*;
 auto value_get_record(Value val) -> Record*;
 auto value_get_closure(Value val) -> Closure*;
-auto value_get_std_string(Value val) -> std::string;
 auto value_get_struct(Value val) -> Struct*;
+auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string;
 
 auto value_eq_bool(Value lhs, Value rhs) -> bool;
 
@@ -181,8 +184,8 @@ struct HeapObject {
 };
 
 
-void extern_print(Value val);
-auto extern_intcast(Value val) -> Value;
+void extern_print(ProgramContext* rt, Value val);
+auto extern_intcast(ProgramContext* rt, Value val) -> Value;
 auto extern_input(ProgramContext* rt) -> Value;
 
 auto extern_rec_load_name(Value rec, Value name) -> Value;
