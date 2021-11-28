@@ -1,6 +1,8 @@
 #include "compiler.h"
 #include <algorithm>
 #include <set>
+#include <string>
+#include <vector>
 #include "AST.h"
 #include "Assigns.h"
 #include "FreeVariables.h"
@@ -12,6 +14,7 @@ using namespace std;
 
 Compiler::Compiler(size_t heap_size) {
     program_ = new IR::Program(heap_size);
+    layout_map_cnt_ = 0;
 
     IR::Function print_ = {
         {{{},
@@ -556,8 +559,8 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     tblock.instructions[b_idx] = a_closure;
 
     block_.instructions.push_back({IR::Operation::GC, IR::Operand(), {}});
-    block_.instructions.push_back(
-        {IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}});
+    if (block_.instructions.back().op != IR::Operation::RETURN)
+        block_.instructions.push_back({IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}});
     fun_->virt_reg_count = reg_cnt_;
     fun_->blocks.push_back(block_);
     program_->functions.push_back(*fun_);
@@ -755,8 +758,34 @@ void Compiler::visit(AST::IndexExpression& expr) {
 
 void Compiler::visit(AST::Record& expr) {
     int rec_reg = reg_cnt_;
-    block_.instructions.push_back(
-        {IR::Operation::ALLOC_REC, {IR::Operand::OpType::VIRT_REG, rec_reg}});
+    // find approriate 
+
+    std::vector<std::string> std_fields;
+    for (const auto &p : expr.dict) 
+        std_fields.push_back(p.first);
+    sort(std_fields.begin(), std_fields.end());
+    std::vector<runtime::Value> fields;
+    for (const auto &s : std_fields) {
+        if (!str_const_.count(s)) {
+            program_->immediates.push_back(runtime::to_value(program_->ctx_ptr, s));
+            str_const_[s] = imm_cnt_++;
+        }
+        fields.push_back(program_->immediates[str_const_[s]]);
+    }
+    
+    if (!layout_map_.count(std_fields)) {
+        program_->struct_layouts.push_back(fields);
+        layout_map_[std_fields] = layout_map_cnt_++;
+    }
+
+    IR::Instruction a_ref;
+    a_ref.op = IR::Operation::ALLOC_REC;
+    a_ref.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
+    a_ref.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
+    a_ref.args[1] = {IR::Operand::OpType::LOGICAL, (int) expr.dict.size()};
+    a_ref.args[2] = {IR::Operand::OpType::LOGICAL, layout_map_[std_fields]};//  find idx
+    block_.instructions.push_back(a_ref);
+
     reg_cnt_++;
 
     for (auto p : expr.dict) {
@@ -776,7 +805,7 @@ void Compiler::visit(AST::Record& expr) {
         store_field.op = IR::Operation::REC_STORE_NAME;
         store_field.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
         store_field.args[1] = {IR::Operand::OpType::IMMEDIATE, idx};
-        store_field.args[2] = opr_;
+        store_field.args[2] = opr_; 
         block_.instructions.push_back(store_field);
     }
 

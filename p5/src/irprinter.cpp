@@ -1,4 +1,5 @@
 
+#include <cstddef>
 #include <iostream>
 #include <string>
 
@@ -26,6 +27,8 @@ std::string op_str[] = {
     "REC_LOAD_INDX",
     "REC_STORE_NAME",
     "REC_STORE_INDX",
+	"REC_STORE_STATIC",
+    "REC_LOAD_STATIC",
     "ALLOC_REF",
     "ALLOC_REC",
     "ALLOC_CLOSURE",
@@ -143,6 +146,14 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 	os << "\timmediates {";
 	for (size_t i = 0; i < prog.immediates.size(); i++)
 		os << i << " : " << runtime::value_get_std_string(prog.ctx_ptr, prog.immediates[i]) << ", ";
+	os << "}" << std::endl;
+	os << "\tlayouts: {";
+	for (size_t i = 0; i < prog.struct_layouts.size(); i++){
+		os << i << " : (";
+		for (size_t j = 0; j < prog.struct_layouts[i].size(); j++)
+			os << runtime::value_get_std_string(prog.ctx_ptr, prog.struct_layouts[i][j]) << ", ";
+		os << "), ";
+	}
 	os << "}" << std::endl;
 	os << "}";
 	return os;

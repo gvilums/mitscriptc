@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <set>
+#include <vector>
 #include "AST.h"
 #include "Assigns.h"
 #include "FreeVariables.h"
@@ -29,11 +30,16 @@ class Compiler : public Visitor {
     
     std::set<std::string> globals_; 
     std::set<std::string> ref_;
+
+    std::map<std::vector<std::string>, int> layout_map_;
+    int layout_map_cnt_;
     
     int imm_cnt_;
     size_t names_cnt_;
     std::map<string, int> str_const_;
     std::map<int, int> int_const_;
+
+    bool shape_analysis_;
     
    public:
     explicit Compiler(size_t heap_size);

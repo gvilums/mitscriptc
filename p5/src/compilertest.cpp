@@ -14,6 +14,7 @@
 #include "dead_code_remover.h"
 #include "const_propagator.h"
 #include "codegen.h"
+#include "shape_analysis.h"
 
 struct Arguments {
     std::string filename{"../inputs/test.mit"};
@@ -21,6 +22,7 @@ struct Arguments {
     bool use_const_propagation{false};
     bool use_dead_code_removal{false};
     bool use_type_inference{false};
+    bool use_shape_analysis{false};
     bool emit_ir{false};
 
     Arguments(int argc, const char* argv[]) {
@@ -32,9 +34,12 @@ struct Arguments {
                 use_const_propagation = true;
                 use_dead_code_removal = true;
                 use_type_inference = true;
+                use_shape_analysis = true;
             } else if (arg == "--opt=constant-prop") {
                 use_const_propagation = true;
             } else if (arg == "--opt=dead-code-rm") {
+                use_dead_code_removal = true;
+            } else if (arg == "--opt=shape-analysis") {
                 use_dead_code_removal = true;
             } else if (arg == "--opt=type-inference") {
                 use_type_inference = true;
@@ -95,8 +100,15 @@ auto main(int argc, const char* argv[]) -> int {
         prog = dc_opt.optimize();
     }
 
+    // if (args.use_shape_analysis) {
+        ShapeAnalysis sa_opt(prog);
+        prog = sa_opt.optimize();
+    // }
+
+    std::cout << *prog << std::endl;
+
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
-    for (auto& func : prog->functions) {
+    /*for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
 //    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
@@ -111,7 +123,7 @@ auto main(int argc, const char* argv[]) -> int {
     } catch (codegen::RuntimeException& exception) {
         std::cout << exception << std::endl;
         return 1;
-    }
+    }*/
 
     // std::cout << *prog << std::endl;
     

@@ -1,13 +1,1174 @@
-get = fun(){
-  x = {a:"banana";};
-  return x;
-};
-
-r = {x:get(); y:get(); z:get(); a:get(); b:get();};
-
-print("P" + r.x);
-print("P" + r.y);
-print("P" + r.z);
-print("P" + r.a);
-print("P" + r.b);
-
+program { 
+	function { 
+		0 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				PRINT [NONE 0] [VIRT_REG 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 
+			];
+		}
+		1 : {
+			0 : [
+				Phi Nodes: 
+				INPUT [VIRT_REG 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 
+			];
+		}
+		2 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [NONE 0] [NONE 0] [NONE 0]
+				ASSERT_STRING [NONE 0] [VIRT_REG 0] [NONE 0] [NONE 0]
+				INTCAST [VIRT_REG 1] [VIRT_REG 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 1] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 
+			];
+		}
+		3 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				MOV [VIRT_REG 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				MOV [VIRT_REG 2] [IMMEDIATE 13] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 3] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 4] [VIRT_REG 3] [IMMEDIATE 6] [NONE 0]
+				EQ [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				NOT [VIRT_REG 6] [VIRT_REG 5] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 7] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 8] [VIRT_REG 7] [IMMEDIATE 6] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 9] [VIRT_REG 8] [IMMEDIATE 7] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 10] [VIRT_REG 9] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 11] [VIRT_REG 2] [VIRT_REG 10] [NONE 0]
+				successors: 3 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+					[VIRT_REG 12] (2, [VIRT_REG 11])(1, [VIRT_REG 2])
+				successors: 4 
+				predecessors: 2 1 
+			];
+			4 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 13] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 13] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 14] [VIRT_REG 13] [IMMEDIATE 11] [NONE 0]
+				EQ [VIRT_REG 15] [VIRT_REG 14] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 15] [NONE 0] [NONE 0]
+				NOT [VIRT_REG 16] [VIRT_REG 15] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 16] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 16] [NONE 0] [NONE 0]
+				successors: 5 6 
+				predecessors: 3 
+			];
+			5 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 17] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 17] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 18] [VIRT_REG 17] [IMMEDIATE 11] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 18] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 19] [VIRT_REG 18] [IMMEDIATE 7] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 19] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 20] [VIRT_REG 19] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 21] [VIRT_REG 12] [VIRT_REG 20] [NONE 0]
+				successors: 6 
+				predecessors: 4 
+			];
+			6 : [
+				Phi Nodes: 
+					[VIRT_REG 22] (5, [VIRT_REG 21])(4, [VIRT_REG 12])
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 22] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 5 4 
+			];
+		}
+		4 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 2] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 2] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 12] [NONE 0]
+				EQ [VIRT_REG 4] [VIRT_REG 0] [VIRT_REG 3] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 1] [NONE 0] [NONE 0]
+				successors: 3 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				successors: 4 
+				predecessors: 2 1 
+			];
+			4 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 5] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 6] [VIRT_REG 5] [IMMEDIATE 12] [NONE 0]
+				GEQ [VIRT_REG 7] [VIRT_REG 0] [VIRT_REG 6] [NONE 0]
+				NOT [VIRT_REG 8] [VIRT_REG 7] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				successors: 5 10 
+				predecessors: 3 
+			];
+			5 : [
+				Phi Nodes: 
+				successors: 6 
+				predecessors: 4 
+			];
+			6 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 9] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 10] [VIRT_REG 9] [IMMEDIATE 6] [NONE 0]
+				EQ [VIRT_REG 11] [VIRT_REG 10] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 11] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 11] [NONE 0] [NONE 0]
+				successors: 7 8 
+				predecessors: 5 
+			];
+			7 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 2] [NONE 0] [NONE 0]
+				successors: 9 
+				predecessors: 6 
+			];
+			8 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 12] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 12] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 13] [VIRT_REG 12] [IMMEDIATE 6] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 13] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 14] [VIRT_REG 13] [IMMEDIATE 4] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 14] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 15] [VIRT_REG 14] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 15] [NONE 0] [NONE 0]
+				successors: 9 
+				predecessors: 6 
+			];
+			9 : [
+				Phi Nodes: 
+				successors: 15 
+				predecessors: 7 8 
+			];
+			10 : [
+				Phi Nodes: 
+				successors: 11 
+				predecessors: 4 
+			];
+			11 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 16] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 16] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 17] [VIRT_REG 16] [IMMEDIATE 11] [NONE 0]
+				EQ [VIRT_REG 18] [VIRT_REG 17] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 18] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 18] [NONE 0] [NONE 0]
+				successors: 12 13 
+				predecessors: 10 
+			];
+			12 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 2] [NONE 0] [NONE 0]
+				successors: 14 
+				predecessors: 11 
+			];
+			13 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 19] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 19] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 20] [VIRT_REG 19] [IMMEDIATE 11] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 20] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 21] [VIRT_REG 20] [IMMEDIATE 4] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 21] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 22] [VIRT_REG 21] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 22] [NONE 0] [NONE 0]
+				successors: 14 
+				predecessors: 11 
+			];
+			14 : [
+				Phi Nodes: 
+				successors: 15 
+				predecessors: 12 13 
+			];
+			15 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 9 14 
+			];
+		}
+		5 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 2] [LOGICAL 1] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 3] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 4] [VIRT_REG 3] [IMMEDIATE 12] [NONE 0]
+				GEQ [VIRT_REG 5] [VIRT_REG 0] [VIRT_REG 4] [NONE 0]
+				NOT [VIRT_REG 6] [VIRT_REG 5] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				successors: 2 7 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				successors: 3 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 7] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 8] [VIRT_REG 7] [IMMEDIATE 6] [NONE 0]
+				EQ [VIRT_REG 9] [VIRT_REG 8] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				successors: 4 5 
+				predecessors: 2 
+			];
+			4 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 10] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 10] [NONE 0] [NONE 0]
+				REF_LOAD [VIRT_REG 11] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 11] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 12] [VIRT_REG 11] [NONE 0] [NONE 0]
+				REC_STORE_NAME [NONE 0] [VIRT_REG 10] [IMMEDIATE 6] [VIRT_REG 12]
+				successors: 6 
+				predecessors: 3 
+			];
+			5 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 13] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 13] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 14] [VIRT_REG 13] [IMMEDIATE 6] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 14] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 15] [VIRT_REG 14] [IMMEDIATE 10] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 15] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 16] [VIRT_REG 15] [NONE 0] [NONE 0]
+				successors: 6 
+				predecessors: 3 
+			];
+			6 : [
+				Phi Nodes: 
+				successors: 15 
+				predecessors: 4 5 
+			];
+			7 : [
+				Phi Nodes: 
+				successors: 8 
+				predecessors: 1 
+			];
+			8 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 17] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 17] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 18] [VIRT_REG 17] [IMMEDIATE 12] [NONE 0]
+				ASSERT_INT [NONE 0] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_INT [NONE 0] [VIRT_REG 18] [NONE 0] [NONE 0]
+				GT [VIRT_REG 19] [VIRT_REG 0] [VIRT_REG 18] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 19] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 19] [NONE 0] [NONE 0]
+				successors: 9 14 
+				predecessors: 7 
+			];
+			9 : [
+				Phi Nodes: 
+				successors: 10 
+				predecessors: 8 
+			];
+			10 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 20] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 20] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 21] [VIRT_REG 20] [IMMEDIATE 11] [NONE 0]
+				EQ [VIRT_REG 22] [VIRT_REG 21] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 22] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 22] [NONE 0] [NONE 0]
+				successors: 11 12 
+				predecessors: 9 
+			];
+			11 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 23] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 23] [NONE 0] [NONE 0]
+				REF_LOAD [VIRT_REG 24] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 24] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 25] [VIRT_REG 24] [NONE 0] [NONE 0]
+				REC_STORE_NAME [NONE 0] [VIRT_REG 23] [IMMEDIATE 11] [VIRT_REG 25]
+				successors: 13 
+				predecessors: 10 
+			];
+			12 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 26] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 26] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 27] [VIRT_REG 26] [IMMEDIATE 11] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 27] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 28] [VIRT_REG 27] [IMMEDIATE 10] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 28] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 29] [VIRT_REG 28] [NONE 0] [NONE 0]
+				successors: 13 
+				predecessors: 10 
+			];
+			13 : [
+				Phi Nodes: 
+				successors: 14 
+				predecessors: 11 12 
+			];
+			14 : [
+				Phi Nodes: 
+				successors: 15 
+				predecessors: 13 8 
+			];
+			15 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 6 14 
+			];
+		}
+		6 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_FREE_REF [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 1] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 1] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 2] [VIRT_REG 1] [IMMEDIATE 6] [NONE 0]
+				EQ [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 4] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 12] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 6] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 7] [VIRT_REG 6] [IMMEDIATE 6] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 8] [VIRT_REG 7] [IMMEDIATE 9] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 9] [VIRT_REG 8] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		7 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_FREE_REF [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 1] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 1] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 2] [VIRT_REG 1] [IMMEDIATE 11] [NONE 0]
+				EQ [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 4] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 12] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 6] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 7] [VIRT_REG 6] [IMMEDIATE 11] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 8] [VIRT_REG 7] [IMMEDIATE 8] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 9] [VIRT_REG 8] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		8 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 2] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 2] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 6] [NONE 0]
+				EQ [VIRT_REG 4] [VIRT_REG 3] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				NOT [VIRT_REG 5] [VIRT_REG 4] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 6] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 7] [VIRT_REG 6] [IMMEDIATE 6] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 8] [VIRT_REG 7] [IMMEDIATE 5] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 9] [VIRT_REG 8] [NONE 0] [NONE 0]
+				successors: 3 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 0] [NONE 0] [NONE 0]
+				REF_LOAD [VIRT_REG 10] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 10] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 11] [VIRT_REG 10] [IMMEDIATE 12] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 11] [NONE 0]
+				EXEC_CALL [VIRT_REG 12] [VIRT_REG 0] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 2 1 
+			];
+			4 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 13] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 13] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 14] [VIRT_REG 13] [IMMEDIATE 11] [NONE 0]
+				EQ [VIRT_REG 15] [VIRT_REG 14] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 15] [NONE 0] [NONE 0]
+				NOT [VIRT_REG 16] [VIRT_REG 15] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 16] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 16] [NONE 0] [NONE 0]
+				successors: 5 6 
+				predecessors: 3 
+			];
+			5 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 17] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 17] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 18] [VIRT_REG 17] [IMMEDIATE 11] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 18] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 19] [VIRT_REG 18] [IMMEDIATE 5] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 19] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 20] [VIRT_REG 19] [NONE 0] [NONE 0]
+				successors: 6 
+				predecessors: 4 
+			];
+			6 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 5 4 
+			];
+		}
+		9 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 2] [LOGICAL 0] [NONE 0] [NONE 0]
+				ALLOC_REF [VIRT_REG 1] [NONE 0] [NONE 0] [NONE 0]
+				REF_STORE [NONE 0] [VIRT_REG 1] [IMMEDIATE 0] [NONE 0]
+				ALLOC_REC [VIRT_REG 3] [VIRT_REG 3] [LOGICAL 9] [LOGICAL 0]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 8] [VIRT_REG 0]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 2] [IMMEDIATE 0]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 7] [IMMEDIATE 0]
+				ALLOC_CLOSURE [VIRT_REG 4] [LOGICAL 3] [LOGICAL 0] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 4] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 3] [VIRT_REG 4]
+				ALLOC_CLOSURE [VIRT_REG 5] [LOGICAL 4] [LOGICAL 1] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 5] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 0] [VIRT_REG 5]
+				ALLOC_CLOSURE [VIRT_REG 6] [LOGICAL 5] [LOGICAL 1] [LOGICAL 2]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 6] [VIRT_REG 2]
+				SET_CAPTURE [NONE 0] [LOGICAL 1] [VIRT_REG 6] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 6] [VIRT_REG 6]
+				ALLOC_CLOSURE [VIRT_REG 7] [LOGICAL 6] [LOGICAL 0] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 7] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 5] [VIRT_REG 7]
+				ALLOC_CLOSURE [VIRT_REG 8] [LOGICAL 7] [LOGICAL 0] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 8] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 4] [VIRT_REG 8]
+				ALLOC_CLOSURE [VIRT_REG 9] [LOGICAL 8] [LOGICAL 1] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 9] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 1] [VIRT_REG 9]
+				REF_STORE [NONE 0] [VIRT_REG 1] [VIRT_REG 3] [NONE 0]
+				REF_LOAD [VIRT_REG 10] [VIRT_REG 1] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 10] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 
+			];
+		}
+		10 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 2] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 2] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 14] [NONE 0]
+				EQ [VIRT_REG 4] [VIRT_REG 3] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 2] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 5] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 6] [VIRT_REG 5] [IMMEDIATE 14] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 7] [VIRT_REG 6] [IMMEDIATE 4] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 8] [VIRT_REG 7] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 8] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		11 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 2] [LOGICAL 1] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 3] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 4] [VIRT_REG 3] [IMMEDIATE 14] [NONE 0]
+				EQ [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 6] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				REF_LOAD [VIRT_REG 7] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 8] [VIRT_REG 7] [NONE 0] [NONE 0]
+				REC_STORE_NAME [NONE 0] [VIRT_REG 6] [IMMEDIATE 14] [VIRT_REG 8]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 9] [VIRT_REG 2] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 10] [VIRT_REG 9] [IMMEDIATE 14] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 10] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 11] [VIRT_REG 10] [IMMEDIATE 10] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 11] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 12] [VIRT_REG 11] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		12 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_FREE_REF [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 1] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 1] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 2] [VIRT_REG 1] [IMMEDIATE 14] [NONE 0]
+				EQ [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 15] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 4] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 14] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 6] [VIRT_REG 5] [IMMEDIATE 9] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 7] [VIRT_REG 6] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		13 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_FREE_REF [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 1] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 1] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 2] [VIRT_REG 1] [IMMEDIATE 14] [NONE 0]
+				EQ [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 15] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 4] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 14] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 6] [VIRT_REG 5] [IMMEDIATE 8] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 7] [VIRT_REG 6] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		14 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_FREE_REF [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 1] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 1] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 2] [VIRT_REG 1] [IMMEDIATE 14] [NONE 0]
+				EQ [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 3] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 3] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 4] [VIRT_REG 0] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 5] [VIRT_REG 4] [IMMEDIATE 14] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 6] [VIRT_REG 5] [IMMEDIATE 7] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 7] [VIRT_REG 6] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		15 : {
+			0 : [
+				Phi Nodes: 
+				LOAD_ARG [VIRT_REG 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				LOAD_FREE_REF [VIRT_REG 1] [LOGICAL 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 2] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 2] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 3] [VIRT_REG 2] [IMMEDIATE 14] [NONE 0]
+				EQ [VIRT_REG 4] [VIRT_REG 3] [IMMEDIATE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				successors: 2 3 
+				predecessors: 0 
+			];
+			2 : [
+				Phi Nodes: 
+				successors: 4 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				REF_LOAD [VIRT_REG 5] [VIRT_REG 1] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 5] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 6] [VIRT_REG 5] [IMMEDIATE 14] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 6] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 7] [VIRT_REG 6] [IMMEDIATE 5] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 7] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 8] [VIRT_REG 7] [NONE 0] [NONE 0]
+				successors: 4 
+				predecessors: 1 
+			];
+			4 : [
+				Phi Nodes: 
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 2 3 
+			];
+		}
+		16 : {
+			0 : [
+				Phi Nodes: 
+				ALLOC_REF [VIRT_REG 0] [NONE 0] [NONE 0] [NONE 0]
+				REF_STORE [NONE 0] [VIRT_REG 0] [IMMEDIATE 0] [NONE 0]
+				ALLOC_REF [VIRT_REG 1] [NONE 0] [NONE 0] [NONE 0]
+				REF_STORE [NONE 0] [VIRT_REG 1] [IMMEDIATE 0] [NONE 0]
+				ALLOC_CLOSURE [VIRT_REG 2] [LOGICAL 9] [LOGICAL 1] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 2] [VIRT_REG 0]
+				REF_STORE [NONE 0] [VIRT_REG 0] [VIRT_REG 2] [NONE 0]
+				ALLOC_REC [VIRT_REG 3] [VIRT_REG 3] [LOGICAL 7] [LOGICAL 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 6] [IMMEDIATE 0]
+				ALLOC_CLOSURE [VIRT_REG 4] [LOGICAL 10] [LOGICAL 1] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 4] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 0] [VIRT_REG 4]
+				ALLOC_CLOSURE [VIRT_REG 5] [LOGICAL 11] [LOGICAL 1] [LOGICAL 2]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 5] [VIRT_REG 0]
+				SET_CAPTURE [NONE 0] [LOGICAL 1] [VIRT_REG 5] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 5] [VIRT_REG 5]
+				ALLOC_CLOSURE [VIRT_REG 6] [LOGICAL 12] [LOGICAL 0] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 6] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 4] [VIRT_REG 6]
+				ALLOC_CLOSURE [VIRT_REG 7] [LOGICAL 13] [LOGICAL 0] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 7] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 3] [VIRT_REG 7]
+				ALLOC_CLOSURE [VIRT_REG 8] [LOGICAL 14] [LOGICAL 0] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 8] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 2] [VIRT_REG 8]
+				ALLOC_CLOSURE [VIRT_REG 9] [LOGICAL 15] [LOGICAL 1] [LOGICAL 1]
+				SET_CAPTURE [NONE 0] [LOGICAL 0] [VIRT_REG 9] [VIRT_REG 1]
+				REC_STORE_STATIC [NONE 0] [VIRT_REG 3] [LOGICAL 1] [VIRT_REG 9]
+				REF_STORE [NONE 0] [VIRT_REG 1] [VIRT_REG 3] [NONE 0]
+				REF_LOAD [VIRT_REG 10] [VIRT_REG 1] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [VIRT_REG 10] [NONE 0] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 
+			];
+		}
+		17 : {
+			0 : [
+				Phi Nodes: 
+				ALLOC_CLOSURE [VIRT_REG 0] [LOGICAL 0] [LOGICAL 1] [LOGICAL 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 0] [VIRT_REG 0] [NONE 0]
+				ALLOC_CLOSURE [VIRT_REG 1] [LOGICAL 1] [LOGICAL 0] [LOGICAL 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 1] [VIRT_REG 1] [NONE 0]
+				ALLOC_CLOSURE [VIRT_REG 2] [LOGICAL 2] [LOGICAL 1] [LOGICAL 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 2] [VIRT_REG 2] [NONE 0]
+				ALLOC_CLOSURE [VIRT_REG 3] [LOGICAL 16] [LOGICAL 0] [LOGICAL 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 3] [VIRT_REG 3] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 4] [IMMEDIATE 16] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 5] [IMMEDIATE 17] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 4] [LOGICAL 3] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 4] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 5] [VIRT_REG 4] [NONE 0] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 6] [VIRT_REG 5] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 7] [IMMEDIATE 3] [NONE 0]
+				successors: 1 
+				predecessors: 
+			];
+			1 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 6] [LOGICAL 7] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 7] [LOGICAL 5] [NONE 0] [NONE 0]
+				GEQ [VIRT_REG 8] [VIRT_REG 6] [VIRT_REG 7] [NONE 0]
+				NOT [VIRT_REG 9] [VIRT_REG 8] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 9] [NONE 0] [NONE 0]
+				successors: 2 6 
+				predecessors: 0 5 
+				this block is loop header with final block 5
+			];
+			2 : [
+				Phi Nodes: 
+				STORE_GLOBAL [NONE 0] [LOGICAL 8] [IMMEDIATE 3] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 9] [IMMEDIATE 18] [NONE 0]
+				successors: 3 
+				predecessors: 1 
+			];
+			3 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 10] [LOGICAL 8] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 11] [LOGICAL 4] [NONE 0] [NONE 0]
+				GEQ [VIRT_REG 12] [VIRT_REG 10] [VIRT_REG 11] [NONE 0]
+				NOT [VIRT_REG 13] [VIRT_REG 12] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 13] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 13] [NONE 0] [NONE 0]
+				successors: 4 5 
+				predecessors: 2 4 
+				this block is loop header with final block 4
+			];
+			4 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 14] [LOGICAL 6] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 14] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 15] [VIRT_REG 14] [IMMEDIATE 10] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 15] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 16] [LOGICAL 9] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 17] [LOGICAL 8] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 18] [VIRT_REG 16] [VIRT_REG 17] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 18] [NONE 0]
+				EXEC_CALL [VIRT_REG 19] [VIRT_REG 15] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 20] [LOGICAL 8] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 21] [VIRT_REG 20] [IMMEDIATE 13] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 8] [VIRT_REG 21] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				successors: 3 
+				predecessors: 3 
+			];
+			5 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 22] [LOGICAL 7] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 23] [VIRT_REG 22] [IMMEDIATE 13] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 7] [VIRT_REG 23] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				successors: 1 
+				predecessors: 3 
+			];
+			6 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 24] [LOGICAL 6] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 24] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 25] [VIRT_REG 24] [IMMEDIATE 9] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 25] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 26] [VIRT_REG 25] [NONE 0] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 10] [VIRT_REG 26] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 27] [LOGICAL 6] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 27] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 28] [VIRT_REG 27] [IMMEDIATE 8] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 28] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 29] [VIRT_REG 28] [NONE 0] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 11] [VIRT_REG 29] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 30] [LOGICAL 0] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 30] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 31] [LOGICAL 10] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 32] [IMMEDIATE 19] [VIRT_REG 31] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 32] [NONE 0]
+				EXEC_CALL [VIRT_REG 33] [VIRT_REG 30] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 34] [LOGICAL 0] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 34] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 35] [LOGICAL 11] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 36] [IMMEDIATE 20] [VIRT_REG 35] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 36] [NONE 0]
+				EXEC_CALL [VIRT_REG 37] [VIRT_REG 34] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 38] [LOGICAL 10] [NONE 0] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 7] [VIRT_REG 38] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 12] [IMMEDIATE 3] [NONE 0]
+				successors: 7 
+				predecessors: 1 
+			];
+			7 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 39] [LOGICAL 7] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 40] [LOGICAL 11] [NONE 0] [NONE 0]
+				GT [VIRT_REG 41] [VIRT_REG 39] [VIRT_REG 40] [NONE 0]
+				NOT [VIRT_REG 42] [VIRT_REG 41] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 42] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 42] [NONE 0] [NONE 0]
+				successors: 8 12 
+				predecessors: 6 11 
+				this block is loop header with final block 11
+			];
+			8 : [
+				Phi Nodes: 
+				successors: 9 
+				predecessors: 7 
+			];
+			9 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 43] [LOGICAL 6] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 43] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 44] [VIRT_REG 43] [IMMEDIATE 4] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 44] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 45] [LOGICAL 7] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 45] [NONE 0]
+				EXEC_CALL [VIRT_REG 46] [VIRT_REG 44] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 46] [NONE 0] [NONE 0]
+				NOT [VIRT_REG 47] [VIRT_REG 46] [NONE 0] [NONE 0]
+				ASSERT_BOOL [NONE 0] [VIRT_REG 47] [NONE 0] [NONE 0]
+				BRANCH [NONE 0] [VIRT_REG 47] [NONE 0] [NONE 0]
+				successors: 10 11 
+				predecessors: 8 
+			];
+			10 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 48] [LOGICAL 12] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 49] [VIRT_REG 48] [IMMEDIATE 13] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 12] [VIRT_REG 49] [NONE 0]
+				successors: 11 
+				predecessors: 9 
+			];
+			11 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 50] [LOGICAL 7] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 51] [VIRT_REG 50] [IMMEDIATE 13] [NONE 0]
+				STORE_GLOBAL [NONE 0] [LOGICAL 7] [VIRT_REG 51] [NONE 0]
+				GC [NONE 0] [NONE 0] [NONE 0] [NONE 0]
+				successors: 7 
+				predecessors: 10 9 
+			];
+			12 : [
+				Phi Nodes: 
+				LOAD_GLOBAL [VIRT_REG 52] [LOGICAL 0] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 52] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 53] [LOGICAL 11] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 54] [LOGICAL 10] [NONE 0] [NONE 0]
+				ASSERT_INT [NONE 0] [VIRT_REG 53] [NONE 0] [NONE 0]
+				ASSERT_INT [NONE 0] [VIRT_REG 54] [NONE 0] [NONE 0]
+				SUB [VIRT_REG 55] [VIRT_REG 53] [VIRT_REG 54] [NONE 0]
+				ADD [VIRT_REG 56] [VIRT_REG 55] [IMMEDIATE 13] [NONE 0]
+				ADD [VIRT_REG 57] [IMMEDIATE 21] [VIRT_REG 56] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 57] [NONE 0]
+				EXEC_CALL [VIRT_REG 58] [VIRT_REG 52] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 59] [LOGICAL 0] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 59] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 60] [LOGICAL 12] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 61] [IMMEDIATE 22] [VIRT_REG 60] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 61] [NONE 0]
+				EXEC_CALL [VIRT_REG 62] [VIRT_REG 59] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 63] [LOGICAL 0] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 63] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 64] [LOGICAL 6] [NONE 0] [NONE 0]
+				ASSERT_RECORD [NONE 0] [VIRT_REG 64] [NONE 0] [NONE 0]
+				REC_LOAD_NAME [VIRT_REG 65] [VIRT_REG 64] [IMMEDIATE 7] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 65] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 0] [NONE 0] [NONE 0]
+				EXEC_CALL [VIRT_REG 66] [VIRT_REG 65] [NONE 0] [NONE 0]
+				ADD [VIRT_REG 67] [IMMEDIATE 23] [VIRT_REG 66] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [VIRT_REG 67] [NONE 0]
+				EXEC_CALL [VIRT_REG 68] [VIRT_REG 63] [NONE 0] [NONE 0]
+				LOAD_GLOBAL [VIRT_REG 69] [LOGICAL 0] [NONE 0] [NONE 0]
+				ASSERT_CLOSURE [NONE 0] [VIRT_REG 69] [NONE 0] [NONE 0]
+				INIT_CALL [NONE 0] [LOGICAL 1] [NONE 0] [NONE 0]
+				SET_ARG [NONE 0] [LOGICAL 0] [IMMEDIATE 24] [NONE 0]
+				EXEC_CALL [VIRT_REG 70] [VIRT_REG 69] [NONE 0] [NONE 0]
+				RETURN [NONE 0] [IMMEDIATE 0] [NONE 0] [NONE 0]
+				successors: 
+				predecessors: 7 
+			];
+		}
+	}
+	immediates {0 : None, 1 : true, 2 : false, 3 : 0, 4 : contains, 5 : forall, 6 : left, 7 : len, 8 : max, 9 : min, 10 : plus, 11 : right, 12 : val, 13 : 1, 14 : root, 15 : Error, 16 : 400, 17 : 5, 18 : 6, 19 : Min = , 20 : Max = , 21 : Range size = , 22 : Missing = , 23 : Length = , 24 : After forall, }
+	layouts: {0 : (contains, forall, left, len, max, min, plus, right, val, ), 1 : (contains, forall, len, max, min, plus, root, ), }
+}

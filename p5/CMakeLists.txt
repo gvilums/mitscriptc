@@ -10,6 +10,7 @@ set(sources ${sources}
     src/compiler.cpp
     src/const_propagator.cpp
     src/dead_code_remover.cpp
+    src/shape_analysis.cpp
     src/ir.cpp
     src/irprinter.cpp
     src/parsercode.cpp

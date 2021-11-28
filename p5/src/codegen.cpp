@@ -370,7 +370,7 @@ void CodeGenerator::process_block(
                 }
             }
             assembler.bind(skip_gc_label);
-        } else if (instr.op == IR::Operation::ALLOC_STRUCT) {
+        /*} else if (instr.op == IR::Operation::ALLOC_STRUCT) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.mov(x86::rsi, Imm(instr.args[0].index));
             assembler.call(Imm(runtime::extern_alloc_struct));
@@ -386,7 +386,7 @@ void CodeGenerator::process_block(
         } else if (instr.op == IR::Operation::STRUCT_STORE) {
             int offset = 8 * (instr.args[1].index + 1);
             assembler.and_(x86::r10, Imm(~0b1111));
-            assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);
+            assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);*/
         } else {
             assert(false);
         }
@@ -503,7 +503,7 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
 
     program.ctx_ptr->init_globals(program.num_globals);
     program.ctx_ptr->init_immediates(program.immediates);
-    program.ctx_ptr->init_layouts(program.struct_layouts);
+    // program.ctx_ptr->init_layouts(program.struct_layouts);
     // TODO maybe remove this in release builds, although speed difference should be small
     assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
 

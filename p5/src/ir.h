@@ -56,9 +56,11 @@ enum class Operation {
     REC_LOAD_INDX,
     REC_STORE_NAME,
     REC_STORE_INDX,
+    REC_STORE_STATIC,
+    REC_LOAD_STATIC,
 
-    ALLOC_REF,
-    ALLOC_REC,
+    ALLOC_REF, 
+    ALLOC_REC,          // ALLOC_REC (VIRT_REG out) <- (LOGICAL size) (LOGICAL layout)
     ALLOC_CLOSURE,		// (VIRT_REG id), FUNCTION IDX, #args, #SET_CAPTUREs
     
     SET_CAPTURE,        // SET_CAPTURE NONE <- (LOGICAL index) (VIRT_REG id) (VIRT_REG id)
@@ -153,7 +155,7 @@ struct Function {
 struct Program {
     std::vector<Function> functions;
     std::vector<runtime::Value> immediates;
-    std::vector<std::vector<std::string>> struct_layouts;
+    std::vector<std::vector<runtime::Value>> struct_layouts;
     int num_globals{0};
     runtime::ProgramContext* ctx_ptr{nullptr};
 
