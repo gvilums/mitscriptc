@@ -138,7 +138,9 @@ void Compiler::visit(AST::Block& expr) {
         c->accept(*((Visitor*)this));
 }
 
-void Compiler::visit(AST::Global& expr) {}
+void Compiler::visit(AST::Global& expr) {
+    program_->ref_globals.insert(names_[expr.name]);
+}
 
 void Compiler::visit(AST::Return& expr) {
     expr.Expr->accept(*((Visitor*)this));
