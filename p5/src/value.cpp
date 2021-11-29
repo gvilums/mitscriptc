@@ -580,8 +580,8 @@ void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
     trace_value(ctx, &ctx->function_string);
 //    std::cout << "----- finished collecting -----" << std::endl;
     // TODO DEBUG
-    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
-    std::memset(cleared_region, 0, ctx->region_size);
+//    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
+//    std::memset(cleared_region, 0, ctx->region_size);
 }
 
 void trace_value(ProgramContext* ctx, Value* ptr) {
