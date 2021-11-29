@@ -7,7 +7,7 @@ COUNT=0
 
 for filename in public/bad*.mit; do
     echo $filename
-    OUT=$(timeout $TIMEOUT $INTERPRETER $filename 2>&1)
+    OUT=$(timeout $TIMEOUT $INTERPRETER -s $filename 2>&1)
     CODE=$?
     if [[ $CODE -ne 0 ]]; then
         COUNT=$((COUNT+1))
@@ -19,7 +19,7 @@ done
 
 for filename in public/good*.mit; do
     echo $filename
-    timeout $TIMEOUT $INTERPRETER $filename > tmp.out
+    timeout $TIMEOUT $INTERPRETER -s $filename > tmp.out
     CODE=$?
     if diff tmp.out public/$(basename $filename).out; then
         COUNT=$((COUNT+1))
@@ -34,9 +34,9 @@ done
 for filename in private/*.mit; do
     echo $filename
     if test -f $filename.in; then
-        timeout $TIMEOUT $INTERPRETER $filename < $filename.in > tmp1.out 2> tmp1.err
+        timeout $TIMEOUT $INTERPRETER -s $filename < $filename.in > tmp1.out 2> tmp1.err
     else
-        timeout $TIMEOUT $INTERPRETER $filename > tmp1.out 2> tmp1.err
+        timeout $TIMEOUT $INTERPRETER -s $filename > tmp1.out 2> tmp1.err
     fi
     CODE=$?
     if [[ $(cat private/$(basename $filename).out) =~ [A-Z][A-Za-z]+Exception ]]; then
