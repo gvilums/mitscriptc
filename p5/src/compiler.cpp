@@ -130,7 +130,7 @@ void Compiler::visit(AST::Program& expr) {
     fun_->virt_reg_count = reg_cnt_;
     program_->functions.push_back(*fun_);
     delete fun_;
-    program_->num_globals = globals_.size();
+    program_->num_globals = (int) names_cnt_;
 }
 
 void Compiler::visit(AST::Block& expr) {

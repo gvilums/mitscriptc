@@ -105,7 +105,7 @@ auto main(int argc, const char* argv[]) -> int {
         prog = sa_opt.optimize();
     }
 
-    // std::cout << *prog << std::endl;
+     // std::cout << *prog << std::endl;
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
     for (auto& func : prog->functions) {
@@ -114,7 +114,7 @@ auto main(int argc, const char* argv[]) -> int {
 //    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
 //    IR::allocate_registers(prog->functions.back());
 
-//    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
 
 
     codegen::Executable compiled(std::move(*prog));
