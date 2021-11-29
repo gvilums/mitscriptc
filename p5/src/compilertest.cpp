@@ -86,8 +86,6 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 
-    // std::cout << *prog << std::endl;
-
     if (args.use_const_propagation) {
         try {
             ConstPropagator c_prop(prog);
@@ -102,10 +100,10 @@ auto main(int argc, const char* argv[]) -> int {
         prog = dc_opt.optimize();
     }
 
-     if (args.use_shape_analysis) {
+    if (args.use_shape_analysis) {
         ShapeAnalysis sa_opt(prog);
         prog = sa_opt.optimize();
-     }
+    }
 
     // std::cout << *prog << std::endl;
 

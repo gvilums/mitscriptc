@@ -1,13 +1,5 @@
-g = fun() {
-	f = fun(){
-		a = {
-			sz:1;
-			len:fun(){
-				return a.sz;
-			};
-		};
-		return a;
-	};
-	a = f();
-	print(a.sz);
+r = {
+    a: 123;
 };
+
+print(r.a);
