@@ -2,6 +2,7 @@
 #include "MITScript.h"
 #include "antlr4-runtime.h"
 #include "parsercode.h"
+#include "utils.h"
 
 #define check(x)                              \
     {                                         \
@@ -432,7 +433,7 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
             break;
         case lexer::MITScript::STRCONST:
             Con3 = new AST::StringConstant();
-            Con3->addVal(token->getText());
+            Con3->addVal(utils::escape(token->getText()));
             tokens.consume();
             Expr = (AST::Expression*)Con3;
             break;

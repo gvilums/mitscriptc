@@ -17,6 +17,7 @@ set(sources ${sources}
     src/parsercode.cpp
     src/regalloc.cpp
     src/value.cpp
+    src/utils.cpp
     grammar/MITScript.cpp
 )
 

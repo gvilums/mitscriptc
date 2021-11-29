@@ -1,5 +1,1 @@
-r = {
-    a: 123;
-};
-
-print(r.a);
+print("a\nb\nc\nd");
