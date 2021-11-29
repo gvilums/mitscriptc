@@ -3,9 +3,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
-#include <ostream>
 #include <queue>
-#include <system_error>
 #include <unordered_set>
 #include <vector>
 #include <bitset>
@@ -283,7 +281,6 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                 case Operation::ALLOC_CLOSURE:
                 case Operation::ALLOC_REC:
                 case Operation::ALLOC_REF:
-                case Operation::ALLOC_STRUCT:
                 case Operation::REC_LOAD_NAME:
                 case Operation::REC_LOAD_INDX:
                 case Operation::REC_STORE_NAME:
