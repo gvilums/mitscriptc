@@ -36,9 +36,6 @@ struct ProgramContext {
     size_t globals_size{0};
     Value* globals{nullptr};
 
-    size_t immediates_size{0};
-    Value* immediates{nullptr};
-
     uint64_t saved_rsp{0};
 
     std::vector<void*> static_allocations;
@@ -62,7 +59,6 @@ struct ProgramContext {
     void init_globals(size_t num_globals);
     void reset_globals();
 
-    void init_immediates(const std::vector<Value>& imm);
     void init_layouts(std::vector<std::vector<Value>> field_layouts);
 };
 

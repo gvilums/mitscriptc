@@ -166,12 +166,8 @@ void CodeGenerator::process_block(
             assembler.or_(x86::r10, x86::r11);
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::NOT) {
-            assembler.shr(x86::r10, 4);
-            assembler.mov(x86::r11, Imm(1));
-            assembler.sub(x86::r11, x86::r10);
-            assembler.shl(x86::r11, 4);
-            assembler.or_(x86::r11, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
-            store(instr.out, x86::r11);
+            assembler.xor_(x86::r10, 0b10000);
+            store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::LOAD_ARG) {
             // +2 because saved rbp and rip are at rbp
             size_t arg_id = instr.args[0].index;
@@ -187,11 +183,11 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r10, x86::Mem(x86::rbx, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_LOAD) {
-            assembler.and_(x86::r10, Imm(~0b1111));
+            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
             assembler.mov(x86::r10, x86::Mem(x86::r10, 0));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_STORE) {
-            assembler.and_(x86::r10, Imm(~0b1111));
+            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
             assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
@@ -209,12 +205,12 @@ void CodeGenerator::process_block(
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::REC_LOAD_STATIC) {
             int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
-            assembler.and_(x86::r10, Imm(~0b111));
+            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
             assembler.mov(x86::r10, x86::ptr_64(x86::r10, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REC_STORE_STATIC) {
             int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
-            assembler.and_(x86::r10, Imm(~0b111));
+            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
             assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
@@ -234,14 +230,14 @@ void CodeGenerator::process_block(
             assembler.call(Imm(runtime::extern_alloc_closure));
             // load function address
             assembler.mov(x86::r11, x86::rax);
-            assembler.and_(x86::r11, Imm(~0b1111));
+            assembler.and_(x86::r11, Imm(runtime::DATA_MASK));
             assembler.mov(x86::r10, x86::Mem(function_address_base_label, 8 * fn_id));
             assembler.mov(x86::Mem(x86::r11, 0), x86::r10);
             assembler.mov(x86::qword_ptr(x86::r11, 8), Imm(instr.args[1].index));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::SET_CAPTURE) {
             int32_t offset = 24 + 8 * instr.args[0].index;
-            assembler.and_(x86::r10, Imm(~0b1111));
+            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::INIT_CALL) {
             current_args = instr.args[0].index;
@@ -267,7 +263,7 @@ void CodeGenerator::process_block(
             }
         } else if (instr.op == IR::Operation::EXEC_CALL) {
             load(x86::rbx, instr.args[0]);
-            assembler.and_(x86::rbx, Imm(~0b1111));
+            assembler.and_(x86::rbx, Imm(runtime::DATA_MASK));
 
             // validate number of arguments
             assembler.mov(x86::r10, x86::Mem(x86::rbx, 8));
@@ -311,21 +307,21 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r11, Imm(program.ctx_ptr->globals));
             assembler.mov(x86::ptr_64(x86::r11, offset), x86::r10);
         } else if (instr.op == IR::Operation::ASSERT_BOOL) {
-            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
             assembler.cmp(x86::r10, Imm(runtime::BOOL_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_INT) {
-            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
             assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_STRING) {
             // TODO implement or maybe remove, think about this
         } else if (instr.op == IR::Operation::ASSERT_RECORD) {
-            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
             assembler.cmp(x86::r10, Imm(runtime::RECORD_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_CLOSURE) {
-            assembler.and_(x86::r10, Imm(0b1111));
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
             assembler.cmp(x86::r10, Imm(runtime::CLOSURE_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_NONZERO) {
@@ -400,8 +396,6 @@ void CodeGenerator::load(const asmjit::x86::Gp& reg, const IR::Operand& op) {
     switch (op.type) {
         case IR::Operand::IMMEDIATE: {
             assembler.mov(reg, Imm(program.immediates[op.index]));
-//            assembler.mov(reg, Imm(program.ctx_ptr->immediates + op.index));
-//            assembler.mov(reg, x86::ptr_64(reg));
         } break;
         case IR::Operand::MACHINE_REG:
             assembler.mov(reg, to_reg(op.index));
