@@ -101,14 +101,14 @@ auto main(int argc, const char* argv[]) -> int {
     }
 
     // if (args.use_shape_analysis) {
-        ShapeAnalysis sa_opt(prog);
-        prog = sa_opt.optimize();
+//        ShapeAnalysis sa_opt(prog);
+//        prog = sa_opt.optimize();
     // }
 
-    std::cout << *prog << std::endl;
+//    std::cout << *prog << std::endl;
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
-    /*for (auto& func : prog->functions) {
+    for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
 //    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
@@ -123,7 +123,7 @@ auto main(int argc, const char* argv[]) -> int {
     } catch (codegen::RuntimeException& exception) {
         std::cout << exception << std::endl;
         return 1;
-    }*/
+    }
 
     // std::cout << *prog << std::endl;
     

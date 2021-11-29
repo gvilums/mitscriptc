@@ -115,7 +115,7 @@ struct ValueEq {
 };
 
 // TODO CHECK IF THIS UPDATE DOESN'T BREAK ANYTHING
-const std::uint64_t TAG_MASK = 0b1111;
+const std::uint64_t TAG_MASK = 0b111;
 const std::uint64_t DATA_MASK = ~TAG_MASK;
 
 

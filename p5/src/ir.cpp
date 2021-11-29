@@ -16,6 +16,7 @@ Program::Program(Program&& other) noexcept {
     this->num_globals = other.num_globals;
     this->functions = std::move(other.functions);
     this->immediates = std::move(other.immediates);
+    this->struct_layouts = std::move(other.struct_layouts);
 }
 
 auto Function::split_edge(int32_t from, int32_t to) -> BasicBlock& {

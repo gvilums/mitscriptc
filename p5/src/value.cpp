@@ -438,7 +438,7 @@ auto ProgramContext::alloc_string(size_t length) -> String* {
 }
 
 auto ProgramContext::alloc_record(uint32_t num_static, uint32_t layout) -> Record* {
-    HeapObject* obj = this->alloc_traced(sizeof(Record));
+    HeapObject* obj = this->alloc_traced(sizeof(Record) + sizeof(Value) * num_static);
     auto* rec = reinterpret_cast<Record*>(&obj->data);
     // initialize map
     new (&rec->dynamic_fields) Record::map_type{ProgramAllocator<Record::alloc_type>{this}};
@@ -458,9 +458,9 @@ auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
     HeapObject* ptr;
     if (this->current_region == 2) {
-        void* vptr = std::malloc(allocation_size);
+        void* vptr = std::malloc(8 + allocation_size);
         this->static_allocations.push_back(vptr);
-        ptr = reinterpret_cast<HeapObject*>(vptr);
+        ptr = reinterpret_cast<HeapObject*>((char*)vptr + 8);
     } else {
         // align to multiple of 16
         size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;

@@ -26,7 +26,7 @@ class RuntimeException {
 };
 
 class CodeGenerator {
-    IR::Program program;
+    const IR::Program& program;
     asmjit::x86::Assembler assembler;
 
     std::vector<asmjit::Label> function_labels;
@@ -48,7 +48,7 @@ class CodeGenerator {
     void init_labels();
 
    public:
-    CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_holder);
+    CodeGenerator(const IR::Program& program1, asmjit::CodeHolder* code_holder);
 };
 
 class Executable {
@@ -57,7 +57,7 @@ class Executable {
     int (*function)(){nullptr};
 
    public:
-    explicit Executable(IR::Program&& program1);
+    explicit Executable(IR::Program program1);
     ~Executable();
     void run();
 

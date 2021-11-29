@@ -13,7 +13,7 @@ class MyErrorHandler : public asmjit::ErrorHandler {
     }
 };
 
-Executable::Executable(IR::Program&& program) : ctx_ptr(program.ctx_ptr) {
+Executable::Executable(IR::Program program) : ctx_ptr(program.ctx_ptr) {
     using namespace asmjit;
     MyErrorHandler handler;
     FileLogger logger(stdout);
@@ -23,7 +23,8 @@ Executable::Executable(IR::Program&& program) : ctx_ptr(program.ctx_ptr) {
     code.setErrorHandler(&handler);
 //    code.setLogger(&logger);
 
-    CodeGenerator generator{std::move(program), &code};
+    CodeGenerator generator{program, &code};
+    program.ctx_ptr = nullptr;
 
     Error err = this->jit_rt.add(&this->function, &code);
     if (err) {
@@ -396,9 +397,9 @@ void CodeGenerator::load(const asmjit::x86::Gp& reg, const IR::Operand& op) {
     using namespace asmjit;
     switch (op.type) {
         case IR::Operand::IMMEDIATE: {
-//            assembler.mov(reg, Imm(program.immediates[op.index]));
-            assembler.mov(reg, Imm(program.ctx_ptr->immediates + op.index));
-            assembler.mov(reg, x86::ptr_64(reg));
+            assembler.mov(reg, Imm(program.immediates[op.index]));
+//            assembler.mov(reg, Imm(program.ctx_ptr->immediates + op.index));
+//            assembler.mov(reg, x86::ptr_64(reg));
         } break;
         case IR::Operand::MACHINE_REG:
             assembler.mov(reg, to_reg(op.index));
@@ -497,11 +498,10 @@ auto to_mem(int32_t stack_slot) -> asmjit::x86::Mem {
     return {asmjit::x86::rbp, 8 * (-stack_slot - 1)};
 }
 
-CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_holder)
-    : program(std::move(program1)), assembler(code_holder) {
+CodeGenerator::CodeGenerator(const IR::Program& program1, asmjit::CodeHolder* code_holder)
+    : program(program1), assembler(code_holder) {
 
     program.ctx_ptr->init_globals(program.num_globals);
-    program.ctx_ptr->init_immediates(program.immediates);
     program.ctx_ptr->init_layouts(program.struct_layouts);
     program.ctx_ptr->start_dynamic_alloc();
     // TODO maybe remove this in release builds, although speed difference should be small
@@ -518,7 +518,6 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
     for (const auto& label : function_labels) {
         assembler.embedLabel(label);
     }
-    program.ctx_ptr = nullptr;
 }
 
 void CodeGenerator::generate_prelude() {
