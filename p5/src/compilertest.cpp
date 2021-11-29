@@ -45,7 +45,7 @@ struct Arguments {
                 use_type_inference = true;
             } else if (arg == "-mem") {
                 assert(i < argc);
-                memory_limit = std::stol(argv[i]) * (1 << 20);
+                memory_limit = (std::stol(argv[i]) - 1) * (1 << 20);
                 i += 1;
             } else if (arg == "--emit-code") {
                 emit_ir = true;

@@ -411,12 +411,9 @@ void extern_rec_store_index(ProgramContext* ctx, Value rec, Value index_val, Val
 ProgramContext::ProgramContext(size_t heap_size) {
     // align heap size
     heap_size &= ~0b1111;
-    // all allocations happen on 8 byte offset of 16 byte boundary
-    // hence, allocate 8 additional bytes for overwriting
     this->heap = static_cast<char*>(malloc(heap_size + 8));
     this->region_size = heap_size / 2;
-    this->gc_threshold = region_size - 1024;
-    // + 8 to preserve alignment for heap object data fields
+    this->gc_threshold = region_size - (1 << 14);
     this->write_head = heap + 8;
 
     this->none_string = to_value(this, "None");
@@ -458,11 +455,10 @@ auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
     HeapObject* ptr;
     if (this->current_region == 2) {
-        void* vptr = std::malloc(8 + allocation_size);
-        this->static_allocations.push_back(vptr);
-        ptr = reinterpret_cast<HeapObject*>((char*)vptr + 8);
+        ptr = static_cast<HeapObject*>(std::malloc(allocation_size));
+        this->static_allocations.push_back(ptr);
     } else {
-        // align to multiple of 16
+        // align to multiple of 8
         size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
         current_alloc += aligned_size;
         if (current_alloc >= region_size) {
@@ -516,17 +512,6 @@ void ProgramContext::reset_globals() {
     }
 }
 
-void ProgramContext::init_immediates(const std::vector<Value>& imm) {
-    if (immediates != nullptr) {
-        assert(false && "cannot reinitialize immediates");
-    }
-    immediates_size = imm.size();
-    immediates = static_cast<Value*>(malloc(sizeof(Value) * immediates_size));
-    for (int i = 0; i < immediates_size; ++i) {
-        immediates[i] = imm[i];
-    }
-}
-
 void ProgramContext::init_layouts(std::vector<std::vector<Value>> field_layouts) {
     this->layouts = std::move(field_layouts);
 }
@@ -537,7 +522,7 @@ auto ProgramContext::alloc_raw(size_t num_bytes) -> void* {
         ptr = malloc(num_bytes);
         this->static_allocations.push_back(ptr);
     } else {
-        // align to 16 bytes
+        // align to 8 bytes
         size_t aligned_size = ((num_bytes - 1) | 0b1111) + 1;
         current_alloc += aligned_size;
         if (current_alloc >= region_size) {
@@ -551,7 +536,6 @@ auto ProgramContext::alloc_raw(size_t num_bytes) -> void* {
 }
 
 void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
-//    std::cout << "------ collecting ------" << std::endl;
     ctx->switch_region();
     // TODO CHECK
     // base rbp is pointing two slots above saved rsp on stack
@@ -569,15 +553,6 @@ void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
     for (int i = 0; i < ctx->globals_size; ++i) {
         trace_value(ctx, ctx->globals + i);
     }
-//    std::cout << "--- tracing immediates ---" << std::endl;
-    for (int i = 0; i < ctx->immediates_size; ++i) {
-        trace_value(ctx, ctx->immediates + i);
-    }
-//    std::cout << "--- tracing string constants ---" << std::endl;
-    trace_value(ctx, &ctx->none_string);
-    trace_value(ctx, &ctx->true_string);
-    trace_value(ctx, &ctx->false_string);
-    trace_value(ctx, &ctx->function_string);
 //    std::cout << "----- finished collecting -----" << std::endl;
     // TODO DEBUG
 //    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
