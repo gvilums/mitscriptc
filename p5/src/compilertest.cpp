@@ -86,6 +86,8 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 
+    // std::cout << *prog << std::endl;
+
     if (args.use_const_propagation) {
         try {
             ConstPropagator c_prop(prog);
@@ -105,7 +107,7 @@ auto main(int argc, const char* argv[]) -> int {
         prog = sa_opt.optimize();
      }
 
-//    std::cout << *prog << std::endl;
+    // std::cout << *prog << std::endl;
 
 //    pretty_print_function(std::cout, prog->functions[3]) << std::endl;
     for (auto& func : prog->functions) {
