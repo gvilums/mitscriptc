@@ -100,10 +100,10 @@ auto main(int argc, const char* argv[]) -> int {
 //        prog = dc_opt.optimize();
 //    }
 
-//     if (args.use_shape_analysis) {
-//        ShapeAnalysis sa_opt(prog);
-//        prog = sa_opt.optimize();
-//     }
+     if (args.use_shape_analysis) {
+        ShapeAnalysis sa_opt(prog);
+        prog = sa_opt.optimize();
+     }
 
 //    std::cout << *prog << std::endl;
 

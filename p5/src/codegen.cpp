@@ -209,10 +209,12 @@ void CodeGenerator::process_block(
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::REC_LOAD_STATIC) {
             int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
+            assembler.and_(x86::r10, Imm(~0b111));
             assembler.mov(x86::r10, x86::ptr_64(x86::r10, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REC_STORE_STATIC) {
             int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
+            assembler.and_(x86::r10, Imm(~0b111));
             assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
