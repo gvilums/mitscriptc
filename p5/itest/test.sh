@@ -59,6 +59,25 @@ for filename in private/*.mit; do
     rm -f tmp1.out tmp1.err
 done
 
+for filename in bench/*.mit; do
+    echo $filename
+    if test -f $filename.input; then
+        timeout $TIMEOUT $INTERPRETER $filename < $filename.input > tmp1.out 2> tmp1.err
+    else
+        timeout $TIMEOUT $INTERPRETER $filename > tmp1.out 2> tmp1.err
+    fi
+    CODE=$?
+    if diff tmp1.out $filename.output; then
+        PCOUNT=$((PCOUNT+1))
+        COUNT=$((COUNT+1))
+    else
+          cat tmp1.out tmp1.err
+        echo "Fail: $(basename $filename) (exit code $CODE)"
+    fi
+    TOTAL=$((TOTAL+1))
+    rm -f tmp1.out tmp1.err
+done
+
 echo "Passed $COUNT out of $TOTAL tests"
 
 # bash ./gc_test.sh $INTERPRETER
