@@ -560,7 +560,7 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
     a_closure.args[2] = {IR::Operand::OpType::LOGICAL, (int)free_vars_.size()};
     tblock.instructions[b_idx] = a_closure;
 
-    if (block_.instructions.back().op != IR::Operation::RETURN) {
+    if (block_.instructions.empty() || block_.instructions.back().op != IR::Operation::RETURN) {
         block_.instructions.push_back({IR::Operation::GC, IR::Operand(), {}});
         block_.instructions.push_back({IR::Operation::RETURN, IR::Operand(), {IR::Operand::OpType::IMMEDIATE, 0}});
     }
