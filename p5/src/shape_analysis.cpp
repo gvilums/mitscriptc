@@ -4,6 +4,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <set>
 
 ShapeAnalysis::ShapeAnalysis(IR::Program* prog) : prog_(prog){}
 
@@ -25,8 +26,9 @@ void ShapeAnalysis::infer_structs() {
     std::map<int, int> known_fun;
     std::map<std::pair<int, int>, int> known_free_var;
     std::map<std::pair<int, int>, int> fun_idx;
+    std::set<std::pair<int, int>> valid_ref_vars;
 
-    size_t cur_size = known_regs.size() + known_fun.size() + known_regs.size();
+    size_t cur_size = known_regs.size() + known_fun.size() + known_free_var.size();
     while(true) {
         for (size_t i = 0; i < prog_->functions.size(); i++) {
             std::vector<int> return_recs;
@@ -47,34 +49,34 @@ void ShapeAnalysis::infer_structs() {
 
                     if (cur_ins.op == IR::Operation::ASSERT_RECORD && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index}))
                         continue;
-        
                     if (cur_ins.op == IR::Operation::MOV  && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index}))
                         known_regs[{i, cur_ins.out.index}] = known_regs[{i, cur_ins.args[0].index}];
-                    
-                    if (cur_ins.op == IR::Operation::LOAD_FREE_REF) {
-                        // std::cerr << "free ref found in fun " << i << " with idx " << cur_ins.args[0].index << std::endl;
-                        if (known_free_var.count({i, cur_ins.args[0].index})) {
-                            known_regs[{i, cur_ins.out.index}] = known_free_var[{i, cur_ins.args[0].index}];
-                        }
+                   
+                    if (cur_ins.op == IR::Operation::LOAD_FREE_REF && known_free_var.count({i, cur_ins.args[0].index})) {
+                        known_regs[{i, cur_ins.out.index}] = known_free_var[{i, cur_ins.args[0].index}];
+                        valid_ref_vars.insert({i, cur_ins.out.index});
                     }
                 
-                    if (cur_ins.op == IR::Operation::SET_CAPTURE) {
-                         std::cerr << "set capture in fun n." << i << " with idx " << cur_ins.args[0].index << "  to fun " << fun_idx[{i, cur_ins.args[1].index}] << " argument is virt. reg. " << cur_ins.args[2].index << std::endl; 
-                        if (known_regs.count({i, cur_ins.args[2].index})) {
-                            known_free_var[{fun_idx[{i, cur_ins.args[1].index}], cur_ins.args[0].index}] = known_regs[{i, cur_ins.args[2].index}];
-                        }
+                    if (cur_ins.op == IR::Operation::SET_CAPTURE && known_regs.count({i, cur_ins.args[2].index}) && valid_ref_vars.count({i, cur_ins.args[2].index})) {
+                        known_free_var[{fun_idx[{i, cur_ins.args[1].index}], cur_ins.args[0].index}] = known_regs[{i, cur_ins.args[2].index}];
                     }
 
-                    // if (cur_ins.op == IR::Operation::ALLOC_REF && known_regs.count({i, cur_ins.args[2].index})) only insert specific records
+                    if (cur_ins.op == IR::Operation::ALLOC_REF && cur_ins.args[0].index <= 1)
+                        valid_ref_vars.insert({i, cur_ins.out.index});
 
-                    if (cur_ins.op == IR::Operation::ALLOC_CLOSURE)
+                    if (cur_ins.op == IR::Operation::ALLOC_CLOSURE) {
+                        if (known_fun.count(cur_ins.args[0].index))
+                            known_regs[{i, cur_ins.out.index}] = known_fun[cur_ins.args[0].index];
                         fun_idx[{i, cur_ins.out.index}] = cur_ins.args[0].index;
+                    }
 
-                    if (cur_ins.op == IR::Operation::REF_LOAD && known_regs.count({i, cur_ins.args[0].index}))
+                    if (cur_ins.op == IR::Operation::REF_LOAD && known_regs.count({i, cur_ins.args[0].index}) && valid_ref_vars.count({i, cur_ins.args[0].index})) {
                         known_regs[{i, cur_ins.out.index}] = known_regs[{i, cur_ins.args[0].index}];
+                    }
 
-                    if (cur_ins.op == IR::Operation::REF_STORE && cur_ins.args[1].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[1].index}))
+                    if (cur_ins.op == IR::Operation::REF_STORE && cur_ins.args[1].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[1].index}) && valid_ref_vars.count({i, cur_ins.args[0].index})) {
                         known_regs[{i, cur_ins.args[0].index}] = known_regs[{i, cur_ins.args[1].index}];
+                    }
 
                     if (cur_ins.op == IR::Operation::RETURN) {
                         if (cur_ins.args[0].type == IR::Operand::IMMEDIATE || (cur_ins.args[0].type == IR::Operand::VIRT_REG && !known_regs.count({i, cur_ins.args[0].index})))
@@ -83,13 +85,11 @@ void ShapeAnalysis::infer_structs() {
                             return_recs.push_back(known_regs[{i, cur_ins.args[0].index}]);
                     }
                     
-                    if (cur_ins.op == IR::Operation::EXEC_CALL && known_fun.count(cur_ins.args[1].index))
-                        known_regs[{i, cur_ins.out.index}] = known_fun[cur_ins.args[1].index];
+                    if (cur_ins.op == IR::Operation::EXEC_CALL && known_regs.count({i, cur_ins.args[0].index}))
+                        known_regs[{i, cur_ins.out.index}] = known_regs[{i, cur_ins.args[0].index}];
 
-                    if (cur_ins.op == IR::Operation::ALLOC_REC) {
-                        std::cerr << "alloc rec in " << cur_ins.out.index << std::endl;
+                    if (cur_ins.op == IR::Operation::ALLOC_REC)
                         known_regs[{i, cur_ins.out.index}] = cur_ins.args[1].index;
-                    }
                     
                     if (cur_ins.op == IR::Operation::REC_STORE_NAME && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index})) {
                         cur_ins.op = IR::Operation::REC_STORE_STATIC;
@@ -122,8 +122,7 @@ void ShapeAnalysis::infer_structs() {
                 known_fun[(int) i] = ret_rec;
         }
 
-        size_t new_size = known_regs.size() + known_fun.size() + known_regs.size();
-        std::cerr << cur_size << " " << new_size << std::endl;
+        size_t new_size = known_regs.size() + known_fun.size() + known_free_var.size();
         if (new_size == cur_size)
             break;
         cur_size = new_size;
