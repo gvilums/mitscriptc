@@ -1,7 +1,13 @@
-
-point = {x:12; y:24; name:"point1";};
-print(point.y);
-display = fun(pt){
-   print(pt.y);
+g = fun() {
+	f = fun(){
+		a = {
+			sz:1;
+			len:fun(){
+				return a.sz;
+			};
+		};
+		return a;
+	};
+	a = f();
+	print(a.sz);
 };
-display(point);

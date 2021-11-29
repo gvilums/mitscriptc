@@ -151,7 +151,7 @@ std::ostream& operator<<(std::ostream& os, const IR::Program& prog){
 	for (size_t i = 0; i < prog.struct_layouts.size(); i++){
 		os << i << " : (";
 		for (size_t j = 0; j < prog.struct_layouts[i].size(); j++)
-			os << runtime::value_get_std_string(prog.ctx_ptr, prog.struct_layouts[i][j]) << ", ";
+			os << j << "->" << runtime::value_get_std_string(prog.ctx_ptr, prog.struct_layouts[i][j]) << ", ";
 		os << "), ";
 	}
 	os << "}" << std::endl;
