@@ -14,15 +14,14 @@ struct HeapObject;
 struct Record;
 struct Closure;
 struct String;
-struct Struct;
 
 struct ProgramContext {
     char* heap{nullptr};
 
     char* write_head{nullptr};
 
-    // start with region 0
-    int current_region{0};
+    // start in static allocation mode
+    int current_region{2};
 
     // track allocation amount
     size_t current_alloc{0};
@@ -42,18 +41,20 @@ struct ProgramContext {
 
     uint64_t saved_rsp{0};
 
-    std::vector<std::vector<std::string>> struct_layouts;
+    std::vector<void*> static_allocations;
+    std::vector<std::vector<Value>> layouts;
 
     explicit ProgramContext(size_t heap_size);
     ~ProgramContext();
+
+    void start_dynamic_alloc();
 
     void switch_region();
 
     auto alloc_ref() -> Value*;
     auto alloc_string(size_t length) -> String*;
-    auto alloc_record() -> Record*;
+    auto alloc_record(uint32_t num_static, uint32_t layout) -> Record*;
     auto alloc_closure(size_t num_free) -> Closure*;
-    auto alloc_struct(uint32_t num_fields) -> Struct*;
 
     auto alloc_traced(size_t data_size) -> HeapObject*;
     auto alloc_raw(size_t num_bytes) -> void*;
@@ -62,7 +63,7 @@ struct ProgramContext {
     void reset_globals();
 
     void init_immediates(const std::vector<Value>& imm);
-    void init_layouts(std::vector<std::vector<std::string>> layouts);
+    void init_layouts(std::vector<std::vector<Value>> field_layouts);
 };
 
 enum class ValueType : uint64_t {
@@ -74,7 +75,6 @@ enum class ValueType : uint64_t {
     Record,
     Closure,
     Reference,
-    Struct,
 };
 
 const int32_t BOOL_TAG = static_cast<int32_t>(ValueType::Bool);
@@ -84,7 +84,6 @@ const int32_t HEAP_STRING_TAG = static_cast<int32_t>(ValueType::HeapString);
 const int32_t RECORD_TAG = static_cast<int32_t>(ValueType::Record);
 const int32_t CLOSURE_TAG = static_cast<int32_t>(ValueType::Closure);
 const int32_t REFERENCE_TAG = static_cast<int32_t>(ValueType::Reference);
-const int32_t STRUCT_TAG = static_cast<int32_t>(ValueType::Struct);
 
 bool is_heap_type(ValueType type);
 
@@ -98,8 +97,7 @@ bool is_heap_type(ValueType type);
     101 - Record
     110 - Closure
     111 - Reference
-   1000 - Struct
-    
+
     Formats:
     None            - 0000...0000
     Bool            - 0000...[bool 0/1]0001
@@ -133,12 +131,6 @@ struct Closure {
     Value free_vars[];
 };
 
-struct Struct {
-    std::uint32_t num_fields;
-    std::uint32_t layout_index;
-    std::uint64_t data[];
-};
-
 auto value_get_type(Value val) -> ValueType;
 
 auto value_get_bool(Value val) -> bool;
@@ -147,7 +139,6 @@ auto value_get_ref(Value val) -> Value*;
 auto value_get_string_ptr(Value val) -> String*;
 auto value_get_record(Value val) -> Record*;
 auto value_get_closure(Value val) -> Closure*;
-auto value_get_struct(Value val) -> Struct*;
 auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string;
 
 auto value_eq_bool(Value lhs, Value rhs) -> bool;
@@ -176,28 +167,25 @@ Value to_value(Value* ref);
 Value to_value(String* str);
 Value to_value(Record* rec_ptr);
 Value to_value(Closure* closure_ptr);
-Value to_value(Struct* struct_ptr);
 
 struct HeapObject {
     uint8_t region;
     uint64_t data[];
 };
 
-
 void extern_print(ProgramContext* rt, Value val);
 auto extern_intcast(ProgramContext* rt, Value val) -> Value;
 auto extern_input(ProgramContext* rt) -> Value;
 
-auto extern_rec_load_name(Value rec, Value name) -> Value;
-void extern_rec_store_name(Value rec, Value name, Value val);
-auto extern_rec_load_index(ProgramContext* rt, Value rec, Value index_val) -> Value;
-void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Value val);
+auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value;
+void extern_rec_store_name(ProgramContext* ctx, Value rec, Value name, Value val);
+auto extern_rec_load_index(ProgramContext* ctx, Value rec, Value index_val) -> Value;
+void extern_rec_store_index(ProgramContext* ctx, Value rec, Value index_val, Value val);
 
 Value extern_alloc_ref(ProgramContext* rt);
 Value extern_alloc_string(ProgramContext* rt, size_t length);
-Value extern_alloc_record(ProgramContext* rt);
+Value extern_alloc_record(ProgramContext* rt, size_t num_static, size_t layout_index);
 Value extern_alloc_closure(ProgramContext* rt, size_t num_free);
-Value extern_alloc_struct(ProgramContext* rt, size_t num_fields);
 
 void trace_value(ProgramContext* ctx, Value* ptr);
 
@@ -242,10 +230,11 @@ struct Record {
         ValueHash,
         ValueEq,
         ProgramAllocator<alloc_type>>;
-    map_type fields;
 
-
-    explicit Record(ProgramContext* ctx);
+    map_type dynamic_fields;
+    uint32_t static_field_count;
+    uint32_t layout_index;
+    Value static_fields[];
 };
 
 };

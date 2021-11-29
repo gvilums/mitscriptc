@@ -31,6 +31,11 @@ Executable::Executable(IR::Program&& program) : ctx_ptr(program.ctx_ptr) {
     }
 }
 
+Executable::~Executable() {
+    this->jit_rt.release(this->function);
+    delete this->ctx_ptr;
+}
+
 void CodeGenerator::process_function(size_t func_index) {
 //    std::cout << "------- function " << func_index << "---------" << std::endl;
     using namespace asmjit;
@@ -188,6 +193,7 @@ void CodeGenerator::process_block(
             assembler.and_(x86::r10, Imm(~0b1111));
             assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_load_name));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
@@ -195,16 +201,26 @@ void CodeGenerator::process_block(
             assembler.call(Imm(runtime::extern_rec_load_index));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_STORE_NAME) {
+            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_store_name));
         } else if (instr.op == IR::Operation::REC_STORE_INDX) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_store_index));
+        } else if (instr.op == IR::Operation::REC_LOAD_STATIC) {
+            int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
+            assembler.mov(x86::r10, x86::ptr_64(x86::r10, offset));
+            store(instr.out, x86::r10);
+        } else if (instr.op == IR::Operation::REC_STORE_STATIC) {
+            int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
+            assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_alloc_ref));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_REC) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
+            assembler.mov(x86::rsi, Imm(instr.args[0].index));
+            assembler.mov(x86::rdx, Imm(instr.args[1].index));
             assembler.call(Imm(runtime::extern_alloc_record));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ALLOC_CLOSURE) {
@@ -370,23 +386,6 @@ void CodeGenerator::process_block(
                 }
             }
             assembler.bind(skip_gc_label);
-        /*} else if (instr.op == IR::Operation::ALLOC_STRUCT) {
-            assembler.mov(x86::rdi, Imm(program.ctx_ptr));
-            assembler.mov(x86::rsi, Imm(instr.args[0].index));
-            assembler.call(Imm(runtime::extern_alloc_struct));
-            // set struct layout index
-            assembler.mov(x86::ptr_32(x86::rax, 4), Imm(instr.args[1].index));
-            store(instr.out, x86::rax);
-        } else if (instr.op == IR::Operation::STRUCT_LOAD) {
-            // + 1 to skip struct header
-            int offset = 8 * (instr.args[1].index + 1);
-            assembler.and_(x86::r10, Imm(~0b1111));
-            assembler.mov(x86::r10, x86::ptr_64(x86::r10, offset));
-            store(instr.out, x86::r10);
-        } else if (instr.op == IR::Operation::STRUCT_STORE) {
-            int offset = 8 * (instr.args[1].index + 1);
-            assembler.and_(x86::r10, Imm(~0b1111));
-            assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);*/
         } else {
             assert(false);
         }
@@ -503,7 +502,8 @@ CodeGenerator::CodeGenerator(IR::Program&& program1, asmjit::CodeHolder* code_ho
 
     program.ctx_ptr->init_globals(program.num_globals);
     program.ctx_ptr->init_immediates(program.immediates);
-    // program.ctx_ptr->init_layouts(program.struct_layouts);
+    program.ctx_ptr->init_layouts(program.struct_layouts);
+    program.ctx_ptr->start_dynamic_alloc();
     // TODO maybe remove this in release builds, although speed difference should be small
     assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
 

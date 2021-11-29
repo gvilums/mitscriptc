@@ -40,7 +40,7 @@ struct Arguments {
             } else if (arg == "--opt=dead-code-rm") {
                 use_dead_code_removal = true;
             } else if (arg == "--opt=shape-analysis") {
-                use_dead_code_removal = true;
+                use_shape_analysis = true;
             } else if (arg == "--opt=type-inference") {
                 use_type_inference = true;
             } else if (arg == "-mem") {

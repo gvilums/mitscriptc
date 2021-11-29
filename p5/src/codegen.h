@@ -58,6 +58,7 @@ class Executable {
 
    public:
     explicit Executable(IR::Program&& program1);
+    ~Executable();
     void run();
 
 };

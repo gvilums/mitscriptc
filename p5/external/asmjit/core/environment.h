@@ -351,7 +351,7 @@ public:
   //!
   //! Returns true if all members are zero, and thus unknown.
   inline bool empty() const noexcept {
-    // Unfortunately compilers won't optimize fields are checked one by one...
+    // Unfortunately compilers won't optimize dynamic_fields are checked one by one...
     return _packed() == 0;
   }
 

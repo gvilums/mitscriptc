@@ -88,10 +88,6 @@ enum class Operation {
     INIT_CALL,      // INIT_CALL NONE <- (LOGICAL num_params)
 
     GC,
-
-    ALLOC_STRUCT,   // ALLOC_STRUCT (VIRT_REG out) <- (LOGICAL size) (LOGICAL layout)
-    STRUCT_LOAD,    // STRUCT_LOAD  (VIRT_REG out) <- (VIRT_REG struct) (LOGICAL index)
-    STRUCT_STORE    // STRUCT_STORE (NONE)         <- (VIRT_REG struct) (LOGICAL index) (VIRT_REG value)
 };
 
 struct Operand {

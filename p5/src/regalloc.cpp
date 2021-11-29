@@ -683,11 +683,11 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
     switch (instr.op) {
         case Operation::ADD:
         case Operation::REC_LOAD_INDX:
+        case Operation::REC_LOAD_NAME:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
             break;
         case Operation::EQ:
-        case Operation::REC_LOAD_NAME:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RSI));
             break;
@@ -715,15 +715,11 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::ASSERT_CLOSURE:
         case Operation::ASSERT_NONZERO:
         case Operation::BRANCH:
-        case Operation::STRUCT_LOAD:
+        case Operation::REC_LOAD_STATIC:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
             break;
-        case Operation::REC_STORE_NAME:
-            mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RDI));
-            mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RSI));
-            mapping.emplace_back(instr.args[2], Operand::from(MachineReg::RDX));
-            break;
         case Operation::REC_STORE_INDX:
+        case Operation::REC_STORE_NAME:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
             mapping.emplace_back(instr.args[2], Operand::from(MachineReg::RCX));
@@ -746,7 +742,6 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::ALLOC_REF:
         case Operation::ALLOC_REC:
         case Operation::ALLOC_CLOSURE:
-        case Operation::ALLOC_STRUCT:
         case Operation::EXEC_CALL:
         case Operation::INPUT:
         case Operation::SWAP:
@@ -757,7 +752,7 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::LOAD_GLOBAL:
         case Operation::GC:
             break;
-        case Operation::STRUCT_STORE:
+        case Operation::REC_STORE_STATIC:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
             mapping.emplace_back(instr.args[2], Operand::from(MachineReg::R11));
             break;

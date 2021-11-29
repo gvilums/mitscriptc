@@ -13,7 +13,7 @@ namespace runtime {
 
 bool is_heap_type(ValueType type) {
     return type == ValueType::HeapString || type == ValueType::Record || type == ValueType::Closure
-           || type == ValueType::Reference || type == ValueType::Struct;
+           || type == ValueType::Reference;
 }
 
 ValueType value_get_type(Value val) {
@@ -42,10 +42,6 @@ Record* value_get_record(Value val) {
 
 Closure* value_get_closure(Value val) {
     return reinterpret_cast<Closure*>(val & DATA_MASK);
-}
-
-Struct* value_get_struct(Value val) {
-    return reinterpret_cast<Struct*>(val & DATA_MASK);
 }
 
 Value to_value(bool b) {
@@ -91,10 +87,6 @@ Value to_value(Record* rec) {
 
 Value to_value(Closure* closure) {
     return reinterpret_cast<uint64_t>(closure) | static_cast<uint64_t>(ValueType::Closure);
-}
-
-Value to_value(Struct* struct_ptr) {
-    return reinterpret_cast<uint64_t>(struct_ptr) | STRUCT_TAG;
 }
 
 Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
@@ -260,9 +252,6 @@ Value value_to_string(ProgramContext* rt, Value val) {
     if (type == ValueType::Closure) {
         return rt->function_string;
     }
-    if (type == ValueType::Struct) {
-        return to_value(rt, value_get_std_string(rt, val));
-    }
     return 0;
 }
 
@@ -284,12 +273,16 @@ auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string {
     if (type == ValueType::Record) {
         Record* record = value_get_record(val);
         std::string out{"{"};
-        std::vector<std::pair<Value, Value>> vals{record->fields.begin(), record->fields.end()};
-        std::sort(vals.begin(), vals.end(),
+        std::vector<std::pair<Value, Value>> entries{record->dynamic_fields.begin(), record->dynamic_fields.end()};
+        const std::vector<Value>& layout = ctx->layouts[record->layout_index];
+        for (int i = 0; i < record->static_field_count; ++i) {
+            entries.emplace_back(layout[i], record->static_fields[i]);
+        }
+        std::sort(entries.begin(), entries.end(),
                   [=](const std::pair<Value, Value>& l, const std::pair<Value, Value>& r) {
                       return value_get_std_string(ctx, l.first) < value_get_std_string(ctx, r.first);
                   });
-        for (auto [key, field_value] : vals) {
+        for (auto [key, field_value] : entries) {
             out.append(value_get_std_string(ctx, key));
             out.push_back(':');
             out.append(value_get_std_string(ctx, field_value));
@@ -315,18 +308,7 @@ auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string {
     if (type == ValueType::Reference) {
         return "REF TO: " + value_get_std_string(ctx, *value_get_ref(val));
     }
-    if (type == ValueType::Struct) {
-        std::string out{"{"};
-        Struct* struct_ptr = value_get_struct(val);
-        for (int i = 0; i < struct_ptr->num_fields; ++i) {
-            out.append(ctx->struct_layouts[struct_ptr->layout_index][i]);
-            out.push_back(':');
-            out.append(value_get_std_string(ctx, struct_ptr->data[i]));
-            out.push_back(' ');
-        }
-        out.push_back('}');
-        return out;
-    }
+    return "<< INVALID >>";
 }
 
 Value extern_alloc_ref(ProgramContext* rt) {
@@ -337,16 +319,12 @@ Value extern_alloc_string(ProgramContext* rt, size_t length) {
     return to_value(rt->alloc_string(length));
 }
 
-Value extern_alloc_record(ProgramContext* rt) {
-    return to_value(rt->alloc_record());
+Value extern_alloc_record(ProgramContext* rt, size_t num_static, size_t layout_index) {
+    return to_value(rt->alloc_record(num_static, layout_index));
 }
 
 Value extern_alloc_closure(ProgramContext* rt, size_t num_free) {
     return to_value(rt->alloc_closure(num_free));
-}
-
-Value extern_alloc_struct(ProgramContext* rt, size_t num_fields) {
-    return to_value(rt->alloc_struct(num_fields));
 }
 
 void extern_print(ProgramContext* rt, Value val) {
@@ -370,32 +348,64 @@ auto extern_input(ProgramContext* rt) -> Value {
     return to_value(rt, input);
 }
 
-auto extern_rec_load_name(Value rec, Value name) -> Value {
+auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value {
     Record* rec_ptr = value_get_record(rec);
-    if (rec_ptr->fields.contains(name)) {
-        return rec_ptr->fields[name];
+    uint32_t static_field_count = rec_ptr->static_field_count;
+    const auto& layout = ctx->layouts[rec_ptr->layout_index];
+    for (int i = 0; i < static_field_count; ++i) {
+        if (value_eq_bool(name, layout[i])) {
+            return rec_ptr->static_fields[i];
+        }
+    }
+    auto iter = rec_ptr->dynamic_fields.find(name);
+    if (iter != rec_ptr->dynamic_fields.end()) {
+        return iter->second;
     }
     return 0;
 }
 
-void extern_rec_store_name(Value rec, Value name, Value val) {
+void extern_rec_store_name(ProgramContext* ctx, Value rec, Value name, Value val) {
     Record* rec_ptr = value_get_record(rec);
-    rec_ptr->fields[name] = val;
+    uint32_t static_field_count = rec_ptr->static_field_count;
+    const auto& layout = ctx->layouts[rec_ptr->layout_index];
+    for (int i = 0; i < static_field_count; ++i) {
+        if (value_eq_bool(name, layout[i])) {
+            rec_ptr->static_fields[i] = val;
+            return;
+        }
+    }
+    rec_ptr->dynamic_fields[name] = val;
 }
 
-auto extern_rec_load_index(ProgramContext* rt, Value rec, Value index_val) -> Value {
+auto extern_rec_load_index(ProgramContext* ctx, Value rec, Value index_val) -> Value {
     Record* rec_ptr = value_get_record(rec);
-    Value name = value_to_string(rt, index_val);
-    if (rec_ptr->fields.contains(name)) {
-        return rec_ptr->fields[name];
+    Value name = value_to_string(ctx, index_val);
+    uint32_t static_field_count = rec_ptr->static_field_count;
+    const auto& layout = ctx->layouts[rec_ptr->layout_index];
+    for (int i = 0; i < static_field_count; ++i) {
+        if (value_eq_bool(name, layout[i])) {
+            return rec_ptr->static_fields[i];
+        }
+    }
+    auto iter = rec_ptr->dynamic_fields.find(name);
+    if (iter != rec_ptr->dynamic_fields.end()) {
+        return iter->second;
     }
     return 0;
 }
 
-void extern_rec_store_index(ProgramContext* rt, Value rec, Value index_val, Value val) {
+void extern_rec_store_index(ProgramContext* ctx, Value rec, Value index_val, Value val) {
     Record* rec_ptr = value_get_record(rec);
-    Value name = value_to_string(rt, index_val);
-    rec_ptr->fields[name] = val;
+    Value name = value_to_string(ctx, index_val);
+    uint32_t static_field_count = rec_ptr->static_field_count;
+    const auto& layout = ctx->layouts[rec_ptr->layout_index];
+    for (int i = 0; i < static_field_count; ++i) {
+        if (value_eq_bool(name, layout[i])) {
+            rec_ptr->static_fields[i] = val;
+            return;
+        }
+    }
+    rec_ptr->dynamic_fields[name] = val;
 }
 
 ProgramContext::ProgramContext(size_t heap_size) {
@@ -427,10 +437,13 @@ auto ProgramContext::alloc_string(size_t length) -> String* {
     return str;
 }
 
-auto ProgramContext::alloc_record() -> Record* {
+auto ProgramContext::alloc_record(uint32_t num_static, uint32_t layout) -> Record* {
     HeapObject* obj = this->alloc_traced(sizeof(Record));
     auto* rec = reinterpret_cast<Record*>(&obj->data);
-    new (rec) Record{this};
+    // initialize map
+    new (&rec->dynamic_fields) Record::map_type{ProgramAllocator<Record::alloc_type>{this}};
+    rec->static_field_count = num_static;
+    rec->layout_index = layout;
     return rec;
 }
 
@@ -441,27 +454,24 @@ auto ProgramContext::alloc_closure(size_t num_free) -> Closure* {
     return closure;
 }
 
-auto ProgramContext::alloc_struct(uint32_t num_fields) -> Struct* {
-    HeapObject* obj = this->alloc_traced(sizeof(Struct) + sizeof(Value) * num_fields);
-    auto* struct_ptr = reinterpret_cast<Struct*>(&obj->data);
-    struct_ptr->num_fields = num_fields;
-    for (int i = 0; i < num_fields; ++i) {
-        struct_ptr->data[i] = 0;
-    }
-    return struct_ptr;
-}
-
 auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
-    // align to multiple of 16
-    size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
-    current_alloc += aligned_size;
-    if (current_alloc >= region_size) {
-        std::cout << "out of memory" << std::endl;
-        std::exit(1);
+    HeapObject* ptr;
+    if (this->current_region == 2) {
+        void* vptr = std::malloc(allocation_size);
+        this->static_allocations.push_back(vptr);
+        ptr = reinterpret_cast<HeapObject*>(vptr);
+    } else {
+        // align to multiple of 16
+        size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
+        current_alloc += aligned_size;
+        if (current_alloc >= region_size) {
+            std::cout << "out of memory" << std::endl;
+            std::exit(1);
+        }
+        ptr = reinterpret_cast<HeapObject*>(write_head);
+        write_head += aligned_size;
     }
-    auto* ptr = reinterpret_cast<HeapObject*>(write_head);
-    write_head += aligned_size;
     ptr->region = current_region;
     return ptr;
 }
@@ -469,6 +479,15 @@ auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
 ProgramContext::~ProgramContext() {
     std::free(this->heap);
     std::free(this->globals);
+    for (void* ptr : this->static_allocations) {
+        std::free(ptr);
+    }
+}
+
+void ProgramContext::start_dynamic_alloc() {
+    if (this->current_region == 2) {
+        this->current_region = 0;
+    }
 }
 
 void ProgramContext::init_globals(size_t num_globals) {
@@ -476,7 +495,7 @@ void ProgramContext::init_globals(size_t num_globals) {
         assert(false && "cannot reinitialize globals");
     }
     this->globals_size = num_globals;
-    this->globals = static_cast<Value*>(malloc(sizeof(Value) * num_globals));
+    this->globals = static_cast<Value*>(std::malloc(sizeof(Value) * num_globals));
     for (size_t i = 0; i < num_globals; ++i) {
         this->globals[i] = 0b10000;
     }
@@ -508,20 +527,26 @@ void ProgramContext::init_immediates(const std::vector<Value>& imm) {
     }
 }
 
-void ProgramContext::init_layouts(std::vector<std::vector<std::string>> layouts) {
-    this->struct_layouts = std::move(layouts);
+void ProgramContext::init_layouts(std::vector<std::vector<Value>> field_layouts) {
+    this->layouts = std::move(field_layouts);
 }
 
 auto ProgramContext::alloc_raw(size_t num_bytes) -> void* {
-    // align to 16 bytes
-    size_t aligned_size = ((num_bytes - 1) | 0b1111) + 1;
-    current_alloc += aligned_size;
-    if (current_alloc >= region_size) {
-        std::cout << "out of memory" << std::endl;
-        std::exit(1);
+    void* ptr;
+    if (current_region == 2) {
+        ptr = malloc(num_bytes);
+        this->static_allocations.push_back(ptr);
+    } else {
+        // align to 16 bytes
+        size_t aligned_size = ((num_bytes - 1) | 0b1111) + 1;
+        current_alloc += aligned_size;
+        if (current_alloc >= region_size) {
+            std::cout << "out of memory" << std::endl;
+            std::exit(1);
+        }
+        ptr = write_head;
+        write_head += aligned_size;
     }
-    void* ptr = write_head;
-    write_head += aligned_size;
     return ptr;
 }
 
@@ -563,6 +588,10 @@ void trace_value(ProgramContext* ctx, Value* ptr) {
     auto type = value_get_type(*ptr);
     if (is_heap_type(type)) {
         auto* heap_obj = reinterpret_cast<HeapObject*>((*ptr & DATA_MASK) - sizeof(HeapObject));
+        // check for statically allocated objects
+        if (heap_obj->region == 2) {
+            return;
+        }
         if (heap_obj->region == ctx->current_region) {
             // if moved, new value is in data field
             //! IMPORTANT note: data already has tag bit set
@@ -597,19 +626,25 @@ void trace_value(ProgramContext* ctx, Value* ptr) {
         } else if (type == ValueType::Record) {
             Record* old_record = value_get_record(*ptr);
             // copy data
-            Record* new_record = ctx->alloc_record();
+            Record* new_record = ctx->alloc_record(
+                old_record->static_field_count, old_record->layout_index);
             // set forward
             heap_obj->region = ctx->current_region;
             Value new_value = to_value(new_record);
             heap_obj->data[0] = new_value;
             *ptr = new_value;
-            // trace fields of record
-            for (auto& elem : old_record->fields) {
+            // trace dynamic_fields of record
+            for (auto& elem : old_record->dynamic_fields) {
                 Value key = elem.first;
                 Value val = elem.second;
                 trace_value(ctx, &key);
                 trace_value(ctx, &val);
-                new_record->fields[key] = val;
+                new_record->dynamic_fields[key] = val;
+            }
+            for (int i = 0; i < new_record->static_field_count; ++i) {
+                Value val = old_record->static_fields[i];
+                trace_value(ctx, &val);
+                new_record->static_fields[i] = val;
             }
             // map allocates in gc heap and hence needs no dealloc
         } else if (type == ValueType::Closure) {
@@ -627,27 +662,17 @@ void trace_value(ProgramContext* ctx, Value* ptr) {
             for (int i = 0; i < num_free; ++i) {
                 trace_value(ctx, &new_closure->free_vars[i]);
             }
-        } else if (type == ValueType::Struct) {
-            Struct* old_struct = value_get_struct(*ptr);
-            Struct* new_struct = ctx->alloc_struct(old_struct->num_fields);
-            std::memcpy(new_struct, old_struct, sizeof(Struct) + 8 * old_struct->num_fields);
-            heap_obj->region = ctx->current_region;
-            Value new_value = to_value(new_struct);
-            heap_obj->data[0] = new_value;
-            *ptr = new_value;
-
-            for (int i = 0; i < new_struct->num_fields; ++i) {
-                trace_value(ctx, &new_struct->data[i]);
-            }
+        } else {
+            assert(false);
         }
     }
 }
 
 
 std::size_t ValueHash::operator()(const Value& val) const noexcept {
-    ValueType tag = static_cast<ValueType>(val & TAG_MASK);
+    ValueType tag = value_get_type(val);
     if (tag == ValueType::HeapString) {
-        String* str = reinterpret_cast<String*>(val & DATA_MASK);
+        auto* str = reinterpret_cast<String*>(val & DATA_MASK);
         const size_t l = str->len;
         const size_t p = 1000000007;
         size_t current_p = p;
@@ -664,7 +689,5 @@ std::size_t ValueHash::operator()(const Value& val) const noexcept {
 bool ValueEq::operator()(const Value& lhs, const Value& rhs) const noexcept {
     return value_eq_bool(lhs, rhs);
 }
-
-Record::Record(ProgramContext* ctx) : fields{ProgramAllocator<alloc_type>{ctx}} {}
 
 };  // namespace runtime
