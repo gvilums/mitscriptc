@@ -482,9 +482,10 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
         block_.instructions.push_back(l_arg);
 
         if (local_reference_vars_.count(s)) {
+            int ass_cnt = (int) count(ass_var.begin(), ass_var.end(), s);
             int new_reg = reg_cnt_++;
             a_refs.push_back(
-                {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, new_reg}});
+                {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, new_reg},{IR::Operand::OpType::LOGICAL, ass_cnt}});
             IR::Instruction s_ref;
             s_ref.op = IR::Operation::REF_STORE;
             s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, new_reg};
@@ -532,8 +533,9 @@ void Compiler::visit(AST::FunctionDeclaration& expr) {
 
     for (const auto& var : new_ass) {
         if (local_reference_vars_.count(var)) {
+            int ass_cnt = (int) count(ass_var.begin(), ass_var.end(), var);
             block_.instructions.push_back(
-                {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, local_vars_[var]}});
+                {IR::Operation::ALLOC_REF, {IR::Operand::OpType::VIRT_REG, local_vars_[var]}, {IR::Operand::OpType::LOGICAL, ass_cnt}});
             IR::Instruction s_ref;
             s_ref.op = IR::Operation::REF_STORE;
             s_ref.args[0] = {IR::Operand::OpType::VIRT_REG, local_vars_[var]};
@@ -780,10 +782,9 @@ void Compiler::visit(AST::Record& expr) {
 
     IR::Instruction a_ref;
     a_ref.op = IR::Operation::ALLOC_REC;
-    a_ref.out = {IR::Operand::OpType::VIRT_REG, reg_cnt_};
-    a_ref.args[0] = {IR::Operand::OpType::VIRT_REG, rec_reg};
-    a_ref.args[1] = {IR::Operand::OpType::LOGICAL, (int) expr.dict.size()};
-    a_ref.args[2] = {IR::Operand::OpType::LOGICAL, layout_map_[std_fields]};//  find idx
+    a_ref.out = {IR::Operand::OpType::VIRT_REG, rec_reg};
+    a_ref.args[0] = {IR::Operand::OpType::LOGICAL, (int) expr.dict.size()};
+    a_ref.args[1] = {IR::Operand::OpType::LOGICAL, layout_map_[std_fields]};//  find idx
     block_.instructions.push_back(a_ref);
 
     reg_cnt_++;
