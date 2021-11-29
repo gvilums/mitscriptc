@@ -25,6 +25,7 @@ void ShapeAnalysis::infer_structs() {
     std::map<std::pair<size_t, int>, int> known_regs;
     std::map<int, int> known_fun;
     std::map<std::pair<int, int>, int> known_free_var;
+    std::map<int, int> known_glob;
     std::map<std::pair<int, int>, int> fun_idx;
     std::set<std::pair<int, int>> valid_ref_vars;
 
@@ -83,6 +84,14 @@ void ShapeAnalysis::infer_structs() {
                             return_recs.push_back(-1);
                         else
                             return_recs.push_back(known_regs[{i, cur_ins.args[0].index}]);
+                    }
+
+                    if (cur_ins.op == IR::Operation::LOAD_GLOBAL && known_glob.count(cur_ins.args[0].index)) {
+                        known_regs[{i, cur_ins.out.index}] = known_glob[cur_ins.args[0].index];
+                    }
+
+                    if (cur_ins.op == IR::Operation::STORE_GLOBAL && cur_ins.args[1].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[1].index}) && !prog_->ref_globals.count(cur_ins.args[0].index)) {
+                        known_glob[cur_ins.out.index] = known_regs[{i, cur_ins.args[1].index}];
                     }
                     
                     if (cur_ins.op == IR::Operation::EXEC_CALL && known_regs.count({i, cur_ins.args[0].index}))
