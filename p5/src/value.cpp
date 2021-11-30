@@ -230,6 +230,23 @@ Value value_not(Value val) {
 
 Value value_to_string(ProgramContext* rt, Value val) {
     auto type = value_get_type(val);
+    if (type == ValueType::Int) {
+        int n = value_get_int32(val);
+        if (n > 0 && n < 10000000) {
+            uint64_t out = 0;
+            uint8_t i = 0;
+            while (n > 0) {
+                out <<= 8;
+                out |= (uint64_t)((n % 10) + '0');
+                n /= 10;
+                i = i + 1;
+            }
+            out <<= 8;
+            out |= (i << 4) | INLINE_STRING_TAG;
+            return out;
+        }
+        return to_value(rt, std::to_string(value_get_int32(val)));
+    }
     if (type == ValueType::None) {
         return rt->none_string;
     }
@@ -242,9 +259,6 @@ Value value_to_string(ProgramContext* rt, Value val) {
         } else {
             return rt->false_string;
         }
-    }
-    if (type == ValueType::Int) {
-        return to_value(rt, std::to_string(value_get_int32(val)));
     }
     if (type == ValueType::Record) {
         return to_value(rt, value_get_std_string(rt, val));
