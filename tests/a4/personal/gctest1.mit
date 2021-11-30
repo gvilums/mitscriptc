@@ -1,0 +1,22 @@
+f = fun(n){
+	y = {};
+	x = {};
+	g = fun(){
+		i = 0;
+		while(i < n){
+			x[i] = y;
+			y[i] = x; 
+			i = i + 1;
+		}
+	};
+	g();
+	
+	return y;
+};
+
+i = 0;
+y = None;
+while(i < 50){
+	y = f(5000);
+	i = i + 1;
+}

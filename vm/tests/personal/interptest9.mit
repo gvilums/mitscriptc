@@ -1,0 +1,22 @@
+palindrome = fun(str, n){
+	i = 0;
+	while(i < (n/2)){
+		if (!(str[i] == str[n - i - 1]))
+			{return false;}
+		i = i + 1;
+	}
+	return true;
+};
+
+s1 = {};
+s1[0] = "a";
+s1[1] = "b";
+s1[2] = "b";
+s1[3] = "a";
+s2 = {};
+s2[0] = "a";
+s2[1] = "b";
+s2[2] = "c";	
+
+print(palindrome(s1, 4));
+print(palindrome(s2, 3));

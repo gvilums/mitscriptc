@@ -1,0 +1,17 @@
+f = fun(b){
+	if (b) {
+		return fun(x, y){
+			if (x < y){return x;}else{return y;}
+		};	
+	}
+	else {
+		return fun(x, y){
+			if (x > y){return x;}else{return y;}
+		};
+	}
+};
+
+mn = f(true);
+mx = f(false);
+
+print(mx(mn(4, 2), mn(3, 7)));

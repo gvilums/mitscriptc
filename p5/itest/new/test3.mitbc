@@ -1,0 +1,50 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [42, None],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+				load_const	0
+				return
+				load_const	1
+				return
+			]
+		}
+	],
+	constants = [0],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [print, intcast, input, r, a, b, a, b],
+	instructions = 
+	[
+		alloc_record
+		dup
+		load_const	0
+		field_store	4
+		dup
+		load_func	0
+		alloc_closure	0
+		field_store	5
+		store_global	3
+		load_global	0
+		load_global	3
+		field_load	6
+		call	1
+		load_global	0
+		load_global	3
+		field_load	7
+		call	0
+		call	1
+	]
+}

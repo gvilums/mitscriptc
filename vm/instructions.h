@@ -1,10 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <vector>
 
-enum class Operation
-{
+enum class Operation {
     // Description: push a constant onto the operand stack
     // Mnemonic:    load_const i
     // Operand 0:   index of constant in enclosing function's list of constants
@@ -225,14 +225,10 @@ enum class Operation
     Pop
 };
 
-
-struct Instruction
-{
+struct Instruction {
     Instruction(const Operation operation, std::optional<int32_t> operand0)
-    : operation(operation),
-    operand0(operand0)
-    {
-
+        : operation(operation),
+          operand0(operand0) {
     }
 
     Operation operation;

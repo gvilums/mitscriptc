@@ -1,0 +1,73 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [0, 1, 2, 2, 2, 3, 1, 1, None],
+			parameter_count = 1,
+			local_vars = [x, steps],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+				load_const	0
+				store_local	1
+				load_local	0
+				load_const	1
+				eq
+				not
+				if	2
+				goto	26
+				load_local	0
+				load_const	2
+				div
+				load_const	3
+				mul
+				load_local	0
+				eq
+				if	2
+				goto	6
+				load_local	0
+				load_const	4
+				div
+				store_local	0
+				goto	7
+				load_const	5
+				load_local	0
+				mul
+				load_const	6
+				add
+				store_local	0
+				load_local	1
+				load_const	7
+				add
+				store_local	1
+				goto	-30
+				load_local	1
+				return
+				load_const	8
+				return
+			]
+		}
+	],
+	constants = [7],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [print, intcast, input, collatz],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	3
+		load_global	0
+		load_global	3
+		load_const	0
+		call	1
+		call	1
+	]
+}

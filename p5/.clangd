@@ -1,0 +1,18 @@
+CompileFlags:
+  Add:
+   - "-xc++"
+   - "-std=c++20"
+   - "-Wno-attributes"
+
+Index:
+  Background: Build
+  
+Diagnostics:
+  ClangTidy:
+    Add:
+      - bugprone*
+      - clang-analyze*
+      - performance*
+      - portability*
+      # - readability*
+      # - modernize*

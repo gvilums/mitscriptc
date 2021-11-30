@@ -1,0 +1,6 @@
+# Memory Usage Limits
+
+bignum.mit: 40 MB
+cars.mit: 4 MB
+textproc.mit: 8 MB
+treeproc.mit: 6 MB

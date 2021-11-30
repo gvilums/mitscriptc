@@ -1,0 +1,23 @@
+x = 1;
+
+f = fun(x){
+	g = fun(y){
+		global x;
+		h = fun(x){
+			k = fun(){
+				j = fun(){
+					global x;
+					return x;
+				};	
+				return x + j();
+			};
+			return k() + x;
+		};
+		return h(3) + x;
+	};
+	
+	return g(x) + x;
+};
+
+print(f(2));
+print(f(4));

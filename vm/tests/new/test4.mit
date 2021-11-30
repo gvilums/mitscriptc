@@ -1,0 +1,9 @@
+f = fun(){
+	g = fun(x, y){
+		return x + y;
+	};
+	return g;
+};
+
+a = f();
+print(a(40, 2));

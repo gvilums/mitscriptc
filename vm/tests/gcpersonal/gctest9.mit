@@ -1,0 +1,20 @@
+i = 0;
+while(i < 1000000){
+	f2 = None;
+	f1 = fun(g){
+		h = fun(){
+			return 1;
+		};
+		x = f2(g);
+		return g(h);
+	};
+	f2 = fun(g){
+		h = fun(){
+			return 1;
+		};
+		x = f1(g);
+		return g(h);
+	};
+	
+	i = i + 1;
+}

@@ -63,7 +63,7 @@ int yyerror(BCLTYPE * yylloc, yyscan_t yyscanner, Function*& out, const char* me
 
 
     	Constant* constant;
-    	vector<Constant *>* constantlist;
+    	vector<Constant>* constantlist;
 }
 
 //Below is where you define your tokens and their types.
@@ -218,29 +218,29 @@ T_ident
 Constant :
   T_none
 {
-	$$ = new None();
+	$$ = new Constant(None{});
 }
 | T_true
 {
-	$$ = new Boolean(true);
+	$$ = new Constant(true);
 }
 | T_false
 {
-	$$ = new Boolean(false);
+	$$ = new Constant(false);
 }
 |  T_string
 {
-	$$ = new String(*$1);
+	$$ = new Constant(*$1);
 
 	delete $1;
 }
 | T_int
 {
-	$$ = new Integer{safe_cast($1)};
+	$$ = new Constant{safe_cast($1)};
 }
 
 ConstantListStar:
-%empty { $$ = new vector<Constant *>(); }
+%empty { $$ = new vector<Constant>(); }
 | ConstantListPlus
 {
 	$$ = $1;
@@ -249,9 +249,9 @@ ConstantListStar:
 ConstantListPlus:
 Constant
 {
-	auto list = new vector<Constant *>();
+	auto list = new vector<Constant>();
 
-	list->insert(list->begin(), $1);
+	list->insert(list->begin(), *$1);
 
 	$$ = list;
 }
@@ -259,7 +259,7 @@ Constant
 {
 	auto list = $3;
 
-	list->insert(list->begin(), $1);
+	list->insert(list->begin(), *$1);
 
 	$$ = list;
 }
