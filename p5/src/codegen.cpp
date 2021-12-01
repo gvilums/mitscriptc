@@ -263,7 +263,7 @@ void CodeGenerator::process_block(
             // load function address
             assembler.mov(x86::r11, x86::rax);
             assembler.and_(x86::r11, Imm(runtime::DATA_MASK));
-            assembler.mov(x86::r10, x86::Mem(function_address_base_label, 8 * fn_id));
+            assembler.lea(x86::r10, x86::ptr(function_labels[fn_id]));
             assembler.mov(x86::Mem(x86::r11, 0), x86::r10);
             assembler.mov(x86::qword_ptr(x86::r11, 8), Imm(instr.args[1].index));
             store(instr.out, x86::rax);
