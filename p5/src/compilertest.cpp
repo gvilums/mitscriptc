@@ -101,10 +101,10 @@ auto main(int argc, const char* argv[]) -> int {
         prog = dc_opt.optimize();
     }
 
-    /*if (args.use_type_inference) {
+    if (args.use_type_inference) {
         TypeInferer ti_opt(prog);
         prog = ti_opt.optimize();
-    }*/
+    }
 
     if (args.use_shape_analysis) {
         ShapeAnalysis sa_opt(prog);
