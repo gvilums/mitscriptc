@@ -1,6 +1,5 @@
 {
     cmdlines = {
-        "xmake l /home/jakob/.vscode/extensions/tboox.xmake-vscode-1.4.8/assets/update_intellisense.lua .vscode",
         "xmake run mitscriptc ../../../../inputs/test.mit",
         "xmake ",
         "xmake run mitscriptc ../../../../inputs/test.mit",
@@ -64,6 +63,7 @@
         "xmake ",
         "xmake l /home/jakob/.vscode/extensions/tboox.xmake-vscode-1.4.8/assets/config.lua",
         "xmake l /home/jakob/.vscode/extensions/tboox.xmake-vscode-1.4.8/assets/update_intellisense.lua .vscode",
+        "xmake l /home/jakob/.vscode/extensions/tboox.xmake-vscode-1.4.8/assets/config.lua",
         "xmake l /home/jakob/.vscode/extensions/tboox.xmake-vscode-1.4.8/assets/config.lua"
     }
 }

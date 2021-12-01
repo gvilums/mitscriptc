@@ -88,12 +88,8 @@ auto main(int argc, const char* argv[]) -> int {
    	IR::Program* prog = compiler.get_program();
 
     if (args.use_const_propagation) {
-        try {
-            ConstPropagator c_prop(prog);
-            prog = c_prop.optimize();
-        } catch (const std::string& e) {
-            std::cout << "ERROR: " << e << std::endl;
-        }
+        ConstPropagator c_prop(prog);
+        prog = c_prop.optimize();
     }
 
     if (args.use_dead_code_removal) {
@@ -101,10 +97,10 @@ auto main(int argc, const char* argv[]) -> int {
         prog = dc_opt.optimize();
     }
 
-    /*if (args.use_type_inference) {
+    if (args.use_type_inference) {
         TypeInferer ti_opt(prog);
         prog = ti_opt.optimize();
-    }*/
+    }
 
     if (args.use_shape_analysis) {
         ShapeAnalysis sa_opt(prog);
