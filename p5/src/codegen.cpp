@@ -221,8 +221,7 @@ void CodeGenerator::process_block(
             assembler.vmovq(x86::xmm0, x86::r11);
             assembler.vpbroadcastq(x86::ymm0, x86::xmm0);
             // load offset into r11
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
-            assembler.mov(x86::r11, x86::ptr_64(x86::r10));
+            assembler.mov(x86::r11, x86::ptr_64(x86::r10, -runtime::RECORD_TAG));
             // perform comparison with layout as memory operand
             assembler.lea(x86::r9, x86::ptr_256(layout_base_label));
             assembler.vpcmpeqq(x86::ymm0, x86::ymm0, x86::ptr_256(x86::r9, x86::r11));
@@ -232,7 +231,9 @@ void CodeGenerator::process_block(
             assembler.jz(extern_call);
             // find index
             assembler.bsf(x86::r11, x86::r11); // offset of *8 is already included
-            assembler.mov(x86::rax, x86::ptr_64(x86::r10, x86::r11, 0, sizeof(runtime::Record)));
+            assembler.mov(x86::rax,
+                          x86::ptr_64(x86::r10, x86::r11, 0,
+                                      sizeof(runtime::Record) - runtime::RECORD_TAG));
             assembler.jmp(end);
 
             // not found, need call
@@ -444,7 +445,9 @@ void CodeGenerator::load(const asmjit::x86::Gp& reg, const IR::Operand& op) {
             assembler.mov(reg, Imm(program.immediates[op.index]));
         } break;
         case IR::Operand::MACHINE_REG:
-            assembler.mov(reg, to_reg(op.index));
+            if (to_reg(op.index) != reg) {
+                assembler.mov(reg, to_reg(op.index));
+            }
             break;
         case IR::Operand::STACK_SLOT:
             assembler.mov(reg, to_mem(op.index));
@@ -461,13 +464,14 @@ void CodeGenerator::store(const IR::Operand& op, const asmjit::x86::Gp& reg) {
     using namespace asmjit;
     switch (op.type) {
         case IR::Operand::MACHINE_REG:
-            assembler.mov(to_reg(op.index), reg);
+            if (to_reg(op.index) != reg) {
+                assembler.mov(to_reg(op.index), reg);
+            }
             break;
         case IR::Operand::STACK_SLOT:
             assembler.mov(to_mem(op.index), reg);
             break;
         case IR::Operand::NONE:
-//            std::cerr << "storing to none, no instruction emitted" << std::endl;
             break;
         default:
             assert(false && "invalid operand");
