@@ -88,12 +88,8 @@ auto main(int argc, const char* argv[]) -> int {
    	IR::Program* prog = compiler.get_program();
 
     if (args.use_const_propagation) {
-        try {
-            ConstPropagator c_prop(prog);
-            prog = c_prop.optimize();
-        } catch (const std::string& e) {
-            std::cout << "ERROR: " << e << std::endl;
-        }
+        ConstPropagator c_prop(prog);
+        prog = c_prop.optimize();
     }
 
     if (args.use_dead_code_removal) {
