@@ -107,8 +107,32 @@ void CodeGenerator::process_block(
     assembler.bind(block_labels[block_index]);
     for (const auto& instr : block.instructions) {
         if (instr.op == IR::Operation::ADD) {
+            Label extern_call = assembler.newLabel();
+            Label end = assembler.newLabel();
+
+            assembler.mov(x86::r10, x86::rsi);
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
+            assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
+            assembler.jne(extern_call);
+
+            assembler.mov(x86::r10, x86::rdx);
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
+            assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
+            assembler.jne(extern_call);
+
+            assembler.mov(x86::rax, x86::rsi);
+            assembler.shr(x86::rax, 4);
+            assembler.shr(x86::rdx, 4);
+            assembler.add(x86::eax, x86::edx);
+            assembler.shl(x86::rax, 4);
+            assembler.or_(x86::rax, Imm(runtime::INT_TAG));
+            assembler.jmp(end);
+
+            assembler.bind(extern_call);
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
-            assembler.call(Imm(runtime::value_add));
+            assembler.call(Imm(runtime::value_add_nonint));
+
+            assembler.bind(end);
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ADD_INT) {
             assembler.shr(x86::r10, 4);
