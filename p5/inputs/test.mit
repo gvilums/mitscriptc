@@ -1,13 +1,2 @@
-f = fun(){
-	g = fun(){
-		a = {
-			f:123;
-		};
-		return a;
-	};
-	j = g;
-	return j();
-};
-
-t = f();
-print(t.f);
+r = { a: 10; b: 11; bananana: 20;};
+print(r.bananana);

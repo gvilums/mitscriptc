@@ -2,6 +2,7 @@
 #include <stack>
 #include "value.h"
 #include <cassert>
+#include <cstddef>
 #include <bitset>
 
 namespace codegen {
@@ -190,8 +191,39 @@ void CodeGenerator::process_block(
             assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
             assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
+            // record in r10, index of name is second arg TODO change in regalloc
+            Label extern_call = assembler.newLabel();
+            Label end = assembler.newLabel();
+
+            // broadcast name into zmm0
+            assembler.mov(x86::r11, Imm(program.immediates[instr.args[1].index]));
+            assembler.vmovq(x86::xmm0, x86::r11);
+            assembler.vpbroadcastq(x86::ymm0, x86::xmm0);
+            // load offset into r11
+            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
+            assembler.mov(x86::r11, x86::ptr_64(x86::r10));
+            // perform comparison with layout as memory operand
+            assembler.lea(x86::r9, x86::ptr_256(layout_base_label));
+            assembler.vpcmpeqq(x86::ymm0, x86::ymm0, x86::ptr_256(x86::r9, x86::r11));
+            assembler.vpmovmskb(x86::r11d, x86::ymm0);
+            assembler.test(x86::r11, x86::r11);
+            // if not found jump to extern call
+            assembler.jz(extern_call);
+            // find index TODO check if need to invert
+            assembler.bsf(x86::r11, x86::r11); // offset of *8 is already included
+            assembler.add(x86::r11, Imm(sizeof(runtime::Record)));
+            assembler.mov(x86::rax, x86::ptr_64(x86::r10, x86::r11));
+            assembler.jmp(end);
+
+            // not found, need call
+            assembler.bind(extern_call);
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
+            assembler.mov(x86::rsi, x86::r10);
+            assembler.mov(x86::rdx, Imm(program.immediates[instr.args[1].index]));
             assembler.call(Imm(runtime::extern_rec_load_name));
+
+            // store result
+            assembler.bind(end);
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::REC_LOAD_INDX) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
@@ -500,11 +532,25 @@ CodeGenerator::CodeGenerator(const IR::Program& program1, asmjit::CodeHolder* co
     program.ctx_ptr->init_globals(program.num_globals);
     program.ctx_ptr->init_layouts(program.struct_layouts);
     program.ctx_ptr->start_dynamic_alloc();
+
+    // after prelude but before functions, we need to generate layouts
+    std::vector<uint64_t> layouts;
+    for (const auto& layout : program.struct_layouts) {
+        this->layout_offsets.push_back((int32_t)layouts.size() * 8);
+        layouts.insert(layouts.end(), layout.begin(), layout.end());
+        while (layouts.size() % 4 != 0) {
+            layouts.push_back(0);
+        }
+    }
+    // make available at runtime
+    program.ctx_ptr->layout_offsets = this->layout_offsets;
+
     // TODO maybe remove this in release builds, although speed difference should be small
     assembler.addValidationOptions(asmjit::BaseEmitter::kValidationOptionAssembler);
 
     init_labels();
     generate_prelude();
+
 
     for (size_t i = 0; i < program.functions.size(); ++i) {
         process_function(i);
@@ -514,6 +560,11 @@ CodeGenerator::CodeGenerator(const IR::Program& program1, asmjit::CodeHolder* co
     for (const auto& label : function_labels) {
         assembler.embedLabel(label);
     }
+    // align to 32 bytes (4 uint64_t values, 256 bit)
+    assembler.align(asmjit::AlignMode::kAlignData, 32);
+    // TODO CHECK THIS
+    assembler.bind(this->layout_base_label);
+    assembler.embedDataArray(asmjit::Type::kIdU64, layouts.data(), layouts.size(), 1);
 }
 
 void CodeGenerator::generate_prelude() {
@@ -581,6 +632,7 @@ void CodeGenerator::init_labels() {
         label = assembler.newLabel();
     }
     function_address_base_label = assembler.newLabel();
+    layout_base_label = assembler.newLabel();
     uninit_var_label = assembler.newLabel();
     illegal_cast_label = assembler.newLabel();
     illegal_arith_label = assembler.newLabel();

@@ -363,13 +363,17 @@ auto extern_input(ProgramContext* rt) -> Value {
 }
 
 auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value {
+    // TODO make rec a Record* instead of Value
     Record* rec_ptr = value_get_record(rec);
     uint32_t static_field_count = rec_ptr->static_field_count;
     const auto& layout = ctx->layouts[rec_ptr->layout_index];
     for (int i = 0; i < static_field_count; ++i) {
-        if (value_eq_bool(name, layout[i])) {
+        if (name == layout[i]) {
             return rec_ptr->static_fields[i];
         }
+//        if (value_eq_bool(name, layout[i])) {
+//            return rec_ptr->static_fields[i];
+//        }
     }
     auto iter = rec_ptr->dynamic_fields.find(name);
     if (iter != rec_ptr->dynamic_fields.end()) {
@@ -455,6 +459,7 @@ auto ProgramContext::alloc_record(uint32_t num_static, uint32_t layout) -> Recor
     new (&rec->dynamic_fields) Record::map_type{ProgramAllocator<Record::alloc_type>{this}};
     rec->static_field_count = num_static;
     rec->layout_index = layout;
+    rec->layout_offset = layout_offsets[layout]; // TODO check
     return rec;
 }
 

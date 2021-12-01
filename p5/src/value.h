@@ -41,6 +41,8 @@ struct ProgramContext {
     std::vector<void*> static_allocations;
     std::vector<std::vector<Value>> layouts;
 
+    std::vector<int32_t> layout_offsets;
+
     explicit ProgramContext(size_t heap_size);
     ~ProgramContext();
 
@@ -227,9 +229,10 @@ struct Record {
         ValueEq,
         ProgramAllocator<alloc_type>>;
 
-    map_type dynamic_fields;
+    uint64_t layout_offset; // TODO initialization
     uint32_t static_field_count;
     uint32_t layout_index;
+    map_type dynamic_fields;
     Value static_fields[];
 };
 

@@ -306,7 +306,6 @@ auto compute_machine_assignments(const Function& func) -> std::vector<LiveInterv
                     builders[static_cast<size_t>(MachineReg::RDX)].push_range({instr_id, instr_id});
                     break;
                 case Operation::SET_ARG:
-                    // TODO arguments must survive until function call
                     if (!next_call.has_value()) {
                         size_t temp_instr_id = instr_id;
                         size_t k = j;
@@ -680,7 +679,6 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
     switch (instr.op) {
         case Operation::ADD:
         case Operation::REC_LOAD_INDX:
-        case Operation::REC_LOAD_NAME:
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::RSI));
             mapping.emplace_back(instr.args[1], Operand::from(MachineReg::RDX));
             break;
@@ -713,6 +711,7 @@ void generate_instr_mapping(const Instruction& instr, std::vector<std::pair<Oper
         case Operation::ASSERT_NONZERO:
         case Operation::BRANCH:
         case Operation::REC_LOAD_STATIC:
+        case Operation::REC_LOAD_NAME: // TODO check
             mapping.emplace_back(instr.args[0], Operand::from(MachineReg::R10));
             break;
         case Operation::REC_STORE_INDX:

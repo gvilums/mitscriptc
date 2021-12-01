@@ -29,8 +29,9 @@ class CodeGenerator {
     const IR::Program& program;
     asmjit::x86::Assembler assembler;
 
+    std::vector<int32_t> layout_offsets;
     std::vector<asmjit::Label> function_labels;
-    asmjit::Label function_address_base_label;
+    asmjit::Label function_address_base_label, layout_base_label;
     asmjit::Label uninit_var_label, illegal_cast_label, illegal_arith_label, rt_exception_label;
 
     int current_args{0};
