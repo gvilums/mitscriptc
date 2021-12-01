@@ -92,34 +92,28 @@ bool ConstPropagator::eliminate_assert(IR::Instruction ins, std::unordered_map<s
       
     switch (ins.op) {
         case IR::Operation::ASSERT_BOOL:
-            if (runtime::value_get_type(imm) != runtime::ValueType::Bool)
-                throw std::string("IllegalCastException");
-            return true;
+            if (runtime::value_get_type(imm) == runtime::ValueType::Bool)
+                return true;
             break;
         case IR::Operation::ASSERT_INT:
-            if (runtime::value_get_type(imm) != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            return true;
+            if (runtime::value_get_type(imm) == runtime::ValueType::Int)
+               return true;
             break;
         case IR::Operation::ASSERT_STRING:
-            if (runtime::value_get_type(imm) != runtime::ValueType::HeapString && runtime::value_get_type(imm) != runtime::ValueType::InlineString)
-                throw std::string("IllegalCastException");  
-            return true;
+            if (runtime::value_get_type(imm) == runtime::ValueType::HeapString || runtime::value_get_type(imm) == runtime::ValueType::InlineString)
+              return true;
             break;
         case IR::Operation::ASSERT_CLOSURE:
-            if (runtime::value_get_type(imm) != runtime::ValueType::Closure)
-                throw std::string("IllegalCastException");
-            return true;
+            if (runtime::value_get_type(imm) == runtime::ValueType::Closure)
+                return true;
             break;
         case IR::Operation::ASSERT_RECORD:
-            if (runtime::value_get_type(imm) != runtime::ValueType::Record)
-                throw std::string("IllegalCastException");
-            return true;
+            if (runtime::value_get_type(imm) == runtime::ValueType::Record)
+                return true;
             break;
         case IR::Operation::ASSERT_NONZERO:
-            if (runtime::value_get_type(imm) != runtime::ValueType::Int || runtime::value_get_int32(imm) == 0)
-                throw std::string("IllegalArithmeticException");
-            return true;
+            if (runtime::value_get_type(imm) == runtime::ValueType::Int && runtime::value_get_int32(imm) != 0)
+               return true;
             break;
         default:
             return false;
