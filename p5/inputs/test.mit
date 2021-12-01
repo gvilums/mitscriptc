@@ -1,2 +1,1 @@
-r = { a: 10; b: 11; bananana: 20;};
-print(r.bananana);
+print(10 / 0);

@@ -16,13 +16,12 @@ namespace codegen {
  * 4 - RuntimeException
  */
 
-class RuntimeException {
+class ExecutionError : public std::runtime_error {
     int type{0};
 
-
+    static auto code_to_text(int i) -> const char*;
    public:
-    RuntimeException(int kind);
-    friend std::ostream& operator<<(std::ostream& os, const RuntimeException& exception);
+    explicit ExecutionError(int kind);
 };
 
 class CodeGenerator {
@@ -31,7 +30,7 @@ class CodeGenerator {
 
     std::vector<int32_t> layout_offsets;
     std::vector<asmjit::Label> function_labels;
-    asmjit::Label function_address_base_label, layout_base_label;
+    asmjit::Label layout_base_label;
     asmjit::Label uninit_var_label, illegal_cast_label, illegal_arith_label, rt_exception_label;
 
     int current_args{0};

@@ -50,7 +50,6 @@ void CodeGenerator::process_function(size_t func_index) {
     assembler.mov(x86::rbp, x86::rsp);
 
     // reserve stack slots. To ensure 16-byte alignment at function call time, align stack to 16 bytes + 8
-    // TODO CHECK THIS
     int allocated_stack_slots;
     if (func.stack_slots % 2 == 0) {
         assembler.sub(x86::rsp, 8 * func.stack_slots);
@@ -107,29 +106,53 @@ void CodeGenerator::process_block(
     assembler.bind(block_labels[block_index]);
     for (const auto& instr : block.instructions) {
         if (instr.op == IR::Operation::ADD) {
+            Label extern_call = assembler.newLabel();
+            Label end = assembler.newLabel();
+
+            assembler.mov(x86::r10, x86::rsi);
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
+            assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
+            assembler.jne(extern_call);
+
+            assembler.mov(x86::r10, x86::rdx);
+            assembler.and_(x86::r10, Imm(runtime::TAG_MASK));
+            assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
+            assembler.jne(extern_call);
+
+            assembler.mov(x86::rax, x86::rsi);
+            assembler.shr(x86::rax, 4);
+            assembler.shr(x86::rdx, 4);
+            assembler.add(x86::eax, x86::edx);
+            assembler.shl(x86::rax, 4);
+            assembler.or_(x86::rax, Imm(runtime::INT_TAG));
+            assembler.jmp(end);
+
+            assembler.bind(extern_call);
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
-            assembler.call(Imm(runtime::value_add));
+            assembler.call(Imm(runtime::value_add_nonint));
+
+            assembler.bind(end);
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::ADD_INT) {
             assembler.shr(x86::r10, 4);
             assembler.shr(x86::r11, 4);
             assembler.add(x86::r10d, x86::r11d);
             assembler.shl(x86::r10, 4);
-            assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Int)));
+            assembler.or_(x86::r10, Imm(runtime::INT_TAG));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::SUB) {
             assembler.shr(x86::r10, 4);
             assembler.shr(x86::r11, 4);
             assembler.sub(x86::r10d, x86::r11d);
             assembler.shl(x86::r10, 4);
-            assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Int)));
+            assembler.or_(x86::r10, Imm(runtime::INT_TAG));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::MUL) {
             assembler.shr(x86::rax, 4);
             assembler.shr(x86::r10, 4);
             assembler.imul(x86::r10d);
             assembler.shl(x86::rax, 4);
-            assembler.or_(x86::rax, Imm(static_cast<size_t>(runtime::ValueType::Int)));
+            assembler.or_(x86::rax, Imm(runtime::INT_TAG));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::DIV) {
             assembler.shr(x86::rax, 4);
@@ -137,7 +160,7 @@ void CodeGenerator::process_block(
             assembler.cdq();
             assembler.idiv(x86::r10d);
             assembler.shl(x86::rax, 4);
-            assembler.or_(x86::rax, Imm(static_cast<size_t>(runtime::ValueType::Int)));
+            assembler.or_(x86::rax, Imm(runtime::INT_TAG));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::EQ) {
             assembler.call(Imm(runtime::value_eq));
@@ -149,7 +172,7 @@ void CodeGenerator::process_block(
             assembler.setg(x86::r10b);
             assembler.and_(x86::r10, Imm(0b1));
             assembler.shl(x86::r10, 4);
-            assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
+            assembler.or_(x86::r10, Imm(runtime::BOOL_TAG));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::GEQ) {
             assembler.shr(x86::r10, Imm(4));
@@ -158,7 +181,7 @@ void CodeGenerator::process_block(
             assembler.setge(x86::r10b);
             assembler.and_(x86::r10, Imm(0b1));
             assembler.shl(x86::r10, 4);
-            assembler.or_(x86::r10, Imm(static_cast<size_t>(runtime::ValueType::Bool)));
+            assembler.or_(x86::r10, Imm(runtime::BOOL_TAG));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::AND) {
             assembler.and_(x86::r10, x86::r11);
@@ -184,14 +207,12 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r10, x86::Mem(x86::rbx, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_LOAD) {
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
-            assembler.mov(x86::r10, x86::Mem(x86::r10, 0));
+            assembler.mov(x86::r10, x86::Mem(x86::r10, -runtime::REFERENCE_TAG));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REF_STORE) {
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
-            assembler.mov(x86::Mem(x86::r10, 0), x86::r11);
+            assembler.mov(x86::Mem(x86::r10, -runtime::REFERENCE_TAG), x86::r11);
         } else if (instr.op == IR::Operation::REC_LOAD_NAME) {
-            // record in r10, index of name is second arg TODO change in regalloc
+            // record in r10, index of name is second arg
             Label extern_call = assembler.newLabel();
             Label end = assembler.newLabel();
 
@@ -200,8 +221,7 @@ void CodeGenerator::process_block(
             assembler.vmovq(x86::xmm0, x86::r11);
             assembler.vpbroadcastq(x86::ymm0, x86::xmm0);
             // load offset into r11
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
-            assembler.mov(x86::r11, x86::ptr_64(x86::r10));
+            assembler.mov(x86::r11, x86::ptr_64(x86::r10, -runtime::RECORD_TAG));
             // perform comparison with layout as memory operand
             assembler.lea(x86::r9, x86::ptr_256(layout_base_label));
             assembler.vpcmpeqq(x86::ymm0, x86::ymm0, x86::ptr_256(x86::r9, x86::r11));
@@ -209,10 +229,11 @@ void CodeGenerator::process_block(
             assembler.test(x86::r11, x86::r11);
             // if not found jump to extern call
             assembler.jz(extern_call);
-            // find index TODO check if need to invert
+            // find index
             assembler.bsf(x86::r11, x86::r11); // offset of *8 is already included
-            assembler.add(x86::r11, Imm(sizeof(runtime::Record)));
-            assembler.mov(x86::rax, x86::ptr_64(x86::r10, x86::r11));
+            assembler.mov(x86::rax,
+                          x86::ptr_64(x86::r10, x86::r11, 0,
+                                      sizeof(runtime::Record) - runtime::RECORD_TAG));
             assembler.jmp(end);
 
             // not found, need call
@@ -236,13 +257,11 @@ void CodeGenerator::process_block(
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
             assembler.call(Imm(runtime::extern_rec_store_index));
         } else if (instr.op == IR::Operation::REC_LOAD_STATIC) {
-            int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
+            int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index - runtime::RECORD_TAG;
             assembler.mov(x86::r10, x86::ptr_64(x86::r10, offset));
             store(instr.out, x86::r10);
         } else if (instr.op == IR::Operation::REC_STORE_STATIC) {
-            int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index;
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
+            int32_t offset = (int32_t)sizeof(runtime::Record) + 8 * instr.args[1].index - runtime::RECORD_TAG;
             assembler.mov(x86::ptr_64(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::ALLOC_REF) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
@@ -261,15 +280,12 @@ void CodeGenerator::process_block(
             assembler.mov(x86::rsi, instr.args[2].index);
             assembler.call(Imm(runtime::extern_alloc_closure));
             // load function address
-            assembler.mov(x86::r11, x86::rax);
-            assembler.and_(x86::r11, Imm(runtime::DATA_MASK));
-            assembler.mov(x86::r10, x86::Mem(function_address_base_label, 8 * fn_id));
-            assembler.mov(x86::Mem(x86::r11, 0), x86::r10);
-            assembler.mov(x86::qword_ptr(x86::r11, 8), Imm(instr.args[1].index));
+            assembler.lea(x86::r10, x86::ptr(function_labels[fn_id]));
+            assembler.mov(x86::Mem(x86::rax, -runtime::CLOSURE_TAG), x86::r10);
+            assembler.mov(x86::qword_ptr(x86::rax, 8 - runtime::CLOSURE_TAG), Imm(instr.args[1].index));
             store(instr.out, x86::rax);
         } else if (instr.op == IR::Operation::SET_CAPTURE) {
-            int32_t offset = 24 + 8 * instr.args[0].index;
-            assembler.and_(x86::r10, Imm(runtime::DATA_MASK));
+            int32_t offset = 24 + 8 * instr.args[0].index - runtime::CLOSURE_TAG;
             assembler.mov(x86::Mem(x86::r10, offset), x86::r11);
         } else if (instr.op == IR::Operation::INIT_CALL) {
             current_args = instr.args[0].index;
@@ -298,8 +314,7 @@ void CodeGenerator::process_block(
             assembler.and_(x86::rbx, Imm(runtime::DATA_MASK));
 
             // validate number of arguments
-            assembler.mov(x86::r10, x86::Mem(x86::rbx, 8));
-            assembler.cmp(x86::r10, Imm(current_args));
+            assembler.cmp(x86::ptr_64(x86::rbx, 8), Imm(current_args));
             assembler.jne(rt_exception_label);
 
             assembler.call(x86::Mem(x86::rbx, 0));
@@ -357,8 +372,8 @@ void CodeGenerator::process_block(
             assembler.cmp(x86::r10, Imm(runtime::CLOSURE_TAG));
             assembler.jne(illegal_cast_label);
         } else if (instr.op == IR::Operation::ASSERT_NONZERO) {
-            assembler.shr(x86::r10, Imm(4));
-            assembler.cmp(x86::r10, Imm(0));
+            // compare for only tag, i.e. data zero
+            assembler.cmp(x86::r10, Imm(runtime::INT_TAG));
             assembler.je(illegal_arith_label);
         } else if (instr.op == IR::Operation::PRINT) {
             assembler.mov(x86::rdi, Imm(program.ctx_ptr));
@@ -430,7 +445,9 @@ void CodeGenerator::load(const asmjit::x86::Gp& reg, const IR::Operand& op) {
             assembler.mov(reg, Imm(program.immediates[op.index]));
         } break;
         case IR::Operand::MACHINE_REG:
-            assembler.mov(reg, to_reg(op.index));
+            if (to_reg(op.index) != reg) {
+                assembler.mov(reg, to_reg(op.index));
+            }
             break;
         case IR::Operand::STACK_SLOT:
             assembler.mov(reg, to_mem(op.index));
@@ -447,13 +464,14 @@ void CodeGenerator::store(const IR::Operand& op, const asmjit::x86::Gp& reg) {
     using namespace asmjit;
     switch (op.type) {
         case IR::Operand::MACHINE_REG:
-            assembler.mov(to_reg(op.index), reg);
+            if (to_reg(op.index) != reg) {
+                assembler.mov(to_reg(op.index), reg);
+            }
             break;
         case IR::Operand::STACK_SLOT:
             assembler.mov(to_mem(op.index), reg);
             break;
         case IR::Operand::NONE:
-//            std::cerr << "storing to none, no instruction emitted" << std::endl;
             break;
         default:
             assert(false && "invalid operand");
@@ -463,7 +481,7 @@ void CodeGenerator::store(const IR::Operand& op, const asmjit::x86::Gp& reg) {
 void Executable::run() {
     int exit_code = this->function();
     if (exit_code != 0) {
-        throw RuntimeException(exit_code);
+        throw ExecutionError(exit_code);
     }
 }
 
@@ -556,10 +574,6 @@ CodeGenerator::CodeGenerator(const IR::Program& program1, asmjit::CodeHolder* co
         process_function(i);
     }
 
-    assembler.bind(function_address_base_label);
-    for (const auto& label : function_labels) {
-        assembler.embedLabel(label);
-    }
     // align to 32 bytes (4 uint64_t values, 256 bit)
     assembler.align(asmjit::AlignMode::kAlignData, 32);
     // TODO CHECK THIS
@@ -631,7 +645,6 @@ void CodeGenerator::init_labels() {
     for (auto& label : function_labels) {
         label = assembler.newLabel();
     }
-    function_address_base_label = assembler.newLabel();
     layout_base_label = assembler.newLabel();
     uninit_var_label = assembler.newLabel();
     illegal_cast_label = assembler.newLabel();
@@ -639,26 +652,19 @@ void CodeGenerator::init_labels() {
     rt_exception_label = assembler.newLabel();
 }
 
-std::ostream& operator<<(std::ostream& os, const RuntimeException& exception) {
-    switch (exception.type) {
-        case 1:
-            os << "UninitializedVariableException";
-            break;
-        case 2:
-            os << "IllegalCastException";
-            break;
-        case 3:
-            os << "IllegalArithmeticException";
-            break;
-        case 4:
-            os << "RuntimeException";
-            break;
-        default:
-            os << "INVALID EXCEPTION STATE";
-            break;
+auto ExecutionError::code_to_text(int i) -> const char* {
+    if (i == 1) {
+        return "UninitializedVariableException";
+    } else if (i == 2) {
+        return "IllegalCastException";
+    } else if (i == 3) {
+        return "IllegalArithmeticException";
+    } else if (i == 4) {
+        return "RuntimeException";
     }
-    return os;
+    return "INVALID EXCEPTION STATE";
 }
-RuntimeException::RuntimeException(int kind) : type(kind) {}
+
+ExecutionError::ExecutionError(int kind) : type(kind), std::runtime_error{code_to_text(kind)} {}
 
 };  // namespace codegen

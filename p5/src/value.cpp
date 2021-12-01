@@ -89,21 +89,11 @@ Value to_value(Closure* closure) {
     return reinterpret_cast<uint64_t>(closure) | static_cast<uint64_t>(ValueType::Closure);
 }
 
-Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
-    auto lhs_kind = value_get_type(lhs);
-    auto rhs_kind = value_get_type(rhs);
-    if (lhs_kind == ValueType::Int && rhs_kind == ValueType::Int) {
-        return value_add_int32(lhs, rhs);
-    }
-    if (lhs_kind != ValueType::InlineString && lhs_kind != ValueType::HeapString) {
-        lhs = value_to_string(rt, lhs);
-    }
-    if (rhs_kind != ValueType::InlineString && rhs_kind != ValueType::HeapString) {
-        rhs = value_to_string(rt, rhs);
-    }
-    // update types
-    lhs_kind = value_get_type(lhs);
-    rhs_kind = value_get_type(rhs);
+Value value_add_nonint(ProgramContext* rt, Value lhs, Value rhs) {
+    lhs = value_to_string(rt, lhs);
+    rhs = value_to_string(rt, rhs);
+    ValueType lhs_kind = value_get_type(lhs);
+    ValueType rhs_kind = value_get_type(rhs);
     size_t lhs_size{0};
     size_t rhs_size{0};
     if (lhs_kind == ValueType::InlineString) {
@@ -153,6 +143,15 @@ Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
     }
 }
 
+Value value_add(ProgramContext* rt, Value lhs, Value rhs) {
+    auto lhs_kind = value_get_type(lhs);
+    auto rhs_kind = value_get_type(rhs);
+    if (lhs_kind == ValueType::Int && rhs_kind == ValueType::Int) {
+        return value_add_int32(lhs, rhs);
+    }
+    return value_add_nonint(rt, lhs, rhs);
+}
+
 Value value_add_int32(Value lhs, Value rhs) {
     return to_value(value_get_int32(lhs) + value_get_int32(rhs));
 }
@@ -176,13 +175,16 @@ Value value_div(Value lhs, Value rhs) {
 
 auto value_eq_bool(Value lhs, Value rhs) -> bool {
     ValueType lhs_type = value_get_type(lhs);
+    if (lhs == rhs && lhs_type != ValueType::Closure) {
+        return true;
+    }
     ValueType rhs_type = value_get_type(rhs);
     if (lhs_type != rhs_type) {
         return false;
     }
     ValueType type = lhs_type;
-    if (type == ValueType::None || type == ValueType::Int 
-        || type == ValueType::Bool || type == ValueType::InlineString 
+    if (type == ValueType::None || type == ValueType::Int
+        || type == ValueType::Bool || type == ValueType::InlineString
         || type == ValueType::Record) {
         // bitwise comparison
         return lhs == rhs;
@@ -230,6 +232,9 @@ Value value_not(Value val) {
 
 Value value_to_string(ProgramContext* rt, Value val) {
     auto type = value_get_type(val);
+    if (type == ValueType::InlineString || type == ValueType::HeapString) {
+        return val;
+    }
     if (type == ValueType::Int) {
         int n = value_get_int32(val);
         if (n > 0 && n < 10000000) {
@@ -249,9 +254,6 @@ Value value_to_string(ProgramContext* rt, Value val) {
     }
     if (type == ValueType::None) {
         return rt->none_string;
-    }
-    if (type == ValueType::InlineString || type == ValueType::HeapString) {
-        return val;
     }
     if (type == ValueType::Bool) {
         if (value_get_bool(val)) {
@@ -367,7 +369,8 @@ auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value {
     Record* rec_ptr = value_get_record(rec);
     uint32_t static_field_count = rec_ptr->static_field_count;
     const auto& layout = ctx->layouts[rec_ptr->layout_index];
-    for (int i = 0; i < static_field_count; ++i) {
+    // can start at 4 because 0 through 3 are checked in assembly
+    for (int i = 4; i < static_field_count; ++i) {
         if (name == layout[i]) {
             return rec_ptr->static_fields[i];
         }
@@ -460,6 +463,9 @@ auto ProgramContext::alloc_record(uint32_t num_static, uint32_t layout) -> Recor
     rec->static_field_count = num_static;
     rec->layout_index = layout;
     rec->layout_offset = layout_offsets[layout]; // TODO check
+    for (int i = 0; i < num_static; ++i) {
+        rec->static_fields[i] = 0;
+    }
     return rec;
 }
 

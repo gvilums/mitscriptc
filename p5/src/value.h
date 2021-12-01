@@ -142,6 +142,7 @@ auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string;
 auto value_eq_bool(Value lhs, Value rhs) -> bool;
 
 // checks types
+Value value_add_nonint(ProgramContext* rt, Value lhs, Value rhs);
 Value value_add(ProgramContext* rt, Value lhs, Value rhs);
 // below assume correct types
 Value value_add_int32(Value lhs, Value rhs);
