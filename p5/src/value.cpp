@@ -367,7 +367,8 @@ auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value {
     Record* rec_ptr = value_get_record(rec);
     uint32_t static_field_count = rec_ptr->static_field_count;
     const auto& layout = ctx->layouts[rec_ptr->layout_index];
-    for (int i = 0; i < static_field_count; ++i) {
+    // can start at 4 because 0 through 3 are checked in assembly
+    for (int i = 4; i < static_field_count; ++i) {
         if (name == layout[i]) {
             return rec_ptr->static_fields[i];
         }

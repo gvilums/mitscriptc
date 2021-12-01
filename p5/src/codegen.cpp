@@ -556,10 +556,6 @@ CodeGenerator::CodeGenerator(const IR::Program& program1, asmjit::CodeHolder* co
         process_function(i);
     }
 
-    assembler.bind(function_address_base_label);
-    for (const auto& label : function_labels) {
-        assembler.embedLabel(label);
-    }
     // align to 32 bytes (4 uint64_t values, 256 bit)
     assembler.align(asmjit::AlignMode::kAlignData, 32);
     // TODO CHECK THIS
@@ -631,7 +627,6 @@ void CodeGenerator::init_labels() {
     for (auto& label : function_labels) {
         label = assembler.newLabel();
     }
-    function_address_base_label = assembler.newLabel();
     layout_base_label = assembler.newLabel();
     uninit_var_label = assembler.newLabel();
     illegal_cast_label = assembler.newLabel();
