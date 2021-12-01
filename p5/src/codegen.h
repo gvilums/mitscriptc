@@ -16,13 +16,12 @@ namespace codegen {
  * 4 - RuntimeException
  */
 
-class RuntimeException {
+class ExecutionError : public std::runtime_error {
     int type{0};
 
-
+    static auto code_to_text(int i) -> const char*;
    public:
-    explicit RuntimeException(int kind);
-    friend std::ostream& operator<<(std::ostream& os, const RuntimeException& exception);
+    explicit ExecutionError(int kind);
 };
 
 class CodeGenerator {
