@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cassert>
-#include <iostream>
 #include <iterator>
 #include <limits>
 #include <queue>
@@ -9,7 +8,6 @@
 #include <bitset>
 
 #include "ir.h"
-#include "irprinter.h"
 #include "regalloc.h"
 
 namespace std {
@@ -18,17 +16,17 @@ template <>
 struct hash<::IR::LiveInterval> {
     size_t operator()(const ::IR::LiveInterval& interval) const {
         const size_t prime = 1000000007;
-        size_t cprime = prime;
+        size_t current_factor = prime;
         size_t value = 0;
         for (auto [x, y] : interval.ranges) {
-            value += x * cprime;
-            cprime *= prime;
-            value += y * cprime;
-            cprime *= prime;
+            value += x * current_factor;
+            current_factor *= prime;
+            value += y * current_factor;
+            current_factor *= prime;
         }
         for (size_t x : interval.use_locations) {
-            value += x * cprime;
-            cprime *= prime;
+            value += x * current_factor;
+            current_factor *= prime;
         }
         return value;
     }
@@ -37,9 +35,9 @@ struct hash<::IR::LiveInterval> {
 template <>
 struct hash<::IR::Operand> {
     size_t operator()(const ::IR::Operand& operand) const {
-        std::hash<int> inthash;
-        std::hash<size_t> sizethash;
-        return inthash(static_cast<int>(operand.type)) ^ (sizethash(operand.index) << 1);
+        std::hash<int> int_hash;
+        std::hash<size_t> size_t_hash;
+        return int_hash(static_cast<int>(operand.type)) ^ (size_t_hash(operand.index) << 1);
     }
 };
 
@@ -85,7 +83,7 @@ auto LiveInterval::split_at(size_t pos) -> LiveInterval {
         }
         if (begin < pos && pos <= end) {
             this->ranges[i] = {begin, pos - 1};
-            result.ranges.push_back({pos, end});
+            result.ranges.emplace_back(pos, end);
             for (size_t j = i + 1; j < this->ranges.size(); ++j) {
                 result.ranges.push_back(this->ranges[j]);
             }
@@ -136,7 +134,7 @@ auto IntervalBuilder::finish() -> LiveInterval {
     return LiveInterval{std::move(merged_ranges), std::move(this->use_locations), this->reg_id};
 }
 
-auto IntervalBuilder::empty() -> bool {
+auto IntervalBuilder::empty() const -> bool {
     return this->ranges.empty();
 }
 
@@ -180,6 +178,7 @@ size_t LiveInterval::next_use_after(size_t pos) const {
         }
     }
     assert(false && "invalid interval state, active after end");
+    return 0;
 }
 
 size_t LiveInterval::next_alive_after(size_t pos) const {
@@ -189,6 +188,7 @@ size_t LiveInterval::next_alive_after(size_t pos) const {
         }
     }
     assert(false && "invalid interval state, inactive after end");
+    return 0;
 }
 
 bool operator<(const LiveInterval& lhs, const LiveInterval& rhs) {
@@ -242,10 +242,6 @@ auto IntervalGroup::assignment_at(size_t pos) const -> std::optional<Operand> {
         }
     }
     return std::nullopt;
-}
-
-auto IntervalGroup::begins_at(size_t pos) const -> bool {
-    return this->intervals.front().start_pos() == pos;
 }
 
 std::array<MachineReg, 6> arg_regs{MachineReg::RDI, MachineReg::RSI, MachineReg::RDX,
@@ -400,7 +396,7 @@ auto mapping_to_instructions(const std::vector<std::pair<Operand, Operand>>& map
             continue;
         }
         if (child_count[parent[i]] > 0) {
-            permuted.push_back({operands[parent[i]], operands[i]});
+            permuted.emplace_back(operands[parent[i]], operands[i]);
         }
     }
 
@@ -515,7 +511,7 @@ auto try_alloc_reg(
     std::vector<LiveInterval>& active,
     std::vector<LiveInterval>& inactive,
     const std::vector<LiveInterval>& machine_reg_uses) -> bool {
-    std::array<size_t, MACHINE_REG_COUNT> free_until_pos;
+    std::array<size_t, MACHINE_REG_COUNT> free_until_pos{};
     free_until_pos.fill(std::numeric_limits<size_t>::max());
 
     for (const auto& interval : active) {
@@ -575,7 +571,7 @@ void alloc_blocked_reg(
     std::vector<LiveInterval>& inactive,
     size_t& stack_slot,
     const std::vector<LiveInterval>& machine_reg_uses) {
-    std::array<size_t, MACHINE_REG_COUNT> next_use_pos;
+    std::array<size_t, MACHINE_REG_COUNT> next_use_pos{};
     next_use_pos.fill(std::numeric_limits<size_t>::max());
 
     for (const auto& interval : active) {
@@ -632,8 +628,6 @@ void alloc_blocked_reg(
         for (auto& interval : inactive) {
             assert(interval.op.type == Operand::MACHINE_REG);
             if (interval.op.index == current.op.index) {
-                // TODO do we need the splitting rounding here? because we are currently in lifetime
-                // hole
                 unhandled.push(interval.split_at(interval.next_alive_after(position)));
             }
         }
@@ -772,6 +766,7 @@ void rewrite_instructions(Function& func,
         // initial block offset
         instr_id += 2;
         std::vector<Instruction> new_instructions;
+        new_instructions.reserve(2 * block.instructions.size());
 
         for (const auto& instr : block.instructions) {
             Instruction new_instr = set_instr_machine_regs(instr, instr_id, groups);
@@ -790,15 +785,6 @@ void rewrite_instructions(Function& func,
 
         }
 
-        // TODO check if the following is necessary
-//        std::vector<std::pair<Operand, Operand>> edge_resolves;
-//        while (resolve_index < resolves.size() && resolves[resolve_index].first < instr_id) {
-//            edge_resolves.push_back(resolves[resolve_index].second);
-//            ++resolve_index;
-//        }
-//        mapping_to_instructions(edge_resolves, new_instructions);
-
-
         block.phi_nodes.clear();
         block.instructions = std::move(new_instructions);
     }
@@ -809,7 +795,7 @@ void allocate_registers(Function& func) {
     std::vector<std::pair<size_t, size_t>> block_ranges;
     size_t current_from = 0;
     for (const BasicBlock& block : func.blocks) {
-        block_ranges.push_back({current_from, current_from + 2 * block.instructions.size() + 1});
+        block_ranges.emplace_back(current_from, current_from + 2 * block.instructions.size() + 1);
         current_from += 2 * block.instructions.size() + 2;
     }
 
@@ -952,7 +938,7 @@ void allocate_registers(Function& func) {
                             block_ranges[succ].first + 1)) {
                         Operand move_to = *to;
                         if (move_from != move_to) {
-                            resolve_moves.push_back({move_from, move_to});
+                            resolve_moves.emplace_back(move_from, move_to);
                         }
                     }
                 }
@@ -962,7 +948,7 @@ void allocate_registers(Function& func) {
                 if (auto move_to = group.assignment_at(block_ranges[succ].first)) {
                     Operand move_from = group.assignment_at(block_ranges[pred].second).value();
                     if (!(move_from == *move_to)) {
-                        resolve_moves.push_back({move_from, *move_to});
+                        resolve_moves.emplace_back(move_from, *move_to);
                     }
                 }
             }
@@ -1003,7 +989,7 @@ void allocate_registers(Function& func) {
               [](auto lhs, auto rhs) { return lhs.first < rhs.first; });
 
     rewrite_instructions(func, interval_groups, resolve_moves);
-    func.stack_slots = stack_slot;
+    func.stack_slots = (int)stack_slot;
 }
 
 };  // namespace IR

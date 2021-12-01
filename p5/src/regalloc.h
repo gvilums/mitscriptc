@@ -48,13 +48,12 @@ struct IntervalBuilder {
     void shorten(size_t new_begin);
     
     auto finish() -> LiveInterval;
-    auto empty() -> bool;
+    auto empty() const -> bool;
 };
 
 struct IntervalGroup {
     std::vector<LiveInterval> intervals;
 
-    bool begins_at(size_t pos) const;
     auto assignment_at(size_t pos) const -> std::optional<Operand>;
 };
 
