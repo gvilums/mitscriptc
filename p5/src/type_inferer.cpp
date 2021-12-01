@@ -13,43 +13,22 @@ IR::Program* TypeInferer::optimize() {
     return prog_;
 }
 
-/*bool TypeInferer::is_string(runtime::ValueType vt){
-    return (vt == runtime::ValueType::HeapString) || (vt == runtime::ValueType::InlineString);
-}
+bool TypeInferer::proc_assert(IR::Instruction &ins, std::map<std::pair<size_t, int>, vt> &known_regs, size_t fun_idx) { // return true if we can eliminate the assert
+    if (ins.args[1].type != IR::Operand::NONE)
+        return false;
 
-bool TypeInferer::proc_assert(IR::Instruction ins, std::unordered_map<size_t, runtime::ValueType> &type_var) { // return true if we can eliminate the assert
     switch (ins.op) {
         case IR::Operation::ASSERT_BOOL:
-            if (has_type(ins.args[0], type_var)) {
-                if (get_type(ins.args[0], type_var) != runtime::ValueType::Bool)
-                    throw std::string("IllegalCastException");
+            if (get_type(ins.args[0], known_regs, fun_idx) == vt::Bool) 
                 return true;
-            }
-            type_var[ins.args[0].index] = runtime::ValueType::Bool;
+            ins.args[1].type = IR::Operand::IMMEDIATE;
+            known_regs[{fun_idx, ins.args[0].index}] = vt::Bool;
             break;
         case IR::Operation::ASSERT_INT:
-            if (has_type(ins.args[0], type_var)) {
-                if (get_type(ins.args[0], type_var) != runtime::ValueType::Int)
-                    throw std::string("IllegalCastException");
+            if (get_type(ins.args[0], known_regs, fun_idx) == vt::Int) 
                 return true;
-            }
-            type_var[ins.args[0].index] = runtime::ValueType::Int;
-            break;
-        case IR::Operation::ASSERT_STRING:
-            if (has_type(ins.args[0], type_var)) {
-                if (!is_string(get_type(ins.args[0], type_var)))
-                    throw std::string("IllegalCastException");
-                return true;
-            }
-            type_var[ins.args[0].index] = runtime::ValueType::HeapString; // it shouldn't matter which string type we choose
-            break;
-        case IR::Operation::ASSERT_CLOSURE:
-            if (has_type(ins.args[0], type_var)) {
-                if (get_type(ins.args[0], type_var) != runtime::ValueType::Closure)
-                    throw std::string("IllegalCastException");
-                return true;
-            }
-            type_var[ins.args[0].index] = runtime::ValueType::Closure;
+            ins.args[1].type = IR::Operand::IMMEDIATE;
+            known_regs[{fun_idx, ins.args[0].index}] = vt::Int;
             break;
         default:
             return false;
@@ -57,93 +36,66 @@ bool TypeInferer::proc_assert(IR::Instruction ins, std::unordered_map<size_t, ru
     return false;
 }
 
-bool TypeInferer::proc_opr(IR::Instruction ins, std::unordered_map<size_t, runtime::ValueType> &type_var) { // return true if we changed the add
-    runtime::ValueType vt1 = get_type(ins.args[0], type_var);
-    runtime::ValueType vt2 = get_type(ins.args[1], type_var);
-    bool kt1 = has_type(ins.args[0], type_var);
-    bool kt2 = has_type(ins.args[1], type_var);
-
+void TypeInferer::proc_opr(IR::Instruction &ins, std::map<std::pair<size_t, int>, vt> &known_regs, size_t fun_idx) { // return true if we changed the add
+    vt vt1 = get_type(ins.args[0], known_regs, fun_idx);
+    vt vt2 = get_type(ins.args[1], known_regs, fun_idx);
+   
     if (ins.op == IR::Operation::ADD) {
-        if ((is_string(vt1) && kt1) || (is_string(vt2) && kt2)) {
-            type_var[ins.out.index] =  runtime::ValueType::HeapString; // it shouldn't matter which string type we choose
-            return false;
-        } else if (!kt1 || !kt2) {
-            return false;
-        } else if (vt1 == runtime::ValueType::Int && vt2 == runtime::ValueType::Int) {
-            type_var[ins.out.index] =  runtime::ValueType::Int;
-            return true;
-        } else
-            throw std::string("IllegalCastException");
+        if (vt1 == vt::Int && vt2 == vt::Int) {
+            known_regs[{fun_idx, ins.out.index}] = vt::Int;
+            ins.op = IR::Operation::ADD_INT;
+        }    
     }
-
-    if (ins.op == IR::Operation::NOT) {
-        if (!kt1) 
-            return false;
-        if (vt1 != runtime::ValueType::Bool)
-            throw std::string("IllegalCastException");
-        type_var[ins.out.index] =  runtime::ValueType::Bool;
-        return false;
+    else if (ins.op == IR::Operation::NOT) {
+        if (vt1 == vt::Bool)
+            known_regs[{fun_idx, ins.out.index}] =  vt::Bool;
     }
-
-    if (ins.op == IR::Operation::MOV) {
-        if (kt1) 
-            type_var[ins.out.index] =  vt1;
-        return false;
+    else if (ins.op == IR::Operation::MOV) {
+        if (vt1 != vt::None) 
+            known_regs[{fun_idx, ins.out.index}] =  vt1;
     }
-
-    if (!kt1 || !kt2)
-        return false;
 
     switch (ins.op) {
         case IR::Operation::ADD_INT:
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Int;
+            if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Int;
             break;
         case IR::Operation::MUL:  
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Int;
+            if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Int;
             break;
         case IR::Operation::SUB:  
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Int;
+            if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Int;
             break;
         case IR::Operation::DIV:  
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Int;
+            if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Int;
             break;
         case IR::Operation::EQ:
-            if (vt1 != vt2)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Bool;
+            if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Bool;
             break;
         case IR::Operation::GT:
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Bool;
+            if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Bool;
             break;
         case IR::Operation::GEQ:
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Bool;
+           if (vt1 == vt::Int && vt2 == vt::Int)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Bool;
             break;
         case IR::Operation::AND:
-            if (vt1 != runtime::ValueType::Bool || vt2 != runtime::ValueType::Bool)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Bool;
+            if (vt1 == vt::Bool && vt2 == vt::Bool)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Bool;
             break;
         case IR::Operation::OR:
-            if (vt1 != runtime::ValueType::Int || vt2 != runtime::ValueType::Int)
-                throw std::string("IllegalCastException");
-            type_var[ins.out.index] =  runtime::ValueType::Bool;
+            if (vt1 == vt::Bool && vt2 == vt::Bool)
+                known_regs[{fun_idx, ins.out.index}] =  vt::Bool;
+            break;
         default:
-            return false;
+            break;
     }
-    return false;
-}*/
+}
 
 vt TypeInferer::get_type(IR::Operand op, std::map<std::pair<size_t, int>, vt> &known_regs, size_t fun_idx) { // if no type return NONE
     if (op.type == IR::Operand::IMMEDIATE)
@@ -171,7 +123,7 @@ void TypeInferer::infer_type() {
             std::vector<vt> return_recs;
         
             for (size_t j = 0; j < prog_->functions[i].blocks.size(); j++) {
-                // phi nodes
+
                 for (size_t k = 0; k < prog_->functions[i].blocks[j].phi_nodes.size(); k++) {
                     vt reg0 = get_phi_node_reg(i, j, k, 0, known_regs);
                     vt reg1 = get_phi_node_reg(i, j, k, 1, known_regs);
@@ -185,10 +137,10 @@ void TypeInferer::infer_type() {
                 for (size_t k = 0; k < prog_->functions[i].blocks[j].instructions.size(); k++) {
                     IR::Instruction cur_ins = prog_->functions[i].blocks[j].instructions[k];
 
-                    /*if (cur_ins.op == IR::Operation::ASSERT_RECORD && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index}))
+                    proc_opr(cur_ins, known_regs, i);
+
+                    if (proc_assert(cur_ins, known_regs, i))
                         continue;
-                    if (cur_ins.op == IR::Operation::MOV  && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index}))
-                        known_regs[{i, cur_ins.out.index}] = known_regs[{i, cur_ins.args[0].index}];
                    
                     if (cur_ins.op == IR::Operation::LOAD_FREE_REF && known_free_var.count({i, cur_ins.args[0].index})) {
                         known_regs[{i, cur_ins.out.index}] = known_free_var[{i, cur_ins.args[0].index}];
@@ -208,49 +160,27 @@ void TypeInferer::infer_type() {
                         fun_idx[{i, cur_ins.out.index}] = cur_ins.args[0].index;
                     }
 
-                    if (cur_ins.op == IR::Operation::REF_LOAD && known_regs.count({i, cur_ins.args[0].index}) && valid_ref_vars.count({i, cur_ins.args[0].index})) {
-                        known_regs[{i, cur_ins.out.index}] = known_regs[{i, cur_ins.args[0].index}];
+                    if (cur_ins.op == IR::Operation::REF_LOAD && get_type(cur_ins.args[1], known_regs, i) != vt::None && valid_ref_vars.count({i, cur_ins.args[0].index})) {
+                        known_regs[{i, cur_ins.out.index}] = get_type(cur_ins.args[1], known_regs, i);
                     }
 
-                    if (cur_ins.op == IR::Operation::REF_STORE && cur_ins.args[1].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[1].index}) && valid_ref_vars.count({i, cur_ins.args[0].index})) {
-                        known_regs[{i, cur_ins.args[0].index}] = known_regs[{i, cur_ins.args[1].index}];
+                    if (cur_ins.op == IR::Operation::REF_STORE && get_type(cur_ins.args[1], known_regs, i) != vt::None && valid_ref_vars.count({i, cur_ins.args[0].index})) {
+                        known_regs[{i, cur_ins.args[0].index}] = get_type(cur_ins.args[1], known_regs, i);
                     }
 
                     if (cur_ins.op == IR::Operation::RETURN) {
-                        if (cur_ins.args[0].type == IR::Operand::IMMEDIATE || (cur_ins.args[0].type == IR::Operand::VIRT_REG && !known_regs.count({i, cur_ins.args[0].index})))
-                            return_recs.push_back(-1);
-                        else
-                            return_recs.push_back(known_regs[{i, cur_ins.args[0].index}]);
+                        return_recs.push_back(get_type(cur_ins.args[0], known_regs, i));
                     }
 
                     if (cur_ins.op == IR::Operation::LOAD_GLOBAL && known_glob.count(cur_ins.args[0].index)) {
                         known_regs[{i, cur_ins.out.index}] = known_glob[cur_ins.args[0].index];
                     }
-                    if (cur_ins.op == IR::Operation::STORE_GLOBAL && cur_ins.args[1].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[1].index}) && !prog_->ref_globals.count(cur_ins.args[0].index)) {
-                            known_glob[cur_ins.args[0].index] = known_regs[{i, cur_ins.args[1].index}];
+                    if (cur_ins.op == IR::Operation::STORE_GLOBAL && get_type(cur_ins.args[1], known_regs, i) != vt::None && !prog_->ref_globals.count(cur_ins.args[0].index)) {
+                            known_glob[cur_ins.args[0].index] = get_type(cur_ins.args[1], known_regs, i);
                     }
                     
                     if (cur_ins.op == IR::Operation::EXEC_CALL && known_regs.count({i, cur_ins.args[0].index}))
                         known_regs[{i, cur_ins.out.index}] = known_regs[{i, cur_ins.args[0].index}];
-
-                    if (cur_ins.op == IR::Operation::ALLOC_REC)
-                        known_regs[{i, cur_ins.out.index}] = cur_ins.args[1].index;
-                    
-                    if (cur_ins.op == IR::Operation::REC_STORE_NAME && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index})) {
-                        cur_ins.op = IR::Operation::REC_STORE_STATIC;
-                        runtime::Value field = prog_->immediates[cur_ins.args[1].index];
-                        int rec_idx = known_regs[{i, cur_ins.args[0].index}];
-                        int field_idx = (int) (find(prog_->struct_layouts[rec_idx].begin(), prog_->struct_layouts[rec_idx].end(), field) - prog_->struct_layouts[rec_idx].begin());
-                        cur_ins.args[1] = {IR::Operand::LOGICAL, field_idx};
-                    }
-        
-                    if (cur_ins.op == IR::Operation::REC_LOAD_NAME && cur_ins.args[0].type == IR::Operand::VIRT_REG && known_regs.count({i, cur_ins.args[0].index})) {
-                        cur_ins.op = IR::Operation::REC_LOAD_STATIC;
-                        runtime::Value field = prog_->immediates[cur_ins.args[1].index];
-                        int rec_idx = known_regs[{i, cur_ins.args[0].index}];
-                        int field_idx = (int) (find(prog_->struct_layouts[rec_idx].begin(), prog_->struct_layouts[rec_idx].end(), field) - prog_->struct_layouts[rec_idx].begin());
-                        cur_ins.args[1] = {IR::Operand::LOGICAL, field_idx};
-                    }*/
 
                     new_ins.push_back(cur_ins);
                 }
