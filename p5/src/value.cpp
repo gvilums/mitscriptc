@@ -176,13 +176,16 @@ Value value_div(Value lhs, Value rhs) {
 
 auto value_eq_bool(Value lhs, Value rhs) -> bool {
     ValueType lhs_type = value_get_type(lhs);
+    if (lhs == rhs && lhs_type != ValueType::Closure) {
+        return true;
+    }
     ValueType rhs_type = value_get_type(rhs);
     if (lhs_type != rhs_type) {
         return false;
     }
     ValueType type = lhs_type;
-    if (type == ValueType::None || type == ValueType::Int 
-        || type == ValueType::Bool || type == ValueType::InlineString 
+    if (type == ValueType::None || type == ValueType::Int
+        || type == ValueType::Bool || type == ValueType::InlineString
         || type == ValueType::Record) {
         // bitwise comparison
         return lhs == rhs;
@@ -461,6 +464,9 @@ auto ProgramContext::alloc_record(uint32_t num_static, uint32_t layout) -> Recor
     rec->static_field_count = num_static;
     rec->layout_index = layout;
     rec->layout_offset = layout_offsets[layout]; // TODO check
+    for (int i = 0; i < num_static; ++i) {
+        rec->static_fields[i] = 0;
+    }
     return rec;
 }
 
