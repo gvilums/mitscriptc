@@ -12,6 +12,7 @@ set(sources ${sources}
     src/const_propagator.cpp
     src/dead_code_remover.cpp
     src/shape_analysis.cpp
+    src/type_inferer.cpp
     src/ir.cpp
     src/irprinter.cpp
     src/parsercode.cpp

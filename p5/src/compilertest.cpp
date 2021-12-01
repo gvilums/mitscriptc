@@ -13,6 +13,7 @@
 #include "regalloc.h"
 #include "dead_code_remover.h"
 #include "const_propagator.h"
+#include "type_inferer.h"
 #include "codegen.h"
 #include "shape_analysis.h"
 
@@ -98,6 +99,11 @@ auto main(int argc, const char* argv[]) -> int {
     if (args.use_dead_code_removal) {
         DeadCodeRemover dc_opt(prog);
         prog = dc_opt.optimize();
+    }
+
+    if (args.use_type_inference) {
+        TypeInferer ti_opt(prog);
+        prog = ti_opt.optimize();
     }
 
     if (args.use_shape_analysis) {

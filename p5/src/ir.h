@@ -154,7 +154,7 @@ struct Program {
     std::vector<runtime::Value> immediates;
     std::vector<std::vector<runtime::Value>> struct_layouts;
     std::set<int> ref_globals;
-
+    
     int num_globals{0};
     runtime::ProgramContext* ctx_ptr{nullptr};
 

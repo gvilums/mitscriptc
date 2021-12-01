@@ -1,246 +1,6 @@
 [
 {
   "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86emithelper.cpp.o", "external/asmjit/x86/x86emithelper.cpp"],
-  "file": "external/asmjit/x86/x86emithelper.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86instapi.cpp.o", "external/asmjit/x86/x86instapi.cpp"],
-  "file": "external/asmjit/x86/x86instapi.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86formatter.cpp.o", "external/asmjit/x86/x86formatter.cpp"],
-  "file": "external/asmjit/x86/x86formatter.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86func.cpp.o", "external/asmjit/x86/x86func.cpp"],
-  "file": "external/asmjit/x86/x86func.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86instdb.cpp.o", "external/asmjit/x86/x86instdb.cpp"],
-  "file": "external/asmjit/x86/x86instdb.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86assembler.cpp.o", "external/asmjit/x86/x86assembler.cpp"],
-  "file": "external/asmjit/x86/x86assembler.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86features.cpp.o", "external/asmjit/x86/x86features.cpp"],
-  "file": "external/asmjit/x86/x86features.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86operand.cpp.o", "external/asmjit/x86/x86operand.cpp"],
-  "file": "external/asmjit/x86/x86operand.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86compiler.cpp.o", "external/asmjit/x86/x86compiler.cpp"],
-  "file": "external/asmjit/x86/x86compiler.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86builder.cpp.o", "external/asmjit/x86/x86builder.cpp"],
-  "file": "external/asmjit/x86/x86builder.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/x86/x86rapass.cpp.o", "external/asmjit/x86/x86rapass.cpp"],
-  "file": "external/asmjit/x86/x86rapass.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/funcargscontext.cpp.o", "external/asmjit/core/funcargscontext.cpp"],
-  "file": "external/asmjit/core/funcargscontext.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/string.cpp.o", "external/asmjit/core/string.cpp"],
-  "file": "external/asmjit/core/string.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/osutils.cpp.o", "external/asmjit/core/osutils.cpp"],
-  "file": "external/asmjit/core/osutils.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/codewriter.cpp.o", "external/asmjit/core/codewriter.cpp"],
-  "file": "external/asmjit/core/codewriter.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/zonestack.cpp.o", "external/asmjit/core/zonestack.cpp"],
-  "file": "external/asmjit/core/zonestack.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/virtmem.cpp.o", "external/asmjit/core/virtmem.cpp"],
-  "file": "external/asmjit/core/virtmem.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/environment.cpp.o", "external/asmjit/core/environment.cpp"],
-  "file": "external/asmjit/core/environment.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/archtraits.cpp.o", "external/asmjit/core/archtraits.cpp"],
-  "file": "external/asmjit/core/archtraits.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/globals.cpp.o", "external/asmjit/core/globals.cpp"],
-  "file": "external/asmjit/core/globals.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/formatter.cpp.o", "external/asmjit/core/formatter.cpp"],
-  "file": "external/asmjit/core/formatter.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/constpool.cpp.o", "external/asmjit/core/constpool.cpp"],
-  "file": "external/asmjit/core/constpool.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/jitallocator.cpp.o", "external/asmjit/core/jitallocator.cpp"],
-  "file": "external/asmjit/core/jitallocator.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/builder.cpp.o", "external/asmjit/core/builder.cpp"],
-  "file": "external/asmjit/core/builder.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/rapass.cpp.o", "external/asmjit/core/rapass.cpp"],
-  "file": "external/asmjit/core/rapass.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/compiler.cpp.o", "external/asmjit/core/compiler.cpp"],
-  "file": "external/asmjit/core/compiler.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/support.cpp.o", "external/asmjit/core/support.cpp"],
-  "file": "external/asmjit/core/support.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/zone.cpp.o", "external/asmjit/core/zone.cpp"],
-  "file": "external/asmjit/core/zone.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/zonetree.cpp.o", "external/asmjit/core/zonetree.cpp"],
-  "file": "external/asmjit/core/zonetree.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/assembler.cpp.o", "external/asmjit/core/assembler.cpp"],
-  "file": "external/asmjit/core/assembler.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/ralocal.cpp.o", "external/asmjit/core/ralocal.cpp"],
-  "file": "external/asmjit/core/ralocal.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/rastack.cpp.o", "external/asmjit/core/rastack.cpp"],
-  "file": "external/asmjit/core/rastack.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/type.cpp.o", "external/asmjit/core/type.cpp"],
-  "file": "external/asmjit/core/type.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/cpuinfo.cpp.o", "external/asmjit/core/cpuinfo.cpp"],
-  "file": "external/asmjit/core/cpuinfo.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/codeholder.cpp.o", "external/asmjit/core/codeholder.cpp"],
-  "file": "external/asmjit/core/codeholder.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/emithelper.cpp.o", "external/asmjit/core/emithelper.cpp"],
-  "file": "external/asmjit/core/emithelper.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/emitter.cpp.o", "external/asmjit/core/emitter.cpp"],
-  "file": "external/asmjit/core/emitter.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/zonehash.cpp.o", "external/asmjit/core/zonehash.cpp"],
-  "file": "external/asmjit/core/zonehash.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/logger.cpp.o", "external/asmjit/core/logger.cpp"],
-  "file": "external/asmjit/core/logger.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/operand.cpp.o", "external/asmjit/core/operand.cpp"],
-  "file": "external/asmjit/core/operand.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/emitterutils.cpp.o", "external/asmjit/core/emitterutils.cpp"],
-  "file": "external/asmjit/core/emitterutils.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/zonevector.cpp.o", "external/asmjit/core/zonevector.cpp"],
-  "file": "external/asmjit/core/zonevector.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/target.cpp.o", "external/asmjit/core/target.cpp"],
-  "file": "external/asmjit/core/target.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/inst.cpp.o", "external/asmjit/core/inst.cpp"],
-  "file": "external/asmjit/core/inst.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/errorhandler.cpp.o", "external/asmjit/core/errorhandler.cpp"],
-  "file": "external/asmjit/core/errorhandler.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/zonelist.cpp.o", "external/asmjit/core/zonelist.cpp"],
-  "file": "external/asmjit/core/zonelist.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/jitruntime.cpp.o", "external/asmjit/core/jitruntime.cpp"],
-  "file": "external/asmjit/core/jitruntime.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
-  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/external/asmjit/core/func.cpp.o", "external/asmjit/core/func.cpp"],
-  "file": "external/asmjit/core/func.cpp"
-},
-{
-  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
   "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Iexternal/antlr_rt", "-o", "build/.objs/antlr_rt/linux/x86_64/release/external/antlr_rt/ANTLRErrorStrategy.cpp.o", "external/antlr_rt/ANTLRErrorStrategy.cpp"],
   "file": "external/antlr_rt/ANTLRErrorStrategy.cpp"
 },
@@ -986,6 +746,16 @@
 },
 {
   "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/type_inferer.cpp.o", "src/type_inferer.cpp"],
+  "file": "src/type_inferer.cpp"
+},
+{
+  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/utils.cpp.o", "src/utils.cpp"],
+  "file": "src/utils.cpp"
+},
+{
+  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
   "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/ir.cpp.o", "src/ir.cpp"],
   "file": "src/ir.cpp"
 },
@@ -1003,6 +773,11 @@
   "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
   "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/value.cpp.o", "src/value.cpp"],
   "file": "src/value.cpp"
+},
+{
+  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/shape_analysis.cpp.o", "src/shape_analysis.cpp"],
+  "file": "src/shape_analysis.cpp"
 },
 {
   "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
@@ -1028,4 +803,14 @@
   "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
   "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/dead_code_remover.cpp.o", "src/dead_code_remover.cpp"],
   "file": "src/dead_code_remover.cpp"
+},
+{
+  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-Igrammar", "-Iexternal/antlr_rt", "-Iexternal/asmjit", "-o", "build/.objs/mitscriptc/linux/x86_64/release/src/codegen.cpp.o", "src/codegen.cpp"],
+  "file": "src/codegen.cpp"
+},
+{
+  "directory": "/home/jakob/Desktop/fa21-jakob-nogler/p5",
+  "arguments": ["/usr/bin/gcc", "-c", "-m64", "-std=c++2a", "-o", "build/.objs/asmjit/linux/x86_64/release/build/.gens/asmjit/unity_build/unity_642A245F.cpp.o", "build/.gens/asmjit/unity_build/unity_642A245F.cpp"],
+  "file": "build/.gens/asmjit/unity_build/unity_642A245F.cpp"
 }]
