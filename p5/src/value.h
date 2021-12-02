@@ -230,11 +230,13 @@ struct Record {
         ValueEq,
         ProgramAllocator<alloc_type>>;
 
-    uint64_t layout_offset; // TODO initialization
+    uint64_t layout_offset; // must be first field, is accessed from asm
     uint32_t static_field_count;
     uint32_t layout_index;
-    map_type dynamic_fields;
-    Value static_fields[];
+    map_type* dynamic_fields;
+    Value static_fields[]; // must be last field, because variable length
+
+    void init_map(ProgramContext* ctx);
 };
 
 };

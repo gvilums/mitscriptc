@@ -289,7 +289,10 @@ auto value_get_std_string(ProgramContext* ctx, Value val) -> std::string {
     if (type == ValueType::Record) {
         Record* record = value_get_record(val);
         std::string out{"{"};
-        std::vector<std::pair<Value, Value>> entries{record->dynamic_fields.begin(), record->dynamic_fields.end()};
+        std::vector<std::pair<Value, Value>> entries;
+        if (record->dynamic_fields != nullptr) {
+            entries.insert(entries.end(), record->dynamic_fields->begin(), record->dynamic_fields->end());
+        }
         const std::vector<Value>& layout = ctx->layouts[record->layout_index];
         for (int i = 0; i < record->static_field_count; ++i) {
             entries.emplace_back(layout[i], record->static_fields[i]);
@@ -365,7 +368,6 @@ auto extern_input(ProgramContext* rt) -> Value {
 }
 
 auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value {
-    // TODO make rec a Record* instead of Value
     Record* rec_ptr = value_get_record(rec);
     uint32_t static_field_count = rec_ptr->static_field_count;
     const auto& layout = ctx->layouts[rec_ptr->layout_index];
@@ -378,9 +380,11 @@ auto extern_rec_load_name(ProgramContext* ctx, Value rec, Value name) -> Value {
 //            return rec_ptr->static_fields[i];
 //        }
     }
-    auto iter = rec_ptr->dynamic_fields.find(name);
-    if (iter != rec_ptr->dynamic_fields.end()) {
-        return iter->second;
+    if (rec_ptr->dynamic_fields != nullptr) {
+        auto iter = rec_ptr->dynamic_fields->find(name);
+        if (iter != rec_ptr->dynamic_fields->end()) {
+            return iter->second;
+        }
     }
     return 0;
 }
@@ -395,7 +399,10 @@ void extern_rec_store_name(ProgramContext* ctx, Value rec, Value name, Value val
             return;
         }
     }
-    rec_ptr->dynamic_fields[name] = val;
+    if (rec_ptr->dynamic_fields == nullptr) {
+        rec_ptr->init_map(ctx);
+    }
+    rec_ptr->dynamic_fields->operator[](name) = val;
 }
 
 auto extern_rec_load_index(ProgramContext* ctx, Value rec, Value index_val) -> Value {
@@ -408,9 +415,11 @@ auto extern_rec_load_index(ProgramContext* ctx, Value rec, Value index_val) -> V
             return rec_ptr->static_fields[i];
         }
     }
-    auto iter = rec_ptr->dynamic_fields.find(name);
-    if (iter != rec_ptr->dynamic_fields.end()) {
-        return iter->second;
+    if (rec_ptr->dynamic_fields != nullptr) {
+        auto iter = rec_ptr->dynamic_fields->find(name);
+        if (iter != rec_ptr->dynamic_fields->end()) {
+            return iter->second;
+        }
     }
     return 0;
 }
@@ -426,7 +435,10 @@ void extern_rec_store_index(ProgramContext* ctx, Value rec, Value index_val, Val
             return;
         }
     }
-    rec_ptr->dynamic_fields[name] = val;
+    if (rec_ptr->dynamic_fields == nullptr) {
+        rec_ptr->init_map(ctx);
+    }
+    rec_ptr->dynamic_fields->operator[](name) = val;
 }
 
 ProgramContext::ProgramContext(size_t heap_size) {
@@ -458,11 +470,10 @@ auto ProgramContext::alloc_string(size_t length) -> String* {
 auto ProgramContext::alloc_record(uint32_t num_static, uint32_t layout) -> Record* {
     HeapObject* obj = this->alloc_traced(sizeof(Record) + sizeof(Value) * num_static);
     auto* rec = reinterpret_cast<Record*>(&obj->data);
-    // initialize map
-    new (&rec->dynamic_fields) Record::map_type{ProgramAllocator<Record::alloc_type>{this}};
-    rec->static_field_count = num_static;
-    rec->layout_index = layout;
     rec->layout_offset = layout_offsets[layout]; // TODO check
+    rec->layout_index = layout;
+    rec->static_field_count = num_static;
+    rec->dynamic_fields = nullptr;
     for (int i = 0; i < num_static; ++i) {
         rec->static_fields[i] = 0;
     }
@@ -633,13 +644,16 @@ void trace_value(ProgramContext* ctx, Value* ptr) {
             Value new_value = to_value(new_record);
             heap_obj->data[0] = new_value;
             *ptr = new_value;
-            // trace dynamic_fields of record
-            for (auto& elem : old_record->dynamic_fields) {
-                Value key = elem.first;
-                Value val = elem.second;
-                trace_value(ctx, &key);
-                trace_value(ctx, &val);
-                new_record->dynamic_fields[key] = val;
+            // trace dynamic_fields of record, if they exist
+            if (old_record->dynamic_fields != nullptr) {
+                new_record->init_map(ctx);
+                for (auto& elem : *old_record->dynamic_fields) {
+                    Value key = elem.first;
+                    Value val = elem.second;
+                    trace_value(ctx, &key);
+                    trace_value(ctx, &val);
+                    new_record->dynamic_fields->operator[](key) = val;
+                }
             }
             for (int i = 0; i < new_record->static_field_count; ++i) {
                 Value val = old_record->static_fields[i];
@@ -688,6 +702,13 @@ std::size_t ValueHash::operator()(const Value& val) const noexcept {
 
 bool ValueEq::operator()(const Value& lhs, const Value& rhs) const noexcept {
     return value_eq_bool(lhs, rhs);
+}
+
+void Record::init_map(ProgramContext* ctx) {
+    auto* map_ptr = static_cast<Record::map_type*>(
+        ctx->alloc_raw(sizeof(Record::map_type)));
+    ::new (map_ptr) Record::map_type{ProgramAllocator<Record::alloc_type>{ctx}};
+    this->dynamic_fields = map_ptr;
 }
 
 };  // namespace runtime

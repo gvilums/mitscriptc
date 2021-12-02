@@ -2,6 +2,7 @@ grammar/MITScript.interp
 grammar/MITScript.tokens
 
 test_regalloc
+*build*
 build/*
 .cache/*
 .xmake
