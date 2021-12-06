@@ -220,11 +220,11 @@ void CodeGenerator::process_block(
             assembler.mov(x86::r11, Imm(program.immediates[instr.args[1].index]));
             assembler.vmovq(x86::xmm0, x86::r11);
             assembler.vpbroadcastq(x86::ymm0, x86::xmm0);
-            // load offset into r11
-            assembler.mov(x86::r11, x86::ptr_64(x86::r10, -runtime::RECORD_TAG));
+            // load label address into r11
+            assembler.lea(x86::r11, x86::ptr_256(layout_base_label));
+            assembler.add(x86::r11, x86::ptr_64(x86::r10, -runtime::RECORD_TAG));
             // perform comparison with layout as memory operand
-            assembler.lea(x86::r9, x86::ptr_256(layout_base_label));
-            assembler.vpcmpeqq(x86::ymm0, x86::ymm0, x86::ptr_256(x86::r9, x86::r11));
+            assembler.vpcmpeqq(x86::ymm0, x86::ymm0, x86::ptr_256(x86::r11));
             assembler.vpmovmskb(x86::r11d, x86::ymm0);
             assembler.test(x86::r11, x86::r11);
             // if not found jump to extern call
