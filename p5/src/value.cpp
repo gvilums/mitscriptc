@@ -448,6 +448,7 @@ ProgramContext::ProgramContext(size_t heap_size) {
     this->region_size = heap_size / 2;
     this->gc_threshold = region_size - (1 << 14);
     this->write_head = heap + 8;
+    this->prev_end = write_head + heap_size;
 
     this->none_string = to_value(this, "None");
     this->true_string = to_value(this, "true");
@@ -490,20 +491,7 @@ auto ProgramContext::alloc_closure(size_t num_free) -> Closure* {
 auto ProgramContext::alloc_traced(size_t data_size) -> HeapObject* {
     size_t allocation_size = sizeof(HeapObject) + data_size;
     HeapObject* ptr;
-    if (this->current_region == 2) {
-        ptr = static_cast<HeapObject*>(std::malloc(allocation_size));
-        this->static_allocations.push_back(ptr);
-    } else {
-        // align to multiple of 8
-        size_t aligned_size = ((allocation_size - 1) | 0b1111) + 1;
-        current_alloc += aligned_size;
-        if (current_alloc >= region_size) {
-            std::cout << "out of memory" << std::endl;
-            std::exit(1);
-        }
-        ptr = reinterpret_cast<HeapObject*>(write_head);
-        write_head += aligned_size;
-    }
+    ptr = static_cast<HeapObject*>(alloc_raw(allocation_size));
     ptr->region = current_region;
     return ptr;
 }
@@ -535,10 +523,15 @@ void ProgramContext::init_globals(size_t num_globals) {
 
 void ProgramContext::switch_region() {
     // switch region
-    current_region = 1 - current_region;
+    this->current_region = 1 - this->current_region;
+    // remember write head position
+    this->prev_end = this->write_head;
     // reset write head
-    write_head = heap + 8 + current_region * region_size;
-    current_alloc = 0;
+    this->write_head = this->heap + 8;
+    if (this->current_region == 1) {
+        this->write_head += 2 * this->region_size;
+    }
+    this->current_alloc = 0;
 }
 
 void ProgramContext::reset_globals() {
@@ -554,28 +547,34 @@ void ProgramContext::init_layouts(std::vector<std::vector<Value>> field_layouts)
 
 auto ProgramContext::alloc_raw(size_t num_bytes) -> void* {
     void* ptr;
-    if (current_region == 2) {
-        ptr = malloc(num_bytes);
+    if (this->current_region == 2) {
+        ptr = std::malloc(num_bytes);
         this->static_allocations.push_back(ptr);
     } else {
-        // align to 8 bytes
         size_t aligned_size = ((num_bytes - 1) | 0b1111) + 1;
         current_alloc += aligned_size;
-        if (current_alloc >= region_size) {
-            std::cout << "out of memory" << std::endl;
-            std::exit(1);
+        if (this->current_region == 0) {
+            ptr = reinterpret_cast<HeapObject*>(write_head);
+            write_head += aligned_size;
+            if (reinterpret_cast<uintptr_t>(write_head) > reinterpret_cast<uintptr_t>(prev_end)) {
+                std::cout << "out of memory" << std::endl;
+                std::exit(1);
+            }
+        } else {
+            write_head -= aligned_size;
+            ptr = reinterpret_cast<HeapObject*>(write_head);
+            if (reinterpret_cast<uintptr_t>(write_head) < reinterpret_cast<uintptr_t>(prev_end)) {
+                std::cout << "out of memory" << std::endl;
+                std::exit(1);
+            }
         }
-        ptr = write_head;
-        write_head += aligned_size;
     }
     return ptr;
 }
 
 void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
     ctx->switch_region();
-    // TODO CHECK
     // base rbp is pointing two slots above saved rsp on stack
-//    std::cout << "--- tracing stack ---" << std::endl;
     auto* base_rsp = reinterpret_cast<uint64_t*>(ctx->saved_rsp);
     while (rsp != base_rsp) {
         while (rsp != rbp) {
@@ -585,14 +584,14 @@ void trace_collect(ProgramContext* ctx, const uint64_t* rbp, uint64_t* rsp) {
         rbp = reinterpret_cast<uint64_t*>(*rsp);
         rsp += 2;
     }
-//    std::cout << "--- tracing globals ---" << std::endl;
     for (int i = 0; i < ctx->globals_size; ++i) {
         trace_value(ctx, ctx->globals + i);
     }
-//    std::cout << "----- finished collecting -----" << std::endl;
-    // TODO DEBUG
-//    char* cleared_region = ctx->heap + 8 + (1 - ctx->current_region) * ctx->region_size;
-//    std::memset(cleared_region, 0, ctx->region_size);
+    if (ctx->current_region == 0) {
+        ctx->prev_end = ctx->heap + 8 + 2 * ctx->region_size;
+    } else {
+        ctx->prev_end = ctx->heap + 8;
+    }
 }
 
 void trace_value(ProgramContext* ctx, Value* ptr) {

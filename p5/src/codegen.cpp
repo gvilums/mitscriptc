@@ -404,7 +404,7 @@ void CodeGenerator::process_block(
             Label skip_gc_label = assembler.newLabel();
             assembler.mov(x86::r10, Imm(&program.ctx_ptr->current_alloc));
             assembler.mov(x86::r10, x86::ptr_64(x86::r10));
-            assembler.mov(x86::r11, Imm(program.ctx_ptr->gc_threshold));
+            assembler.mov(x86::r11, Imm(program.ctx_ptr->region_size));
             assembler.cmp(x86::r10, x86::r11);
             assembler.jl(skip_gc_label);
             std::bitset<IR::MACHINE_REG_COUNT> live_regs(instr.args[0].index);

@@ -20,6 +20,8 @@ struct ProgramContext {
 
     char* write_head{nullptr};
 
+    char* prev_end{nullptr};
+
     // start in static allocation mode
     int current_region{2};
 
