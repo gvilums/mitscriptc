@@ -57,7 +57,7 @@ class Executable {
     int (*function)(){nullptr};
 
    public:
-    explicit Executable(IR::Program program1);
+    explicit Executable(IR::Program program1, bool emit_code=false);
     ~Executable();
     void run();
 

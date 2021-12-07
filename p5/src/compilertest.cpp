@@ -87,9 +87,17 @@ auto main(int argc, const char* argv[]) -> int {
     program->accept(compiler);
    	IR::Program* prog = compiler.get_program();
 
+    if (args.emit_ir) {
+        std::cout << *prog << std::endl;
+    }
+
     if (args.use_const_propagation) {
         ConstPropagator c_prop(prog);
         prog = c_prop.optimize();
+    }
+
+    if (args.emit_ir) {
+        std::cout << *prog << std::endl;
     }
 
     if (args.use_dead_code_removal) {
@@ -97,14 +105,26 @@ auto main(int argc, const char* argv[]) -> int {
         prog = dc_opt.optimize();
     }
 
+    if (args.emit_ir) {
+        std::cout << *prog << std::endl;
+    }
+
     if (args.use_type_inference) {
         TypeInferer ti_opt(prog);
         prog = ti_opt.optimize();
     }
 
+    if (args.emit_ir) {
+        std::cout << *prog << std::endl;
+    }
+
     if (args.use_shape_analysis) {
         ShapeAnalysis sa_opt(prog);
         prog = sa_opt.optimize();
+    }
+
+    if (args.emit_ir) {
+        std::cout << *prog << std::endl;
     }
 
      // std::cout << *prog << std::endl;
@@ -113,13 +133,17 @@ auto main(int argc, const char* argv[]) -> int {
     for (auto& func : prog->functions) {
         IR::allocate_registers(func);
     }
+
+    if (args.emit_ir) {
+        std::cout << *prog << std::endl;
+    }
 //    pretty_print_function(std::cout, prog->functions.back()) << std::endl;
 //    IR::allocate_registers(prog->functions.back());
 
     // std::cout << *prog << std::endl;
 
 
-    codegen::Executable compiled(std::move(*prog));
+    codegen::Executable compiled(std::move(*prog), args.emit_ir);
     try {
         compiled.run();
     } catch (codegen::ExecutionError& err) {

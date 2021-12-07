@@ -14,7 +14,7 @@ class MyErrorHandler : public asmjit::ErrorHandler {
     }
 };
 
-Executable::Executable(IR::Program program) : ctx_ptr(program.ctx_ptr) {
+Executable::Executable(IR::Program program, bool emit_code) : ctx_ptr(program.ctx_ptr) {
     using namespace asmjit;
     MyErrorHandler handler;
     FileLogger logger(stdout);
@@ -22,7 +22,9 @@ Executable::Executable(IR::Program program) : ctx_ptr(program.ctx_ptr) {
     CodeHolder code;
     code.init(jit_rt.environment());
     code.setErrorHandler(&handler);
-//    code.setLogger(&logger);
+    if (emit_code) {
+        code.setLogger(&logger);
+    }
 
     CodeGenerator generator{program, &code};
     program.ctx_ptr = nullptr;
