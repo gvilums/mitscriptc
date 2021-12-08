@@ -1,0 +1,4 @@
+x = {y: 34; h: {foo: 30;};};
+x.bar = "foo";
+x.h[x.bar] = 20;
+print(x);

@@ -1,0 +1,115 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [0, 1, None],
+			parameter_count = 1,
+			local_vars = [depth],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [print, call_depth],
+			instructions = 
+			[
+				load_global	0
+				load_local	0
+				call	1
+				pop
+				load_local	0
+				load_const	0
+				gt
+				not
+				if	7
+				load_global	1
+				load_local	0
+				load_const	1
+				sub
+				call	1
+				pop
+				load_const	2
+				return
+			]
+		}
+	],
+	constants = [100, 0, 200, 1],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [iterations, call_depth, i, print, input, intcast],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	3
+		load_func	1
+		alloc_closure	0
+		store_global	4
+		load_func	2
+		alloc_closure	0
+		store_global	5
+		load_const	0
+		store_global	0
+		load_func	3
+		alloc_closure	0
+		store_global	1
+		load_const	1
+		store_global	2
+		load_global	2
+		load_global	0
+		swap
+		gt
+		not
+		if	10
+		load_global	1
+		load_const	2
+		call	1
+		pop
+		load_global	2
+		load_const	3
+		add
+		store_global	2
+		goto	-14
+	]
+}

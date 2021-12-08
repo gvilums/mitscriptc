@@ -1,0 +1,6 @@
+l.len() = 10
+big.len = 320
+Duplicates l other: 0
+Duplicates l l: 20
+Duplicates other other: 5
+Duplicates big big: 320

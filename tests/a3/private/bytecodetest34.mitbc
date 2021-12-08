@@ -1,0 +1,216 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		}
+	],
+	constants = ["58acb2f07d76e4eb06ddce81", 0, "ad86cdb0-5b26-4e3e-a5a0-83deb0d39f2d", false, "$1;991.66", "http://placehold.it/32x32", 23, "green", None, "Reese", "Vargas", "TUBESYS", "reese.vargas@tubesys.biz", "+1 (973) 518-2657", "673 Mill Street; Kipp; New Mexico; 1408", "Sit aliquip in amet magna. Aliquip laborum duis excepteur qui dolore qui dolor nulla culpa. Incididunt in adipisicing laborum adipisicing officia ipsum adipisicing minim pariatur.", "Friday; December 19; 2014 7:04 PM", "-87.995063", "-54.615534", "consectetur", "mollit", "duis", "cupidatat", "laboris", 1, 2, 3, 4, 5, 6, 7, 8, 9, "Ila Graves", "Moon Newman", "Hays Wood", "Hello; Reese! You have 9 unread messages.", "apple", " is friends with "],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [account, _id, index, guid, isActive, balance, picture, age, eyeColor, relatives, name, first, last, company, email, phone, address, about, registered, latitude, longitude, tags, _0, _1, _2, _3, _4, range, _5, _6, _7, _8, _9, friends, greeting, favoriteFruit, print, input, intcast],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	36
+		load_func	1
+		alloc_closure	0
+		store_global	37
+		load_func	2
+		alloc_closure	0
+		store_global	38
+		alloc_record
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		load_const	0
+		field_store	1
+		load_const	1
+		field_store	2
+		load_const	2
+		field_store	3
+		load_const	3
+		field_store	4
+		load_const	4
+		field_store	5
+		load_const	5
+		field_store	6
+		load_const	6
+		field_store	7
+		load_const	7
+		field_store	8
+		load_const	8
+		field_store	9
+		alloc_record
+		dup
+		dup
+		load_const	9
+		field_store	11
+		load_const	10
+		field_store	12
+		field_store	10
+		load_const	11
+		field_store	13
+		load_const	12
+		field_store	14
+		load_const	13
+		field_store	15
+		load_const	14
+		field_store	16
+		load_const	15
+		field_store	17
+		load_const	16
+		field_store	18
+		load_const	17
+		field_store	19
+		load_const	18
+		field_store	20
+		alloc_record
+		dup
+		dup
+		dup
+		dup
+		dup
+		load_const	19
+		field_store	22
+		load_const	20
+		field_store	23
+		load_const	21
+		field_store	24
+		load_const	22
+		field_store	25
+		load_const	23
+		field_store	26
+		field_store	21
+		alloc_record
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		load_const	1
+		field_store	22
+		load_const	24
+		field_store	23
+		load_const	25
+		field_store	24
+		load_const	26
+		field_store	25
+		load_const	27
+		field_store	26
+		load_const	28
+		field_store	28
+		load_const	29
+		field_store	29
+		load_const	30
+		field_store	30
+		load_const	31
+		field_store	31
+		load_const	32
+		field_store	32
+		field_store	27
+		alloc_record
+		dup
+		dup
+		dup
+		alloc_record
+		dup
+		load_const	33
+		field_store	10
+		field_store	22
+		alloc_record
+		dup
+		load_const	34
+		field_store	10
+		field_store	23
+		alloc_record
+		dup
+		load_const	35
+		field_store	10
+		field_store	24
+		field_store	33
+		load_const	36
+		field_store	34
+		load_const	37
+		field_store	35
+		store_global	0
+		load_global	36
+		load_global	0
+		field_load	10
+		field_load	11
+		load_const	38
+		add
+		load_global	0
+		field_load	33
+		field_load	22
+		field_load	10
+		add
+		call	1
+		pop
+	]
+}

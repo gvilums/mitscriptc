@@ -1,0 +1,29 @@
+construct = fun(depth) {
+    if(depth == 0) {
+        return None;
+    }
+    this = {
+        child1 : construct(depth - 1);
+        child2 : construct(depth - 1);
+        size : fun() {
+                   result = 1;
+                   if (!(this.child1 == None)) { result = result + this.child1.size(); }
+                   if (!(this.child2 == None)) { result = result + this.child2.size(); }
+                   return result;
+               };
+    };
+    return this;
+};
+
+a = { };
+
+a.tree = construct(10);
+print(a.tree.size());
+a.tree = construct(10);
+print(a.tree.size());
+a.tree = construct(10);
+print(a.tree.size());
+a.tree = construct(10);
+print(a.tree.size());
+a.tree = construct(10);
+print(a.tree.size());

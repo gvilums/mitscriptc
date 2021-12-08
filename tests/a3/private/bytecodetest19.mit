@@ -1,0 +1,12 @@
+x = 10000;
+while(x > 0) {
+    f = fun() {
+        a = {
+            a1 : "hello";
+            a2 : "bye";
+        };
+        print(a);
+    };
+		f();
+    x = x-1;
+}

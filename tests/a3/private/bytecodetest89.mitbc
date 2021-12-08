@@ -1,0 +1,225 @@
+function
+{
+	functions =
+	[
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 0,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [],
+			parameter_count = 1,
+			local_vars = [],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+			]
+		},
+		function
+		{
+			functions = [],
+			constants = [None, "", 0, 1],
+			parameter_count = 2,
+			local_vars = [letter, count, return_val, c],
+			local_ref_vars = [],
+			free_vars = [],
+			names = [],
+			instructions = 
+			[
+				load_const	0
+				store_local	2
+				load_const	0
+				store_local	3
+				load_const	1
+				store_local	2
+				load_const	2
+				store_local	3
+				load_local	3
+				load_local	1
+				swap
+				gt
+				not
+				if	10
+				load_local	2
+				load_local	0
+				add
+				store_local	2
+				load_local	3
+				load_const	3
+				add
+				store_local	3
+				goto	-14
+				load_local	2
+				return
+			]
+		}
+	],
+	constants = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", 0, 10000, "_", 27, 1, 26],
+	parameter_count = 0,
+	local_vars = [],
+	local_ref_vars = [],
+	free_vars = [],
+	names = [LETTERS, letter_replicate, i, letter_index, letter, my_string, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _16, _17, _18, _19, _20, _21, _22, _23, _24, _25, print, input, intcast],
+	instructions = 
+	[
+		load_func	0
+		alloc_closure	0
+		store_global	32
+		load_func	1
+		alloc_closure	0
+		store_global	33
+		load_func	2
+		alloc_closure	0
+		store_global	34
+		alloc_record
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		dup
+		load_const	0
+		field_store	6
+		load_const	1
+		field_store	7
+		load_const	2
+		field_store	8
+		load_const	3
+		field_store	9
+		load_const	4
+		field_store	10
+		load_const	5
+		field_store	11
+		load_const	6
+		field_store	12
+		load_const	7
+		field_store	13
+		load_const	8
+		field_store	14
+		load_const	9
+		field_store	15
+		load_const	10
+		field_store	16
+		load_const	11
+		field_store	17
+		load_const	12
+		field_store	18
+		load_const	13
+		field_store	19
+		load_const	14
+		field_store	20
+		load_const	15
+		field_store	21
+		load_const	16
+		field_store	22
+		load_const	17
+		field_store	23
+		load_const	18
+		field_store	24
+		load_const	19
+		field_store	25
+		load_const	20
+		field_store	26
+		load_const	21
+		field_store	27
+		load_const	22
+		field_store	28
+		load_const	23
+		field_store	29
+		load_const	24
+		field_store	30
+		load_const	25
+		field_store	31
+		store_global	0
+		load_func	3
+		alloc_closure	0
+		store_global	1
+		load_const	26
+		store_global	2
+		load_const	26
+		store_global	3
+		load_global	2
+		load_const	27
+		swap
+		gt
+		not
+		if	32
+		load_global	0
+		load_const	28
+		load_global	3
+		add
+		index_load
+		store_global	4
+		load_global	1
+		load_global	4
+		load_const	29
+		call	2
+		store_global	5
+		load_global	32
+		load_global	5
+		call	1
+		pop
+		load_global	3
+		load_const	30
+		add
+		store_global	3
+		load_global	3
+		load_const	31
+		eq
+		not
+		if	3
+		load_const	26
+		store_global	3
+		load_global	2
+		load_const	30
+		add
+		store_global	2
+		goto	-36
+	]
+}

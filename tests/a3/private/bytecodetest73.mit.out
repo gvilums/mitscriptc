@@ -1,0 +1,2 @@
+foo
+IllegalCastException: String to Bool

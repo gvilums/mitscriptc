@@ -1,0 +1,24 @@
+// let's make a big cycle
+start = {};
+current = start;
+x = 0;
+
+while (x < 100) {
+    current.x = x;
+    current.next = {};
+    current.next.previous = current;
+    current = current.next;
+
+    x = x + 1;
+}
+
+current = current.previous;
+
+current.next = start;
+start.previous = current;
+
+print(current.previous.previous.x);
+print(current.previous.x);
+print(current.x);
+print(current.next.x);
+print(current.next.next.x);

@@ -1,0 +1,10 @@
+{x:bar y:foo }
+-1 foobar -2
+0 foobar -1
+1 foobar 0
+2 foobar 1
+3 foobar 2
+4 foobar 3
+2 foobar 2
+None
+2

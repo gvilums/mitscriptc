@@ -1,0 +1,57 @@
+y = fun (le) {
+    // yes, yes, binding the inner parts of the y combinator to names
+    // is unwholesome, I understand.
+
+    // the parser doesn't support functions as expressions everywhere,
+    // though, so we'll have to make do.
+
+    _a = fun (f) {
+        return f(f);
+    };
+    _b = fun (f) {
+        _c = fun (x) {
+            _d = f(f);
+            return _d(x);
+        };
+        return le(_c);
+    };
+
+    return _a(_b);
+};
+
+factorial = y(fun (factorial) {
+	return fun (n) {
+		if (n <= 2) {
+			return n;
+		} else {
+			return n * factorial(n - 1);
+		}
+	};
+});
+
+print("10! = " + factorial(10));
+
+fibbonacci = fun (x) {
+    if (x <= 2) {
+        return 1;
+    } else {
+        return fibbonacci(x-1) + fibbonacci(x-2);
+    }
+};
+print("fibbonacci(10) = " + fibbonacci(10));
+
+// yeah, that one's probably easier to read...
+
+// or maybe even:
+
+dots = fun (n) {
+    if (n > 0) {
+        print(".");
+        dots(n - 1);
+    }
+};
+print("75 dots:");
+dots(75);
+
+// that's probably the best option.
+// i hope that actually works.

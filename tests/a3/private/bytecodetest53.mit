@@ -1,0 +1,7 @@
+x = 0;
+while (x < 10000) {
+      y = {};
+      x = x + 1;
+			print(y);
+}
+print(x);

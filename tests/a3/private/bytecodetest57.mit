@@ -1,0 +1,10 @@
+x = 1;
+f = fun(y) 
+{
+  g = fun(z)
+  {
+     return x + y + z;
+  };
+	return g(3);
+};
+print(f(2));

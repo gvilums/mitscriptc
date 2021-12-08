@@ -1,0 +1,44 @@
+x = 1;
+f = fun() {
+    global x;
+    x = 2;
+};
+g = fun(x) {
+    x();
+};
+g(f);
+print(x);
+
+// "Object-Oriented"
+test = fun(this) {
+    print(this.x);
+    this.x = this.x + 1;
+};
+
+testClass = {test: test; x: 0;};
+
+while(testClass.x < 200) {
+    testClass.test(testClass);
+}
+
+// Even better OO
+Database = fun() {
+    this = 
+    {
+       updatePerson: fun(name, email) {
+           this.db[name] = email;                          
+       };
+       
+       getPerson: fun(name) {
+           return this.db[name];
+       };
+       
+       db: {};
+    };
+   
+    return this;
+};
+
+myDatabase = Database();
+myDatabase.updatePerson("James Lovejoy", "jameslovejoy1@gmail.com");
+print(myDatabase.getPerson("James Lovejoy")); 

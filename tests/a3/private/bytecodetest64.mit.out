@@ -1,0 +1,47 @@
+x is false
+true
+x is still false
+Loop 0
+Loop 1
+Loop 2
+Loop 3
+Loop 4
+Loop 5
+{0:value 0 1:value 1 2:value 2 3:value 3 }
+{0:value 0 1:foo 2:value 2 3:value 3 }
+None
+value 2
+None
+{cat:dog foo:bar }
+dog
+dog cat
+7
+cat16NoneFUNCTIONtruefalse
+FUNCTION
+-80
+false
+true
+false
+false
+true
+false
+true
+{cat:dog foo:foobar }
+{cat:dog foo:foobar }
+true
+1
+true
+true
+false
+true
+None
+false
+true
+false
+true
+true
+false
+true
+12
+12
+true

@@ -1,0 +1,7 @@
+manycars = fun(){
+  carmap = 1;
+  x = 1;
+  print(carmap);
+};
+
+manycars();

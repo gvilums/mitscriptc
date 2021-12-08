@@ -1,0 +1,7 @@
+x = "a" + "b";
+print(x);
+print("should be 6 " + (3 * 2));
+print("should be 3 " + (21 / 7));
+print("should be true " + (5 > 3));
+print("should be false " + (5 < 3));
+print("should be true " + ("foo" == "foo"));

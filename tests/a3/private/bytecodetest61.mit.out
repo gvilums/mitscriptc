@@ -1,0 +1,14 @@
+Garbage collector bench4.mit
+Starting timeconstruction tests...
+Creating 1024 trees of depth 4
+--> Top down construction
+--> Bottom up construction
+Creating 256 trees of depth 6
+--> Top down construction
+--> Bottom up construction
+Creating 64 trees of depth 8
+--> Top down construction
+--> Bottom up construction
+Creating 16 trees of depth 10
+--> Top down construction
+--> Bottom up construction

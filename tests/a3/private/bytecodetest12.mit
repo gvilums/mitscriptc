@@ -1,0 +1,7 @@
+f = fun(x) {
+  print("world");
+  return 1/x;
+};
+
+print("hello");
+print(f(0));
