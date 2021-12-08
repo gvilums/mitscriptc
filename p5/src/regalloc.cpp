@@ -433,7 +433,9 @@ auto compute_live_intervals(const Function& func,
         const BasicBlock& block = func.blocks[block_index];
         std::unordered_set<size_t> live;
         for (size_t successor : block.successors) {
-            live.merge(block_live_regs[successor]);
+            for (size_t reg : block_live_regs[successor]) {
+                live.insert(reg);
+            }
         }
 
         for (size_t successor : block.successors) {
