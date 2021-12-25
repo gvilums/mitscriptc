@@ -1,7 +1,0 @@
-r = {
-  s: "str";
-  n: None;
-  b: true;
-  i: 1;
-};
-print(r);

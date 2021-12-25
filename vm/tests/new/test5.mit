@@ -1,7 +1,0 @@
-oldprint = print;
-print = fun(x){
-	oldprint("printing: " + x);
-};
-
-print(42);
-oldprint(42);

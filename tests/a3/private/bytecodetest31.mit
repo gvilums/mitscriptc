@@ -1,5 +1,0 @@
-x = {bees: true;};
-y = x;
-y.bees = false;
-print(y.bees);
-print(x.bees);

@@ -1,9 +1,0 @@
-r = {
-	a : 0;
-	b : fun(){
-		return 42;
-	};
-};
-
-print(r.a);
-print(r.b());

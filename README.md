@@ -1,42 +1,18 @@
-### 6.818 Skeleton Code
+# `mitscriptc` -  A JIT compiler for the `mitscript` language
 
-This repository hosts the skeleton code for 6.818, a class for building a virtual machine for a Python-like language called MITScript.
+This repository hosts an implementation of a custom virtual machine for `mitscript`, which performs extensive just-in-time compilation to achieve remarkable performance.
 
-#### Dependencies
+## Compiler
+The first step of the execution process is to translate an `mitscript` program into a high level intermediate representation suitable for further processing.
 
-Here are the basic dependencies on Ubuntu 20.04.1 (LTS) to get the skeleton up and running:
+## Optimizer
+Various optimizations such as constant propagation and type analysis are performed to specialize instructions, improving performance.
 
-```
-sudo apt install git 
-sudo apt install make
-sudo apt install default-jre
-sudo apt install g++
-```
+## Register Allocator
+This step maps the intermediate representation from virtual registers to machine registers.
 
-Here is an additional tool to aid debugging:
+## Code Generator
+Finally, the intermediate representation with machine registers is translated into x86 assembly, and executed.
 
-```
-sudo apt install valgrind
-```
-
-#### Virtual Machine
-
-Here is an Ubuntu 20.04.1 (LTS) virtual machine with these dependencies already installed:
-[link](https://drive.google.com/file/d/1czHe5Ihbjm018RRX74o-Fq0PL_gxyPD6/view?usp=sharing).
-
-Password: IwillgetanA
-
-#### Updating
-
-To pull updates from this repository, go to your own repository, and run:
-
-```sh
-git remote add upstream git@github.com:mit-6818/6818-fa21.git
-```
-
-Then, to update, you can run:
-
-```
-git fetch upstream
-git merge upstream/main
-```
+## Further Info
+More detailed information can be found in `writeup.pdf`
