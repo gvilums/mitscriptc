@@ -2,7 +2,7 @@
 
 `mitscriptc` is a just-in-time compiler and runtime for executing `mitscript` programs.
 
-It was developed as a course project for MIT course `6.818` in the fall of 2021 by [Georgijs Vilums](https://github.com/gvilums) and [Jakob Nogler](https://github.com/jakob-nogler).
+It was developed as a course project for MIT course 6.818 in the fall of 2021 by [Georgijs Vilums](https://github.com/gvilums) and [Jakob Nogler](https://github.com/jakob-nogler).
 
 ## `mitscript`
 
