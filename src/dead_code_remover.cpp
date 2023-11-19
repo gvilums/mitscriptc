@@ -4,6 +4,7 @@
 #include "ir.h"
 #include "irprinter.h"
 #include "value.h"
+#include <algorithm>
 
 const std::set<IR::Operation> dc_ins = {
     IR::Operation::ADD, IR::Operation::ADD_INT, IR::Operation::SUB, IR::Operation::MUL,

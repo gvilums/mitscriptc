@@ -3,6 +3,7 @@
 #include "const_propagator.h"
 #include <set>
 #include "irprinter.h"
+#include <algorithm>
 
 ConstPropagator::ConstPropagator(IR::Program* prog) : prog_(prog){}
 

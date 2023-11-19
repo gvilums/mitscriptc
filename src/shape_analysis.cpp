@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <algorithm>
 
 ShapeAnalysis::ShapeAnalysis(IR::Program* prog) : prog_(prog){}
 
