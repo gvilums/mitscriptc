@@ -4,8 +4,6 @@
 #include <filesystem>
 
 #include "AST.h"
-#include "MITScript.h"
-#include "antlr4-runtime.h"
 #include "compiler.h"
 #include "parsercode.h"
 #include "irprinter.h"
@@ -71,13 +69,7 @@ auto main(int argc, const char* argv[]) -> int {
         return 1;
     }
 
-    antlr4::ANTLRInputStream input(file);
-    lexer::MITScript lexer(&input);
-    antlr4::CommonTokenStream tokens(&lexer);
-
-    tokens.fill();
-
-    AST::Program* program = Program(tokens);
+    AST::Program* program = parse(file);
     if (program == nullptr) {
         std::cout << "Parsing failed" << std::endl;
         return 1;

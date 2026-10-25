@@ -15,11 +15,11 @@ set(sources ${sources}
     src/type_inferer.cpp
     src/ir.cpp
     src/irprinter.cpp
+    src/lexer.cpp
     src/parsercode.cpp
     src/regalloc.cpp
     src/value.cpp
     src/utils.cpp
-    grammar/MITScript.cpp
 )
 
 # set(test_sources ${test_sources}
@@ -29,14 +29,11 @@ set(sources ${sources}
 # )
 
 add_executable(mitscriptc ${sources} src/compilertest.cpp)
-target_link_libraries(mitscriptc PUBLIC antlr)
 target_link_libraries(mitscriptc PUBLIC asmjit)
-target_include_directories(mitscriptc PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/grammar")
+target_include_directories(mitscriptc PUBLIC "${PROJECT_BINARY_DIR}")
 
 # add_executable(test ${sources} ${test_sources})
-# target_link_libraries(test PUBLIC antlr)
 # target_link_libraries(test PUBLIC asmjit)
-# target_include_directories(test PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/grammar")
 # target_include_directories(test PUBLIC "${PROJECT_BINARY_DIR}" "${PROJECT_SOURCE_DIR}/src")
 
 

@@ -1,55 +1,76 @@
-#include "AST.h"
-#include "MITScript.h"
-#include "antlr4-runtime.h"
 #include "parsercode.h"
+
+#include "lexer.h"
 #include "utils.h"
 
-#define check(x)                              \
-    {                                         \
-        token = tokens.get(tokens.index());   \
-        if (token->getType() != lexer::MITScript::x) \
-            return NULL;                      \
-        tokens.consume();                     \
+#include <iterator>
+#include <string>
+
+static AST::Program* Program(lex::Stream& tokens);
+static AST::Statement* Statement(lex::Stream& tokens);
+static AST::Global* Global(lex::Stream& tokens);
+static AST::Assignment* Assignment(lex::Stream& tokens, AST::Expression* Lhs);
+static AST::Statement* CallStatement(lex::Stream& tokens, AST::Expression* Lhs);
+static AST::Block* Block(lex::Stream& tokens);
+static AST::IfStatement* IfStatement(lex::Stream& tokens);
+static AST::WhileLoop* WhileLoop(lex::Stream& tokens);
+static AST::Return* Return(lex::Stream& tokens);
+static AST::Expression* Expression(lex::Stream& tokens);
+static AST::FunctionDeclaration* Function(lex::Stream& tokens);
+static AST::Expression* Boolean(lex::Stream& tokens);
+static AST::Expression* Conjunction(lex::Stream& tokens);
+static AST::Expression* BoolUnit(lex::Stream& tokens);
+static AST::Expression* Predicate(lex::Stream& tokens);
+static AST::Expression* Arithmetic(lex::Stream& tokens);
+static AST::Expression* Product(lex::Stream& tokens);
+static AST::Expression* Unit(lex::Stream& tokens);
+static AST::Expression* LHS(lex::Stream& tokens);
+static AST::Call* Call(lex::Stream& tokens, AST::Expression* Lhs);
+static AST::Record* Record(lex::Stream& tokens);
+
+
+#define check(x)                         \
+    {                                    \
+        token = &tokens.peek();          \
+        if (token->kind != lex::Kind::x) \
+            return NULL;                 \
+        tokens.consume();                \
     }
 
 
 AST::Program* parse(std::ifstream& file) {
-    antlr4::ANTLRInputStream input(file);
-    lexer::MITScript lexer(&input);
-    antlr4::CommonTokenStream tokens(&lexer);
-
-    tokens.fill();
-
+    std::string source((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    lex::Stream tokens(std::move(source));
     return Program(tokens);
 }
 
-AST::Program* Program(antlr4::CommonTokenStream& tokens) {
+static AST::Program* Program(lex::Stream& tokens) {
     AST::Program* Prog = new AST::Program;
-    antlr4::Token* token = tokens.get(tokens.index());
-    while (token->getType() != lexer::MITScript::EOF) {
+    const lex::Token* token = &tokens.peek();
+    while (token->kind != lex::Kind::END) {
         AST::Statement* Stat = Statement(tokens);
         if (!Stat)
             return NULL;
         Prog->addChild(Stat);
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
     return Prog;
 }
 
-AST::Statement* Statement(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Statement* Statement(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     AST::Statement* stat;
-    switch (token->getType()) {
-        case lexer::MITScript::GLOBAL:
+    switch (token->kind) {
+        case lex::Kind::GLOBAL:
             stat = (AST::Statement*)Global(tokens);
             break;
-        case lexer::MITScript::IF:
+        case lex::Kind::IF:
             stat = (AST::Statement*)IfStatement(tokens);
             break;
-        case lexer::MITScript::WHILE:
+        case lex::Kind::WHILE:
             stat = (AST::Statement*)WhileLoop(tokens);
             break;
-        case lexer::MITScript::RETURN:
+        case lex::Kind::RETURN:
             stat = (AST::Statement*)Return(tokens);
             break;
         default:
@@ -57,9 +78,9 @@ AST::Statement* Statement(antlr4::CommonTokenStream& tokens) {
             if (!Lhs)
                 return NULL;
 
-            token = tokens.get(tokens.index());
+            token = &tokens.peek();
 
-            if (token->getType() == lexer::MITScript::BROPEN)
+            if (token->kind == lex::Kind::BROPEN)
                 stat = (AST::Statement*)CallStatement(tokens, Lhs);
             else
                 stat = (AST::Statement*)Assignment(tokens, Lhs);
@@ -70,24 +91,24 @@ AST::Statement* Statement(antlr4::CommonTokenStream& tokens) {
     return stat;
 }
 
-AST::Block* Block(antlr4::CommonTokenStream& tokens) {
+static AST::Block* Block(lex::Stream& tokens) {
     AST::Block* Blk = new AST::Block;
-    antlr4::Token* token = tokens.get(tokens.index());
+    const lex::Token* token = &tokens.peek();
     check(CBROPEN);
-    token = tokens.get(tokens.index());
-    while (token->getType() != lexer::MITScript::CBRCLOSE) {
+    token = &tokens.peek();
+    while (token->kind != lex::Kind::CBRCLOSE) {
         AST::Statement* Stat = Statement(tokens);
         if (!Stat)
             return NULL;
         Blk->addChild(Stat);
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
     tokens.consume();
     return Blk;
 }
 
-AST::Assignment* Assignment(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Assignment* Assignment(lex::Stream& tokens, AST::Expression* Lhs) {
+    const lex::Token* token = &tokens.peek();
     AST::Assignment* Assg = new AST::Assignment;
 
     check(ASSIGN);
@@ -102,8 +123,8 @@ AST::Assignment* Assignment(antlr4::CommonTokenStream& tokens, AST::Expression* 
     return Assg;
 }
 
-AST::Statement* CallStatement(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Statement* CallStatement(lex::Stream& tokens, AST::Expression* Lhs) {
+    const lex::Token* token = &tokens.peek();
     AST::Call* Cl = Call(tokens, Lhs);
 
     if (!Cl)
@@ -113,23 +134,23 @@ AST::Statement* CallStatement(antlr4::CommonTokenStream& tokens, AST::Expression
     return (AST::Statement*)Cl;
 }
 
-AST::Global* Global(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Global* Global(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     AST::Global* Glob = new AST::Global;
     check(GLOBAL);
 
-    token = tokens.get(tokens.index());
-    if (token->getType() != lexer::MITScript::NAME)
+    token = &tokens.peek();
+    if (token->kind != lex::Kind::NAME)
         return NULL;
-    Glob->addName(token->getText());
+    Glob->addName(token->text);
     tokens.consume();
 
     check(SEMICOLON);
     return Glob;
 }
 
-AST::IfStatement* IfStatement(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::IfStatement* IfStatement(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     AST::IfStatement* IfStat = new AST::IfStatement;
     check(IF);
     check(BROPEN);
@@ -143,8 +164,8 @@ AST::IfStatement* IfStatement(antlr4::CommonTokenStream& tokens) {
     if (!Block1)
         return NULL;
     IfStat->addChild(Block1);
-    token = tokens.get(tokens.index());
-    if (token->getType() != lexer::MITScript::ELSE)
+    token = &tokens.peek();
+    if (token->kind != lex::Kind::ELSE)
         return IfStat;
 
     check(ELSE);
@@ -155,8 +176,8 @@ AST::IfStatement* IfStatement(antlr4::CommonTokenStream& tokens) {
     return IfStat;
 }
 
-AST::WhileLoop* WhileLoop(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::WhileLoop* WhileLoop(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     AST::WhileLoop* WhileL = new AST::WhileLoop;
     check(WHILE);
     check(BROPEN);
@@ -174,27 +195,27 @@ AST::WhileLoop* WhileLoop(antlr4::CommonTokenStream& tokens) {
     return WhileL;
 }
 
-AST::Return* Return(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Return* Return(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     check(RETURN);
     AST::Expression* Expr = Expression(tokens);
     if (!Expr)
         return NULL;
-    token = tokens.get(tokens.index());
+    token = &tokens.peek();
     check(SEMICOLON)
         AST::Return* ReturnSt = new AST::Return;
     ReturnSt->addExpr(Expr);
     return ReturnSt;
 }
 
-AST::Expression* Expression(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Expression* Expression(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     AST::Expression* expr;
-    switch (token->getType()) {
-        case lexer::MITScript::FUNCTION:
+    switch (token->kind) {
+        case lex::Kind::FUNCTION:
             expr = (AST::Expression*)Function(tokens);
             break;
-        case lexer::MITScript::CBROPEN:
+        case lex::Kind::CBROPEN:
             expr = (AST::Expression*)Record(tokens);
             break;
         default:
@@ -206,26 +227,26 @@ AST::Expression* Expression(antlr4::CommonTokenStream& tokens) {
     return expr;
 }
 
-AST::FunctionDeclaration* Function(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::FunctionDeclaration* Function(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     check(FUNCTION);
     check(BROPEN);
     AST::FunctionDeclaration* FunDec = new AST::FunctionDeclaration();
-    token = tokens.get(tokens.index());
-    if (token->getType() == lexer::MITScript::NAME) {
-        FunDec->addArg(token->getText());
+    token = &tokens.peek();
+    if (token->kind == lex::Kind::NAME) {
+        FunDec->addArg(token->text);
         tokens.consume();
-        token = tokens.get(tokens.index());
-        while (token->getType() == lexer::MITScript::COMMA) {
+        token = &tokens.peek();
+        while (token->kind == lex::Kind::COMMA) {
             check(COMMA);
 
-            token = tokens.get(tokens.index());
-            if (token->getType() != lexer::MITScript::NAME)
+            token = &tokens.peek();
+            if (token->kind != lex::Kind::NAME)
                 return NULL;
-            FunDec->addArg(token->getText());
+            FunDec->addArg(token->text);
             tokens.consume();
 
-            token = tokens.get(tokens.index());
+            token = &tokens.peek();
         }
     }
     check(BRCLOSE);
@@ -236,15 +257,15 @@ AST::FunctionDeclaration* Function(antlr4::CommonTokenStream& tokens) {
     return FunDec;
 }
 
-AST::Expression* Boolean(antlr4::CommonTokenStream& tokens) {
+static AST::Expression* Boolean(lex::Stream& tokens) {
     AST::Expression* Conj = Conjunction(tokens);
     AST::Expression* Temp;
     if (!Conj)
         return NULL;
 
-    antlr4::Token* token = tokens.get(tokens.index());
-    token = tokens.get(tokens.index());
-    while (token->getType() == lexer::MITScript::OR) {
+    const lex::Token* token = &tokens.peek();
+    token = &tokens.peek();
+    while (token->kind == lex::Kind::OR) {
         check(OR);
         Temp = Conj;
         Conj = Conjunction(tokens);
@@ -257,21 +278,21 @@ AST::Expression* Boolean(antlr4::CommonTokenStream& tokens) {
         BinExp->addOp("|");
 
         Conj = (AST::Expression*)BinExp;
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
 
     return Conj;
 }
 
-AST::Expression* Conjunction(antlr4::CommonTokenStream& tokens) {
+static AST::Expression* Conjunction(lex::Stream& tokens) {
     AST::Expression* BUnit = BoolUnit(tokens);
     AST::Expression* Temp;
     if (!BUnit)
         return NULL;
 
-    antlr4::Token* token = tokens.get(tokens.index());
-    token = tokens.get(tokens.index());
-    while (token->getType() == lexer::MITScript::AND) {
+    const lex::Token* token = &tokens.peek();
+    token = &tokens.peek();
+    while (token->kind == lex::Kind::AND) {
         check(AND);
         Temp = BUnit;
         BUnit = BoolUnit(tokens);
@@ -284,17 +305,17 @@ AST::Expression* Conjunction(antlr4::CommonTokenStream& tokens) {
         BinExp->addOp("&");
 
         BUnit = (AST::Expression*)BinExp;
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
 
     return BUnit;
 }
 
-AST::Expression* BoolUnit(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Expression* BoolUnit(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
 
     bool nt = false;
-    if (token->getType() == lexer::MITScript::NOT) {
+    if (token->kind == lex::Kind::NOT) {
         check(NOT);
         nt = true;
     }
@@ -312,18 +333,18 @@ AST::Expression* BoolUnit(antlr4::CommonTokenStream& tokens) {
     return (AST::Expression*)UnExpr;
 }
 
-AST::Expression* Predicate(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Expression* Predicate(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     AST::Expression* Arith = Arithmetic(tokens);
 
     if (!Arith)
         return NULL;
 
-    token = tokens.get(tokens.index());
+    token = &tokens.peek();
 
-    if (token->getType() != lexer::MITScript::REL)
+    if (token->kind != lex::Kind::REL)
         return Arith;
-    string op = token->getText();
+    string op = token->text;
     tokens.consume();
 
     AST::Expression* Arith2 = Arithmetic(tokens);
@@ -337,16 +358,16 @@ AST::Expression* Predicate(antlr4::CommonTokenStream& tokens) {
     return (AST::Expression*)BinExp;
 }
 
-AST::Expression* Arithmetic(antlr4::CommonTokenStream& tokens) {
+static AST::Expression* Arithmetic(lex::Stream& tokens) {
     AST::Expression* Prod = Product(tokens);
     AST::Expression* Temp;
     if (!Prod)
         return NULL;
 
-    antlr4::Token* token = tokens.get(tokens.index());
-    token = tokens.get(tokens.index());
-    while (token->getType() == lexer::MITScript::PLUS || token->getType() == lexer::MITScript::MINUS) {
-        string op = token->getText();
+    const lex::Token* token = &tokens.peek();
+    token = &tokens.peek();
+    while (token->kind == lex::Kind::PLUS || token->kind == lex::Kind::MINUS) {
+        string op = token->text;
         tokens.consume();
 
         Temp = Prod;
@@ -360,22 +381,22 @@ AST::Expression* Arithmetic(antlr4::CommonTokenStream& tokens) {
         BinExp->addOp(op);
 
         Prod = (AST::Expression*)BinExp;
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
 
     return Prod;
 }
 
-AST::Expression* Product(antlr4::CommonTokenStream& tokens) {
+static AST::Expression* Product(lex::Stream& tokens) {
     AST::Expression* Un = Unit(tokens);
     AST::Expression* Temp;
     if (!Un)
         return NULL;
 
-    antlr4::Token* token = tokens.get(tokens.index());
-    token = tokens.get(tokens.index());
-    while (token->getType() == lexer::MITScript::DIV || token->getType() == lexer::MITScript::MUL) {
-        string op = token->getText();
+    const lex::Token* token = &tokens.peek();
+    token = &tokens.peek();
+    while (token->kind == lex::Kind::DIV || token->kind == lex::Kind::MUL) {
+        string op = token->text;
         tokens.consume();
 
         Temp = Un;
@@ -389,55 +410,55 @@ AST::Expression* Product(antlr4::CommonTokenStream& tokens) {
         BinExp->addOp(op);
 
         Un = (AST::Expression*)BinExp;
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
 
     return Un;
 }
 
-AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
-    token = tokens.get(tokens.index());
+static AST::Expression* Unit(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
+    token = &tokens.peek();
 
     bool minus = false;
-    if (token->getType() == lexer::MITScript::MINUS) {
+    if (token->kind == lex::Kind::MINUS) {
         check(MINUS);
         minus = true;
     }
 
     AST::Expression* Expr;
-    token = tokens.get(tokens.index());
+    token = &tokens.peek();
 
     AST::BoolConstant* Con;
     AST::NoneConstant* Con1;
     AST::IntegerConstant* Con2;
     AST::StringConstant* Con3;
 
-    switch (token->getType()) {
-        case lexer::MITScript::BOOLCONST:
+    switch (token->kind) {
+        case lex::Kind::BOOLCONST:
             Con = new AST::BoolConstant();
-            Con->addVal(token->getText());
+            Con->addVal(token->text);
             tokens.consume();
             Expr = (AST::Expression*)Con;
             break;
-        case lexer::MITScript::NONECONST:
+        case lex::Kind::NONECONST:
             Con1 = new AST::NoneConstant();
             tokens.consume();
             Expr = (AST::Expression*)Con1;
             break;
-        case lexer::MITScript::INT:
+        case lex::Kind::INT:
             Con2 = new AST::IntegerConstant();
-            Con2->addVal(token->getText());
+            Con2->addVal(token->text);
             tokens.consume();
             Expr = (AST::Expression*)Con2;
             break;
-        case lexer::MITScript::STRCONST:
+        case lex::Kind::STRCONST:
             Con3 = new AST::StringConstant();
-            Con3->addVal(utils::escape(token->getText()));
+            Con3->addVal(utils::escape(token->text));
             tokens.consume();
             Expr = (AST::Expression*)Con3;
             break;
-        case lexer::MITScript::BROPEN:
+        case lex::Kind::BROPEN:
             check(BROPEN);
             Expr = Boolean(tokens);
             if (!Expr)
@@ -449,8 +470,8 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
             if (!Lhs)
                 return NULL;
 
-            token = tokens.get(tokens.index());
-            if (token->getType() != lexer::MITScript::BROPEN) {
+            token = &tokens.peek();
+            if (token->kind != lex::Kind::BROPEN) {
                 Expr = Lhs;
                 break;
             }
@@ -472,19 +493,19 @@ AST::Expression* Unit(antlr4::CommonTokenStream& tokens) {
     }
 }
 
-AST::Expression* LHS(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
-    token = tokens.get(tokens.index());
-    if (token->getType() != lexer::MITScript::NAME)
+static AST::Expression* LHS(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
+    token = &tokens.peek();
+    if (token->kind != lex::Kind::NAME)
         return NULL;
     AST::StringConstant* Con = new AST::StringConstant();
-    Con->addVal(token->getText());
+    Con->addVal(token->text);
     AST::Expression* BaseExpression = (AST::Expression*)Con;
     tokens.consume();
 
-    token = tokens.get(tokens.index());
-    while (token->getType() == lexer::MITScript::SQBROPEN || token->getType() == lexer::MITScript::POINT) {
-        if (token->getType() == lexer::MITScript::SQBROPEN) {
+    token = &tokens.peek();
+    while (token->kind == lex::Kind::SQBROPEN || token->kind == lex::Kind::POINT) {
+        if (token->kind == lex::Kind::SQBROPEN) {
             check(SQBROPEN);
             AST::Expression* Index = Expression(tokens);
             if (!Index)
@@ -495,30 +516,30 @@ AST::Expression* LHS(antlr4::CommonTokenStream& tokens) {
             BaseExpression = (AST::Expression*)IExpr;
             check(SQBRCLOSE);
         }
-        if (token->getType() == lexer::MITScript::POINT) {
+        if (token->kind == lex::Kind::POINT) {
             check(POINT);
-            token = tokens.get(tokens.index());
-            if (token->getType() != lexer::MITScript::NAME)
+            token = &tokens.peek();
+            if (token->kind != lex::Kind::NAME)
                 return NULL;
             AST::FieldDereference* Fdef = new AST::FieldDereference();
             Fdef->addBaseexpr(BaseExpression);
-            Fdef->addField(token->getText());
+            Fdef->addField(token->text);
             tokens.consume();
             BaseExpression = (AST::Expression*)Fdef;
         }
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
     return BaseExpression;
 }
 
-AST::Record* Record(antlr4::CommonTokenStream& tokens) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Record* Record(lex::Stream& tokens) {
+    const lex::Token* token = &tokens.peek();
     check(CBROPEN);
 
     AST::Record* Rec = new AST::Record();
-    token = tokens.get(tokens.index());
-    while (token->getType() == lexer::MITScript::NAME) {
-        string name = token->getText();
+    token = &tokens.peek();
+    while (token->kind == lex::Kind::NAME) {
+        string name = token->text;
         tokens.consume();
         check(COLON);
         AST::Expression* Expr = Expression(tokens);
@@ -526,33 +547,33 @@ AST::Record* Record(antlr4::CommonTokenStream& tokens) {
             return NULL;
         check(SEMICOLON);
         Rec->addMap(name, Expr);
-        token = tokens.get(tokens.index());
+        token = &tokens.peek();
     }
     check(CBRCLOSE);
     return Rec;
 }
 
-AST::Call* Call(antlr4::CommonTokenStream& tokens, AST::Expression* Lhs) {
-    antlr4::Token* token = tokens.get(tokens.index());
+static AST::Call* Call(lex::Stream& tokens, AST::Expression* Lhs) {
+    const lex::Token* token = &tokens.peek();
 
     AST::Call* Cl = new AST::Call();
     Cl->addExpr(Lhs);
     check(BROPEN);
 
-    token = tokens.get(tokens.index());
-    if (token->getType() != lexer::MITScript::BRCLOSE) {
+    token = &tokens.peek();
+    if (token->kind != lex::Kind::BRCLOSE) {
         AST::Expression* Arg = Expression(tokens);
         if (!Arg)
             return NULL;
         Cl->addArg(Arg);
-        token = tokens.get(tokens.index());
-        while (token->getType() == lexer::MITScript::COMMA) {
+        token = &tokens.peek();
+        while (token->kind == lex::Kind::COMMA) {
             check(COMMA);
             Arg = Expression(tokens);
             if (!Arg)
                 return NULL;
             Cl->addArg(Arg);
-            token = tokens.get(tokens.index());
+            token = &tokens.peek();
         }
     }
     
